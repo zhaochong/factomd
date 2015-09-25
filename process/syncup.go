@@ -19,8 +19,8 @@ import (
 	. "github.com/FactomProject/factomd/common/DirectoryBlock"
 	. "github.com/FactomProject/factomd/common/EntryBlock"
 	. "github.com/FactomProject/factomd/common/constants"
-	"github.com/FactomProject/factomd/common/factoid/state"
 	. "github.com/FactomProject/factomd/common/primitives"
+	"github.com/FactomProject/factomd/state"
 )
 
 // processDirBlock validates dir block and save it to factom db.

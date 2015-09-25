@@ -35,9 +35,9 @@ import (
 	. "github.com/FactomProject/factomd/common/EntryBlock"
 	. "github.com/FactomProject/factomd/common/EntryCreditBlock"
 	. "github.com/FactomProject/factomd/common/constants"
-	"github.com/FactomProject/factomd/common/factoid/state"
 	. "github.com/FactomProject/factomd/common/interfaces"
 	. "github.com/FactomProject/factomd/common/primitives"
+	"github.com/FactomProject/factomd/state"
 )
 
 var _ = (*block.FBlock)(nil)
