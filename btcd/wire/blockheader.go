@@ -19,21 +19,19 @@ var (
 	CreditsPerChain int32
 
 	// BTCD State Variables
-	FactoshisPerCredit uint64
+	//FactoshisPerCredit uint64
 )
 
 // Factom Constants for BTCD and Factom
 //
-func Init() {
-	barray := []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F}
+func init() {
 	FChainID = new(Hash)
-	FChainID.SetBytes(barray)
+	FChainID.SetBytes(FACTOID_CHAINID)
 
 	CreditsPerChain = 10 // Entry Credits to create a chain
 
 	// Shouldn't set this, but we are for now.
-	FactoshisPerCredit = 666667 // .001 / .15 * 100000000 (assuming a Factoid is .15 cents, entry credit = .1 cents
+	//FactoshisPerCredit = 666667 // .001 / .15 * 100000000 (assuming a Factoid is .15 cents, entry credit = .1 cents
 
 }
 

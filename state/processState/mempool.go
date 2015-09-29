@@ -2,7 +2,7 @@
 // Use of this source code is governed by the MIT license
 // that can be found in the LICENSE file.
 
-package process
+package processState
 
 import (
 	"errors"
@@ -13,9 +13,9 @@ import (
 	"time"
 )
 
-// ftmMemPool is used as a source of factom transactions
+// FtmMemPool is used as a source of factom transactions
 // (CommitChain, RevealChain, CommitEntry, RevealEntry)
-type ftmMemPool struct {
+type FtmMemPool struct {
 	sync.RWMutex
 	pool        map[IHash]wire.Message
 	orphans     map[IHash]wire.Message
@@ -24,7 +24,7 @@ type ftmMemPool struct {
 }
 
 // Add a factom message to the orphan pool
-func (mp *ftmMemPool) init_ftmMemPool() error {
+func (mp *FtmMemPool) Init_FtmMemPool() error {
 
 	mp.pool = make(map[IHash]wire.Message)
 	mp.orphans = make(map[IHash]wire.Message)
@@ -34,7 +34,7 @@ func (mp *ftmMemPool) init_ftmMemPool() error {
 }
 
 // Add a factom message to the  Mem pool
-func (mp *ftmMemPool) addMsg(msg wire.Message, hash IHash) error {
+func (mp *FtmMemPool) AddMsg(msg wire.Message, hash IHash) error {
 
 	if len(mp.pool) > MAX_TX_POOL_SIZE {
 		return errors.New("Transaction mem pool exceeds the limit.")
@@ -46,7 +46,7 @@ func (mp *ftmMemPool) addMsg(msg wire.Message, hash IHash) error {
 }
 
 // Add a factom message to the orphan pool
-func (mp *ftmMemPool) addOrphanMsg(msg wire.Message, hash IHash) error {
+func (mp *FtmMemPool) AddOrphanMsg(msg wire.Message, hash IHash) error {
 
 	if len(mp.orphans) > MAX_ORPHAN_SIZE {
 		errors.New("Ophan mem pool exceeds the limit.")
@@ -58,7 +58,7 @@ func (mp *ftmMemPool) addOrphanMsg(msg wire.Message, hash IHash) error {
 }
 
 // Add a factom block message to the  Mem pool
-func (mp *ftmMemPool) addBlockMsg(msg wire.Message, hash string) error {
+func (mp *FtmMemPool) AddBlockMsg(msg wire.Message, hash string) error {
 
 	if len(mp.blockpool) > MAX_BLK_POOL_SIZE {
 		errors.New("Block mem pool exceeds the limit. Please restart.")
@@ -71,11 +71,11 @@ func (mp *ftmMemPool) addBlockMsg(msg wire.Message, hash string) error {
 }
 
 // Delete a factom block message from the  Mem pool
-func (mp *ftmMemPool) deleteBlockMsg(hash string) error {
+func (mp *FtmMemPool) DeleteBlockMsg(hash string) error {
 
 	if mp.blockpool[hash] != nil {
 		mp.Lock()
-		delete(fMemPool.blockpool, hash)
+		delete(mp.blockpool, hash)
 		mp.Unlock()
 	}
 

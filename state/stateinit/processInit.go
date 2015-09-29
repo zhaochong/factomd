@@ -2,7 +2,7 @@
 // Use of this source code is governed by the MIT license
 // that can be found in the LICENSE file.
 
-package process
+package stateinit
 
 import (
 	"bytes"
@@ -13,13 +13,15 @@ import (
 	"github.com/FactomProject/factomd/common/factoid/block"
 	"github.com/FactomProject/factomd/consensus"
 	cp "github.com/FactomProject/factomd/controlpanel"
+	"github.com/FactomProject/factomd/database"
 	"github.com/FactomProject/factomd/logger"
 	"github.com/FactomProject/factomd/state"
 	"github.com/FactomProject/factomd/util"
 	"github.com/davecgh/go-spew/spew"
-	"runtime/debug"
 	"sort"
 	"strconv"
+
+	. "github.com/FactomProject/factomd/state/processState"
 
 	. "github.com/FactomProject/factomd/common"
 	. "github.com/FactomProject/factomd/common/AdminBlock"
@@ -31,56 +33,150 @@ import (
 	. "github.com/FactomProject/factomd/common/primitives"
 )
 
-var _ = debug.PrintStack
+// Get the configurations
+func LoadConfigurations(cfg *util.FactomdConfig) {
+
+	//setting the variables by the valued form the config file
+	logLevel = cfg.Log.LogLevel
+	dataStorePath = cfg.App.DataStorePath
+	ldbpath = cfg.App.LdbPath
+	directoryBlockInSeconds = cfg.App.DirectoryBlockInSeconds
+	nodeMode = cfg.App.NodeMode
+	serverPrivKeyHex = cfg.App.ServerPrivKey
+
+	FactomdUser = cfg.Btc.RpcUser
+	FactomdPass = cfg.Btc.RpcPass
+}
+
+func InitProcessState(
+	ldb database.Db,
+	inMsgQ chan wire.FtmInternalMsg,
+	outMsgQ chan wire.FtmInternalMsg,
+	inCtlMsgQ chan wire.FtmInternalMsg,
+	outCtlMsgQ chan wire.FtmInternalMsg) *ProcessState {
+	ps := new(ProcessState)
+
+	ps.CommitChainMap = make(map[string]*CommitChain, 0)
+	ps.CommitEntryMap = make(map[string]*CommitEntry, 0)
+	ps.ServerIndex = NewServerIndexNumber()
+
+	ps.DB = ldb
+
+	ps.InMsgQueue = inMsgQ
+	ps.OutMsgQueue = outMsgQ
+
+	ps.InCtlMsgQueue = inCtlMsgQ
+	ps.OutCtlMsgQueue = outCtlMsgQ
+
+	// init server private key or pub key
+	initServerKeys(ps)
+
+	// init mem pools
+	ps.FMemPool = new(ftmMemPool)
+	ps.FMemPool.init_ftmMemPool()
+
+	ps.FactoshisPerCredit = 666666 // .001 / .15 * 100000000 (assuming a Factoid is .15 cents, entry credit = .1 cents
+
+	// init Directory Block Chain
+	initDChain(ps)
+
+	procLog.Info("Loaded ", ps.DChain.NextDBHeight, " Directory blocks for chain: "+ps.DChain.ChainID.String())
+
+	// init Entry Credit Chain
+	initECChain(ps)
+	procLog.Info("Loaded ", ecchain.NextBlockHeight, " Entry Credit blocks for chain: "+ecchain.ChainID.String())
+
+	// init Admin Chain
+	initAChain(ps)
+	procLog.Info("Loaded ", achain.NextBlockHeight, " Admin blocks for chain: "+achain.ChainID.String())
+
+	initFctChain(ps)
+	//state.FactoidStateGlobal.LoadState()
+	procLog.Info("Loaded ", fchain.NextBlockHeight, " factoid blocks for chain: "+fchain.ChainID.String())
+
+	//Init anchor for server
+	if ps.nodeMode == SERVER_NODE {
+		anchor.InitAnchor(db, inMsgQueue, serverPrivKey)
+	}
+	// build the Genesis blocks if the current height is 0
+	if ps.DChain.NextDBHeight == 0 && nodeMode == SERVER_NODE {
+		buildGenesisBlocks(ps)
+	} else {
+		// To be improved in milestone 2
+		SignDirectoryBlock(ps)
+	}
+
+	// init process list manager
+	initProcessListMgr(ps)
+
+	// init Entry Chains
+	initEChains(ps)
+	for _, chain := range chainIDMap {
+		initEChainFromDB(chain)
+
+		procLog.Info("Loaded ", chain.NextBlockHeight, " blocks for chain: "+chain.ChainID.String())
+	}
+
+	// Validate all dir blocks
+	err := validateDChain(dchain)
+	if err != nil {
+		if nodeMode == SERVER_NODE {
+			panic("Error found in validating directory blocks: " + err.Error())
+		} else {
+			ps.DChain.IsValidated = false
+		}
+	}
+	return ps
+}
 
 // Initialize Directory Block Chain from database
-func initDChain() {
-	dchain = new(DChain)
+func initDChain(ps *ProcessState) {
+	ps.DChain = new(DChain)
 
 	//Initialize the Directory Block Chain ID
-	dchain.ChainID = new(Hash)
+	ps.DChain.ChainID = new(Hash)
 	barray := D_CHAINID
-	dchain.ChainID.SetBytes(barray)
+	ps.DChain.ChainID.SetBytes(barray)
 
 	// get all dBlocks from db
-	dBlocks, _ := db.FetchAllDBlocks()
+	dBlocks, _ := ps.DB.FetchAllDBlocks()
 	sort.Sort(util.ByDBlockIDAccending(dBlocks))
 
-	dchain.Blocks = make([]*DirectoryBlock, len(dBlocks), len(dBlocks)+1)
+	ps.DChain.Blocks = make([]*DirectoryBlock, len(dBlocks), len(dBlocks)+1)
 
 	for i := 0; i < len(dBlocks); i = i + 1 {
 		if dBlocks[i].Header.DBHeight != uint32(i) {
-			panic("Error in initializing dChain:" + dchain.ChainID.String())
+			panic("Error in initializing dChain:" + ps.DChain.ChainID.String())
 		}
 		dBlocks[i].Chain = dchain
 		dBlocks[i].IsSealed = true
 		dBlocks[i].IsSavedInDB = true
-		dchain.Blocks[i] = &dBlocks[i]
+		ps.DChain.Blocks[i] = &dBlocks[i]
 	}
 
 	// double check the block ids
-	for i := 0; i < len(dchain.Blocks); i = i + 1 {
-		if uint32(i) != dchain.Blocks[i].Header.DBHeight {
-			panic(errors.New("BlockID does not equal index for chain:" + dchain.ChainID.String() + " block:" + fmt.Sprintf("%v", dchain.Blocks[i].Header.DBHeight)))
+	for i := 0; i < len(ps.DChain.Blocks); i = i + 1 {
+		if uint32(i) != ps.DChain.Blocks[i].Header.DBHeight {
+			panic(errors.New("BlockID does not equal index for chain:" + ps.DChain.ChainID.String() + " block:" + fmt.Sprintf("%v", ps.DChain.Blocks[i].Header.DBHeight)))
 		}
 	}
 
 	//Create an empty block and append to the chain
-	if len(dchain.Blocks) == 0 {
-		dchain.NextDBHeight = 0
-		dchain.NextBlock, _ = CreateDBlock(dchain, nil, 10)
+	if len(ps.DChain.Blocks) == 0 {
+		ps.DChain.NextDBHeight = 0
+		ps.DChain.NextBlock, _ = CreateDBlock(dchain, nil, 10)
 	} else {
-		dchain.NextDBHeight = uint32(len(dchain.Blocks))
-		dchain.NextBlock, _ = CreateDBlock(dchain, dchain.Blocks[len(dchain.Blocks)-1], 10)
+		ps.DChain.NextDBHeight = uint32(len(ps.DChain.Blocks))
+		ps.DChain.NextBlock, _ = CreateDBlock(dchain, ps.DChain.Blocks[len(ps.DChain.Blocks)-1], 10)
 		// Update dir block height cache in db
-		db.UpdateBlockHeightCache(dchain.NextDBHeight-1, dchain.NextBlock.Header.PrevLedgerKeyMR)
+		ps.DB.UpdateBlockHeightCache(ps.DChain.NextDBHeight-1, ps.DChain.NextBlock.Header.PrevLedgerKeyMR)
 	}
 
-	exportDChain(dchain)
+	exportDChain(ps, dchain)
 
 	//Double check the sealed flag
-	if dchain.NextBlock.IsSealed == true {
-		panic("dchain.Blocks[dchain.NextBlockID].IsSealed for chain:" + dchain.ChainID.String())
+	if ps.DChain.NextBlock.IsSealed == true {
+		panic("ps.DChain.Blocks[ps.DChain.NextBlockID].IsSealed for chain:" + ps.DChain.ChainID.String())
 	}
 
 }
@@ -94,7 +190,7 @@ func initECChain() {
 	ecchain = NewECChain()
 
 	// get all ecBlocks from db
-	ecBlocks, _ := db.FetchAllECBlocks()
+	ecBlocks, _ := ps.DB.FetchAllECBlocks()
 	sort.Sort(util.ByECBlockIDAccending(ecBlocks))
 
 	for i, v := range ecBlocks {
@@ -107,7 +203,7 @@ func initECChain() {
 	}
 
 	//Create an empty block and append to the chain
-	if len(ecBlocks) == 0 || dchain.NextDBHeight == 0 {
+	if len(ecBlocks) == 0 || ps.DChain.NextDBHeight == 0 {
 		ecchain.NextBlockHeight = 0
 		ecchain.NextBlock = NewECBlock()
 		ecchain.NextBlock.AddEntry(serverIndex)
@@ -118,7 +214,7 @@ func initECChain() {
 		}
 	} else {
 		// Entry Credit Chain should have the same height as the dir chain
-		ecchain.NextBlockHeight = dchain.NextDBHeight
+		ecchain.NextBlockHeight = ps.DChain.NextDBHeight
 		var err error
 		ecchain.NextBlock, err = NextECBlock(&ecBlocks[ecchain.NextBlockHeight-1])
 		if err != nil {
@@ -146,7 +242,7 @@ func initAChain() {
 	achain.ChainID.SetBytes(ADMIN_CHAINID)
 
 	// get all aBlocks from db
-	aBlocks, _ := db.FetchAllABlocks()
+	aBlocks, _ := ps.DB.FetchAllABlocks()
 	sort.Sort(util.ByABlockIDAccending(aBlocks))
 
 	// double check the block ids
@@ -160,13 +256,13 @@ func initAChain() {
 	}
 
 	//Create an empty block and append to the chain
-	if len(aBlocks) == 0 || dchain.NextDBHeight == 0 {
+	if len(aBlocks) == 0 || ps.DChain.NextDBHeight == 0 {
 		achain.NextBlockHeight = 0
 		achain.NextBlock, _ = CreateAdminBlock(achain, nil, 10)
 
 	} else {
 		// Entry Credit Chain should have the same height as the dir chain
-		achain.NextBlockHeight = dchain.NextDBHeight
+		achain.NextBlockHeight = ps.DChain.NextDBHeight
 		achain.NextBlock, _ = CreateAdminBlock(achain, &aBlocks[achain.NextBlockHeight-1], 10)
 	}
 
@@ -183,7 +279,7 @@ func initFctChain() {
 	fchain.ChainID.SetBytes(FACTOID_CHAINID)
 
 	// get all aBlocks from db
-	fBlocks, _ := db.FetchAllFBlocks()
+	fBlocks, _ := ps.DB.FetchAllFBlocks()
 	sort.Sort(util.ByFBlockIDAccending(fBlocks))
 
 	// double check the block ids
@@ -204,7 +300,7 @@ func initFctChain() {
 	}
 
 	//Create an empty block and append to the chain
-	if len(fBlocks) == 0 || dchain.NextDBHeight == 0 {
+	if len(fBlocks) == 0 || ps.DChain.NextDBHeight == 0 {
 		state.FactoidStateGlobal.SetFactoshisPerEC(FactoshisPerCredit)
 		fchain.NextBlockHeight = 0
 		// func GetGenesisFBlock(ftime uint64, ExRate uint64, addressCnt int, Factoids uint64 ) IFBlock {
@@ -221,8 +317,8 @@ func initFctChain() {
 		}
 
 	} else {
-		fchain.NextBlockHeight = dchain.NextDBHeight
-		state.FactoidStateGlobal.ProcessEndOfBlock2(dchain.NextDBHeight)
+		fchain.NextBlockHeight = ps.DChain.NextDBHeight
+		state.FactoidStateGlobal.ProcessEndOfBlock2(ps.DChain.NextDBHeight)
 		fchain.NextBlock = state.FactoidStateGlobal.GetCurrentBlock()
 	}
 
@@ -235,7 +331,7 @@ func initEChains() {
 
 	chainIDMap = make(map[string]*EChain)
 
-	chains, err := db.FetchAllChains()
+	chains, err := ps.DB.FetchAllChains()
 
 	if err != nil {
 		panic(err)
@@ -275,29 +371,28 @@ func initializeECreditMap(block *ECBlock) {
 }
 
 // Initialize server private key and server public key for milestone 1
-func initServerKeys() {
+func initServerKeys(ps *ProcessState) {
 	if nodeMode == SERVER_NODE {
 		var err error
-		serverPrivKey, err = NewPrivateKeyFromHex(serverPrivKeyHex)
+		ps.ServerPrivKey, err = NewPrivateKeyFromHex(serverPrivKeyHex)
 		if err != nil {
 			panic("Cannot parse Server Private Key from configuration file: " + err.Error())
 		}
 	}
 
-	serverPubKey = PubKeyFromString(SERVER_PUB_KEY)
-
+	ps.ServerPubKey = PubKeyFromString(SERVER_PUB_KEY)
 }
 
 // Initialize the process list manager with the proper dir block height
-func initProcessListMgr() {
-	plMgr = consensus.NewProcessListMgr(dchain.NextDBHeight, 1, 10, serverPrivKey)
+func initProcessListMgr(ps *ProcessState) {
+	ps.PlMgr = consensus.NewProcessListMgr(ps.DChain.NextDBHeight, 1, 10, serverPrivKey)
 
 }
 
 // Initialize the entry chains in memory from db
 func initEChainFromDB(chain *EChain) {
 
-	eBlocks, _ := db.FetchAllEBlocksByChain(chain.ChainID)
+	eBlocks, _ := ps.DB.FetchAllEBlocksByChain(chain.ChainID)
 	sort.Sort(util.ByEBlockIDAccending(*eBlocks))
 
 	for i := 0; i < len(*eBlocks); i = i + 1 {
@@ -323,9 +418,9 @@ func initEChainFromDB(chain *EChain) {
 
 	// Initialize chain with the first entry (Name and rules) for non-server mode
 	if nodeMode != SERVER_NODE && chain.FirstEntry == nil && len(*eBlocks) > 0 {
-		chain.FirstEntry, _ = db.FetchEntryByHash((*eBlocks)[0].Body.EBEntries[0])
+		chain.FirstEntry, _ = ps.DB.FetchEntryByHash((*eBlocks)[0].Body.EBEntries[0])
 		if chain.FirstEntry != nil {
-			db.InsertChain(chain)
+			ps.DB.InsertChain(chain)
 		}
 	}
 
@@ -365,7 +460,6 @@ func validateDChain(c *DChain) error {
 		panic("Genesis Block wasn't as expected:\n" +
 			"    Expected: " + GENESIS_DIR_BLOCK_HASH + "\n" +
 			"    Found:    " + prevBlkHash.String())
-
 	}
 
 	for i := 1; i < len(c.Blocks); i++ {
@@ -434,7 +528,7 @@ func validateDBlock(c *DChain, b *DirectoryBlock) (merkleRoot IHash, dbHash IHas
 
 // Validate Entry Credit Block by merkle root
 func validateCBlockByMR(mr IHash) error {
-	cb, _ := db.FetchECBlockByHash(mr)
+	cb, _ := ps.DB.FetchECBlockByHash(mr)
 
 	if cb == nil {
 		return errors.New("Entry Credit block not found in db for merkle root: " + mr.String())
@@ -445,7 +539,7 @@ func validateCBlockByMR(mr IHash) error {
 
 // Validate Admin Block by merkle root
 func validateABlockByMR(mr IHash) error {
-	b, _ := db.FetchABlockByHash(mr)
+	b, _ := ps.DB.FetchABlockByHash(mr)
 
 	if b == nil {
 		return errors.New("Admin block not found in db for merkle root: " + mr.String())
@@ -456,7 +550,7 @@ func validateABlockByMR(mr IHash) error {
 
 // Validate FBlock by merkle root
 func validateFBlockByMR(mr IHash) error {
-	b, _ := db.FetchFBlockByHash(mr)
+	b, _ := ps.DB.FetchFBlockByHash(mr)
 
 	if b == nil {
 		return errors.New("Factoid block not found in db for merkle root: \n" + mr.String())
@@ -476,7 +570,7 @@ func validateFBlockByMR(mr IHash) error {
 // Validate Entry Block by merkle root
 func validateEBlockByMR(cid IHash, mr IHash) error {
 
-	eb, err := db.FetchEBlockByMR(mr)
+	eb, err := ps.DB.FetchEBlockByMR(mr)
 	if err != nil {
 		return err
 	}
@@ -494,7 +588,7 @@ func validateEBlockByMR(cid IHash, mr IHash) error {
 
 	for _, ebEntry := range eb.Body.EBEntries {
 		if !bytes.Equal(ebEntry.Bytes()[:31], ZERO_HASH[:31]) {
-			entry, _ := db.FetchEntryByHash(ebEntry)
+			entry, _ := ps.DB.FetchEntryByHash(ebEntry)
 			if entry == nil {
 				return errors.New("Entry not found in db for entry hash: " + ebEntry.String())
 			}

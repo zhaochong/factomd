@@ -38,144 +38,10 @@ import (
 	. "github.com/FactomProject/factomd/common/interfaces"
 	. "github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/state"
+	"github.com/FactomProject/factomd/state/stateinit"
 )
 
-var _ = (*block.FBlock)(nil)
-
-var _ = util.Trace
-
-var (
-	db       database.Db // database
-	dchain   *DChain     //Directory Block Chain
-	ecchain  *ECChain    //Entry Credit Chain
-	achain   *AdminChain //Admin Chain
-	fchain   *FctChain   // factoid Chain
-	fchainID *Hash
-
-	inMsgQueue  chan wire.FtmInternalMsg //incoming message queue for factom application messages
-	outMsgQueue chan wire.FtmInternalMsg //outgoing message queue for factom application messages
-
-	inCtlMsgQueue  chan wire.FtmInternalMsg //incoming message queue for factom control messages
-	outCtlMsgQueue chan wire.FtmInternalMsg //outgoing message queue for factom control messages
-
-	//TODO: To be moved to ftmMemPool??
-	chainIDMap     map[string]*EChain // ChainIDMap with chainID string([32]byte) as key
-	commitChainMap = make(map[string]*CommitChain, 0)
-	commitEntryMap = make(map[string]*CommitEntry, 0)
-	eCreditMap     map[string]int32 // eCreditMap with public key string([32]byte) as key, credit balance as value
-
-	chainIDMapBackup map[string]*EChain //previous block bakcup - ChainIDMap with chainID string([32]byte) as key
-	eCreditMapBackup map[string]int32   // backup from previous block - eCreditMap with public key string([32]byte) as key, credit balance as value
-
-	fMemPool *ftmMemPool
-	plMgr    *consensus.ProcessListMgr
-
-	//Server Private key and Public key for milestone 1
-	serverPrivKey PrivateKey
-	serverPubKey  PublicKey
-
-	FactoshisPerCredit uint64 // .001 / .15 * 100000000 (assuming a Factoid is .15 cents, entry credit = .1 cents
-
-	FactomdUser string
-	FactomdPass string
-
-	zeroHash = NewZeroHash()
-)
-
-var (
-	directoryBlockInSeconds int
-	dataStorePath           string
-	ldbpath                 string
-	nodeMode                string
-	devNet                  bool
-	serverPrivKeyHex        string
-	serverIndex             = NewServerIndexNumber()
-)
-
-// Get the configurations
-func LoadConfigurations(cfg *util.FactomdConfig) {
-
-	//setting the variables by the valued form the config file
-	logLevel = cfg.Log.LogLevel
-	dataStorePath = cfg.App.DataStorePath
-	ldbpath = cfg.App.LdbPath
-	directoryBlockInSeconds = cfg.App.DirectoryBlockInSeconds
-	nodeMode = cfg.App.NodeMode
-	serverPrivKeyHex = cfg.App.ServerPrivKey
-
-	FactomdUser = cfg.Btc.RpcUser
-	FactomdPass = cfg.Btc.RpcPass
-}
-
-// Initialize the processor
-func initProcessor() {
-
-	wire.Init()
-
-	// init server private key or pub key
-	initServerKeys()
-
-	// init mem pools
-	fMemPool = new(ftmMemPool)
-	fMemPool.init_ftmMemPool()
-
-	// init wire.FChainID
-	wire.FChainID = NewZeroHash()
-	wire.FChainID.SetBytes(FACTOID_CHAINID)
-
-	FactoshisPerCredit = 666666 // .001 / .15 * 100000000 (assuming a Factoid is .15 cents, entry credit = .1 cents
-
-	// init Directory Block Chain
-	initDChain()
-
-	procLog.Info("Loaded ", dchain.NextDBHeight, " Directory blocks for chain: "+dchain.ChainID.String())
-
-	// init Entry Credit Chain
-	initECChain()
-	procLog.Info("Loaded ", ecchain.NextBlockHeight, " Entry Credit blocks for chain: "+ecchain.ChainID.String())
-
-	// init Admin Chain
-	initAChain()
-	procLog.Info("Loaded ", achain.NextBlockHeight, " Admin blocks for chain: "+achain.ChainID.String())
-
-	initFctChain()
-	//state.FactoidStateGlobal.LoadState()
-	procLog.Info("Loaded ", fchain.NextBlockHeight, " factoid blocks for chain: "+fchain.ChainID.String())
-
-	//Init anchor for server
-	if nodeMode == SERVER_NODE {
-		anchor.InitAnchor(db, inMsgQueue, serverPrivKey)
-	}
-	// build the Genesis blocks if the current height is 0
-	if dchain.NextDBHeight == 0 && nodeMode == SERVER_NODE {
-		buildGenesisBlocks()
-	} else {
-		// To be improved in milestone 2
-		SignDirectoryBlock()
-	}
-
-	// init process list manager
-	initProcessListMgr()
-
-	// init Entry Chains
-	initEChains()
-	for _, chain := range chainIDMap {
-		initEChainFromDB(chain)
-
-		procLog.Info("Loaded ", chain.NextBlockHeight, " blocks for chain: "+chain.ChainID.String())
-	}
-
-	// Validate all dir blocks
-	err := validateDChain(dchain)
-	if err != nil {
-		if nodeMode == SERVER_NODE {
-			panic("Error found in validating directory blocks: " + err.Error())
-		} else {
-			dchain.IsValidated = false
-		}
-	}
-
-}
+var zeroHash = NewZeroHash()
 
 // Started from factomd
 func Start_Processor(
@@ -184,15 +50,8 @@ func Start_Processor(
 	outMsgQ chan wire.FtmInternalMsg,
 	inCtlMsgQ chan wire.FtmInternalMsg,
 	outCtlMsgQ chan wire.FtmInternalMsg) {
-	db = ldb
 
-	inMsgQueue = inMsgQ
-	outMsgQueue = outMsgQ
-
-	inCtlMsgQueue = inCtlMsgQ
-	outCtlMsgQueue = outCtlMsgQ
-
-	initProcessor()
+	ps := stateinit.InitProcessor(ldb, inMsgQ, outMsgQ, inCtlMsgQ, outCtlMsgQ)
 
 	// Initialize timer for the open dblock before processing messages
 	if nodeMode == SERVER_NODE {

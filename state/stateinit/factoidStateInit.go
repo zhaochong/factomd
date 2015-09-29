@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"github.com/FactomProject/factomd/common/factoid/database"
 	"github.com/FactomProject/factomd/common/factoid/wallet"
-	"github.com/FactomProject/factomd/state"
 
 	. "github.com/FactomProject/factomd/common/constants"
 	. "github.com/FactomProject/factomd/common/factoid"
@@ -25,7 +24,7 @@ import (
 var _ = fmt.Printf
 
 func NewFactoidState(filename string) IFactoidState {
-	fs := new(state.FactoidState)
+	fs := new(factoidState.FactoidState)
 	wall := new(wallet.SCWallet)
 	wall.Init()
 
@@ -93,7 +92,7 @@ func GetDatabase(filename string) IFDatabase {
 	addinstance(new(FactoidSignature))
 	addinstance(new(Transaction))
 	addinstance(new(block.FBlock))
-	addinstance(new(state.FSbalance))
+	addinstance(new(factoidState.FSbalance))
 	addinstance(new(wallet.WalletEntry))
 
 	db := new(database.BoltDB)
