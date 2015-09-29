@@ -11,14 +11,13 @@ import (
 	"github.com/FactomProject/factomd/util"
 )
 
-var (
-	logcfg     = util.ReadConfig().Log
-	logPath    = logcfg.LogPath
-	logLevel   = logcfg.LogLevel
-	logfile, _ = os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0660)
-)
+func CreateLog() *logger.FLogger {
+	logcfg := util.ReadConfig().Log
+	logPath := logcfg.LogPath
+	logLevel := logcfg.LogLevel
+	logfile, _ := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0660)
+	return logger.New(logfile, logLevel, "PROC")
+}
 
 // setup subsystem loggers
-var (
-	procLog = logger.New(logfile, logLevel, "PROC")
-)
+var procLog = CreateLog()

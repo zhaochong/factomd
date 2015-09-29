@@ -5,7 +5,7 @@
 // Defines the state for factoid.  By using the proper
 // interfaces, the functionality of factoid can be imported
 // into any framework.
-package state
+package factoidState
 
 import (
 	"bytes"
