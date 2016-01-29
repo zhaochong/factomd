@@ -174,7 +174,7 @@ func HandleV2RevealEntry(state interfaces.IState, params interface{}) (interface
 }
 
 func HandleV2DirectoryBlockHead(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
-	return state.GetPreviousDirectoryBlock().GetKeyMR().String(), nil
+	return state.GetDirectoryBlock(state.GetDBHeight()).GetKeyMR().String(), nil
 }
 
 func HandleV2GetRaw(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
@@ -418,12 +418,12 @@ func HandleV2EntryCreditBalance(state interfaces.IState, params interface{}) (in
 	if adr == nil {
 		return nil, NewInvalidAddressError()
 	}
-	return state.GetFactoidState().GetECBalance(adr.Fixed()), nil
+	return state.GetFactoidState(state.GetDBHeight()).GetECBalance(adr.Fixed()), nil
 
 }
 
 func HandleV2GetFee(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
-	return state.GetFactoidState().GetFactoshisPerEC(), nil
+	return state.GetFactoidState(state.GetDBHeight()).GetFactoshisPerEC(), nil
 }
 
 func HandleV2FactoidSubmit(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
@@ -443,7 +443,7 @@ func HandleV2FactoidSubmit(state interfaces.IState, params interface{}) (interfa
 		return nil, NewUnableToDecodeTransactionError()
 	}
 
-	err = state.GetFactoidState().Validate(1, msg.Transaction)
+	err = state.GetFactoidState(state.GetDBHeight()).Validate(1, msg.Transaction)
 	if err != nil {
 		return nil, NewInvalidTransactionError()
 	}
@@ -467,5 +467,5 @@ func HandleV2FactoidBalance(state interfaces.IState, params interface{}) (interf
 	if err == nil && len(adr) != constants.HASH_LENGTH {
 		return nil, NewInvalidAddressError()
 	}
-	return state.GetFactoidState().GetFactoidBalance(factoid.NewAddress(adr).Fixed()), nil
+	return state.GetFactoidState(state.GetDBHeight()).GetFactoidBalance(factoid.NewAddress(adr).Fixed()), nil
 }

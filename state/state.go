@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"sync"
 
 	"os"
 
@@ -33,8 +32,7 @@ type State struct {
 	Cfg interfaces.IFactomConfig
 
 	IdentityChainID interfaces.IHash // If this node has an identity, this is it
-	ServerIndex     int              // If a federated server, this is the server index
-
+	
 	networkInMsgQueue      chan interfaces.IMsg
 	networkOutMsgQueue     chan interfaces.IMsg
 	networkInvalidMsgQueue chan interfaces.IMsg
@@ -46,26 +44,16 @@ type State struct {
 	serverPrivKey primitives.PrivateKey
 	serverPubKey  primitives.PublicKey
 
-	// Maps
-	// ====
-	// For Follower
-	Holding map[[32]byte]interfaces.IMsg // Hold Messages
-	Acks    map[[32]byte]interfaces.IMsg // Hold Acknowledgemets
-
-	NewEBlksSem *sync.Mutex
-	NewEBlks    map[[32]byte]interfaces.IEntryBlock // Entry Blocks added within 10 minutes (follower and leader)
-
-	CommitsSem *sync.Mutex
-	Commits    map[[32]byte]interfaces.IMsg // Used by the leader, validate
-
-	// Lists
-	// =====
-	AuditServers []interfaces.IServer   // List of Audit Servers
-	FedServers   []interfaces.IServer   // List of Federated Servers
-	ServerOrder  [][]interfaces.IServer // 10 lists for Server Order for each minute
-
-	PLPrevious *ProcessList // Previous Process Lists.  Sometimes you have to wait to process
-	PLCurrent  *ProcessList // Current Process Lists.  What we are building now.
+	// Having all the state for a particular directory block stored in one structure
+	// makes creating the next state, updating the various states, and setting up the next
+	// state much more simple.
+	//
+	// Functions that provide state information take a dbheight param.  I use the current 
+	// DBHeight to ensure that I return the proper information for the right directory block
+	// height, even if it changed out from under the calling code.
+	//
+	// Process list past [0], present [1], and future[2]
+	ProcessLists  [3]*ProcessList 
 
 	AuditHeartBeats []interfaces.IMsg   // The checklist of HeartBeats for this period
 	FedServerFaults [][]interfaces.IMsg // Keep a fault list for every server
@@ -74,37 +62,28 @@ type State struct {
 	NetworkNumber int // Encoded into Directory Blocks(s.Cfg.(*util.FactomdConfig)).String()
 
 	// Number of Servers acknowledged by Factom
-	TotalServers int
-	ServerState  int                // (0 if client, 1 if server, 2 if audit server
 	Matryoshka   []interfaces.IHash // Reverse Hash
 
 	// Database
-	DB *databaseOverlay.Overlay
-
+	DB     *databaseOverlay.Overlay
+	Logger *logger.FLogger
+	Anchor interfaces.IAnchor
+	
 	// Directory Block State
-	PreviousDirectoryBlock interfaces.IDirectoryBlock
-	CurrentDirectoryBlock  interfaces.IDirectoryBlock
 	DBHeight               uint32
 
 	// Web Services
 	Port int
 
 	// Message State
-	LastAck interfaces.IMsg // Return the last Acknowledgement set by this server
+	LastAck interfaces.IMsg      // The last Acknowledgement set by this server
 
-	FactoidState      interfaces.IFactoidState
-	PrevFactoidKeyMR  interfaces.IHash
-	CurrentAdminBlock interfaces.IAdminBlock
-	EntryCreditBlock  interfaces.IEntryCreditBlock
-
-	Logger *logger.FLogger
-
-	Anchor interfaces.IAnchor
 }
 
 var _ interfaces.IState = (*State)(nil)
 
-func (s *State) GetServerIndex() int {
+func (s *State) GetServerIndex(dbheight int) int {
+	index := dbheight - s.DBHeight + 1
 	return s.ServerIndex
 }
 
@@ -278,6 +257,10 @@ func (s *State) ProcessEndOfBlock() {
 	s.PLCurrent = NewProcessList(s)
 	s.LastAck = nil
 
+	
+	
+	
+	
 	s.PreviousDirectoryBlock = s.CurrentDirectoryBlock
 	previousECBlock := s.GetCurrentEntryCreditBlock()
 
@@ -499,18 +482,6 @@ func (s *State) Init(filename string) {
 	default:
 		panic("Bad value for Network in factomd.conf")
 	}
-	s.Holding = make(map[[32]byte]interfaces.IMsg)
-	s.Acks = make(map[[32]byte]interfaces.IMsg)
-
-	s.NewEBlksSem = new(sync.Mutex)
-	s.NewEBlks = make(map[[32]byte]interfaces.IEntryBlock)
-
-	s.CommitsSem = new(sync.Mutex)
-	s.Commits = make(map[[32]byte]interfaces.IMsg)
-
-	s.AuditServers = make([]interfaces.IServer, 0)
-	s.FedServers = make([]interfaces.IServer, 0)
-	s.ServerOrder = make([][]interfaces.IServer, 0)
 
 	s.PLCurrent = NewProcessList(s)
 

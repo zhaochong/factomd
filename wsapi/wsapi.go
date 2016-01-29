@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/entryBlock"
@@ -158,8 +159,13 @@ func HandleDirectoryBlockHead(ctx *web.Context) {
 
 	h := new(DBHead)
 
-	h.KeyMR = state.GetPreviousDirectoryBlock().GetKeyMR().String()
-
+	kmr := state.GetDirectoryBlock(state.GetDBHeight()-1).GetKeyMR()
+	if kmr == nil {				// If not there, wait until it is.
+		time.Sleep(10000)		// TODO: Maybe there is a better way to deal with this?
+		kmr = state.GetDirectoryBlock(state.GetDBHeight()-1).GetKeyMR()
+	}
+	h.KeyMR = kmr.String()
+	
 	fmt.Println(h.KeyMR)
 
 	if p, err := json.Marshal(h); err != nil {
@@ -487,7 +493,7 @@ func HandleEntryCreditBalance(ctx *web.Context, eckey string) {
 		b = FactoidBalance{Response: "Invalid Address", Success: false}
 	}
 	if err == nil {
-		v := int64(state.GetFactoidState().GetECBalance(adr.Fixed()))
+		v := int64(state.GetFactoidState(state.GetDBHeight()).GetECBalance(adr.Fixed()))
 		str := fmt.Sprintf("%d", v)
 		b = FactoidBalance{Response: str, Success: true}
 	} else {
@@ -510,7 +516,7 @@ func HandleGetFee(ctx *web.Context) {
 
 	b := new(x)
 
-	b.Fee = int64(state.GetFactoidState().GetFactoshisPerEC())
+	b.Fee = int64(state.GetFactoidState(state.GetDBHeight()).GetFactoshisPerEC())
 
 	if p, err := json.Marshal(b); err != nil {
 		wsLog.Error(err)
@@ -554,7 +560,7 @@ func HandleFactoidSubmit(ctx *web.Context) {
 		return
 	}
 
-	err = state.GetFactoidState().Validate(1, msg.Transaction)
+	err = state.GetFactoidState(state.GetDBHeight()).Validate(1, msg.Transaction)
 
 	if err != nil {
 		returnMsg(ctx, err.Error(), false)
@@ -576,7 +582,7 @@ func HandleFactoidBalance(ctx *web.Context, eckey string) {
 		b = FactoidBalance{Response: "Invalid Address", Success: false}
 	}
 	if err == nil {
-		v := int64(state.GetFactoidState().GetFactoidBalance(factoid.NewAddress(adr).Fixed()))
+		v := int64(state.GetFactoidState(state.GetDBHeight()).GetFactoidBalance(factoid.NewAddress(adr).Fixed()))
 		str := fmt.Sprintf("%d", v)
 		b = FactoidBalance{Response: str, Success: true}
 	} else {

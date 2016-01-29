@@ -2,7 +2,8 @@ package state
 
 import (
 	"fmt"
-
+	"sync"
+	
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 )
@@ -17,6 +18,43 @@ type ProcessList struct {
 	SigComplete []bool                        // Lists that are signature complete
 	acks        *map[[32]byte]interfaces.IMsg // acknowlegments by hash
 	msgs        *map[[32]byte]interfaces.IMsg // messages by hash
+	
+	// Maps
+	// ====
+	// For Follower
+	Holding map[[32]byte]interfaces.IMsg // Hold Messages
+	Acks    map[[32]byte]interfaces.IMsg // Hold Acknowledgemets
+	
+	NewEBlksSem *sync.Mutex
+	NewEBlks    map[[32]byte]interfaces.IEntryBlock // Entry Blocks added within 10 minutes (follower and leader)
+	
+	CommitsSem *sync.Mutex
+	Commits    map[[32]byte]interfaces.IMsg // Used by the leader, validate
+	
+	
+	// The state CAN change, from client to audit server, to server, and back down again to client
+	ServerState  int                // (0 if client, 1 if server, 2 if audit server
+	
+	// Lists
+	// =====
+	//
+	// Number of servers in the Federated Server Pool
+	TotalServers int
+	// The index into the Matryoshka Index handed off to the network by this server.
+	MatryoshkaIndex int
+	AuditServers []interfaces.IServer   // List of Audit Servers
+	ServerOrder  [][]interfaces.IServer // 10 lists for Server Order for each minute
+	FedServers   []interfaces.IServer   // List of Federated Servers
+	// Index of this server in the FedServers list, if this is a Federated Server
+	ServerIndex     int
+	
+	// State information about the directory block while it is under construction.  We may
+	// have to start building the next block while still building the previous block.
+	FactoidState      interfaces.IFactoidState
+	AdminBlock        interfaces.IAdminBlock
+	EntryCreditBlock  interfaces.IEntryCreditBlock
+	DirectoryBlock    interfaces.IDirectoryBlock
+
 }
 
 func (p *ProcessList) GetLen(list int) int {
@@ -90,5 +128,20 @@ func NewProcessList(state interfaces.IState) *ProcessList {
 	pl.acks = new(map[[32]byte]interfaces.IMsg)
 	pl.msgs = new(map[[32]byte]interfaces.IMsg)
 
+	pl.Holding = make(map[[32]byte]interfaces.IMsg)
+	pl.Acks = make(map[[32]byte]interfaces.IMsg)
+	
+	pl.NewEBlksSem = new(sync.Mutex)
+	pl.NewEBlks = make(map[[32]byte]interfaces.IEntryBlock)
+	
+	pl.CommitsSem = new(sync.Mutex)
+	pl.Commits = make(map[[32]byte]interfaces.IMsg)
+	
+	// If a federated server, this is the server index, which is our index in the FedServers list
+
+	pl.AuditServers = make([]interfaces.IServer, 0)
+	pl.FedServers   = make([]interfaces.IServer, 0)
+	pl.ServerOrder  = make([][]interfaces.IServer, 0)
+	
 	return pl
 }
