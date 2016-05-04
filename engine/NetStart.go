@@ -71,7 +71,8 @@ func NetStart(s *state.State) {
 	// Must add the prefix before loading the configuration.
 	s.AddPrefix(prefix)
 	FactomConfigFilename := util.GetConfigFilename("m2")
-	fmt.Println(fmt.Sprintf("factom config: %s", FactomConfigFilename))
+	fmt.Println(fmt.Sprintf("factom config: %s%s", folder, FactomConfigFilename))
+	os.Mkdir(folder,0777)
 	s.LoadConfig(FactomConfigFilename, folder)
 
 	if 999 < portOverride { // The command line flag exists and seems reasonable.

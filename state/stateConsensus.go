@@ -26,27 +26,58 @@ var _ = fmt.Print
 //***************************************************************
 func (s *State) Process() (progress bool) {
 
-	if s.EOB {
-		s.LLeaderHeight = s.GetHighestRecordedBlock() + 1
-	}
 	skip := false
+	dbstate := s.DBStates.Last()
 	pl := s.ProcessLists.Get(s.LLeaderHeight)
 	if s.LLeaderHeight == 0 {
 		s.Leader, s.LeaderVMIndex = pl.GetVirtualServers(0, s.IdentityChainID)
 	}
 	if s.EOM {
 		min := pl.MinuteHeight()
-		if s.LeaderMinute < min {
+		if s.LeaderMinute+1 < min {
 			skip = true
 		} else {
+
+			// Add EOM to the EBlocks
+
 			if min <= 9 {
+				for _, eb := range pl.NewEBlocks {
+					eb.AddEndOfMinuteMarker(byte(min))
+				}
+				s.FactoidState.EndOfPeriod(min)
+				pl.AdminBlock.AddEndOfMinuteMarker(byte(min))
+
 				// Get if this is a leader, and its VMIndex for this minute if so
 				s.Leader, s.LeaderVMIndex = pl.GetVirtualServers(min, s.IdentityChainID)
 				s.EOM = false
 				for _, vm := range pl.VMs {
 					vm.LastLeaderAck = vm.LastAck
 				}
+			}else{
+
+				s.AddDBState(true, pl.DirectoryBlock, pl.AdminBlock, s.GetFactoidState().GetCurrentBlock(), pl.EntryCreditBlock)
+				if s.Leader {
+					dbs := new(messages.DirectoryBlockSignature)
+					dbs.ServerIdentityChainID = s.GetIdentityChainID()
+					dbs.DirectoryBlockKeyMR = dbstate.DirectoryBlock.GetKeyMR()
+					dbs.DBHeight = s.LLeaderHeight
+					dbs.VMIndex = s.LeaderVMIndex
+
+					err := dbs.Sign(s)
+					if err != nil {
+						panic(err)
+					}
+
+					ack, err := s.NewAck(s.LLeaderHeight, dbs)
+					if err != nil {
+						panic(err)
+					}
+					// Leader Execute creates an acknowledgement and the EOM
+					s.inMsgQueue <- ack
+					dbs.LeaderExecute(s)
+				}
 			}
+
 
 		}
 
@@ -244,8 +275,12 @@ func (s *State) LeaderExecute(m interfaces.IMsg) error {
 	dbheight := s.LLeaderHeight
 	ack, err := s.NewAck(dbheight, m)
 	if err != nil {
+		fmt.Println(s.GetFactomNodeName(),"ACK ERROR")
 		return err
 	}
+	m.SetVMIndex(ack.GetVMIndex())
+	//fmt.Println(s.GetFactomNodeName(), "MSG: ",m.String())
+	//fmt.Println(s.GetFactomNodeName(), "ACK: ",ack.String())
 
 	s.NetworkOutMsgQueue() <- m
 	s.InMsgQueue() <- ack
@@ -253,22 +288,20 @@ func (s *State) LeaderExecute(m interfaces.IMsg) error {
 	return nil
 }
 
+func (s *State) LeaderExecuteEOM(m interfaces.IMsg) error {
+	eom,_:=m.(*messages.EOM)
+	if eom.Minute < 9 {
+		s.LeaderMinute++
+	}
+	return s.LeaderExecute(m)
+}
+
+
 func (s *State) LeaderExecuteDBSig(m interfaces.IMsg) error {
-	dbs, ok := m.(*messages.DirectoryBlockSignature)
-	if !ok {
-		return fmt.Errorf("Bad Directory Block Signature")
-	}
-
-	dbs.Timestamp = s.GetTimestamp()
-
-	ack, err := s.NewAck(dbs.DBHeight, dbs)
-	if err != nil {
-		s.undo = m
-		return nil
-	}
-	ack.FollowerExecute(s)
-	dbs.FollowerExecute(s)
-
+	// TODO: Check signatures here, and possibly invalidate the block before we
+	// save it to disk.
+	s.LeaderExecute(m)
+	s.LLeaderHeight++
 	return nil
 }
 
@@ -343,15 +376,11 @@ func (s *State) ProcessEOM(dbheight uint32, msg interfaces.IMsg) bool {
 		return false
 	}
 
-	s.EOM = true
-	s.LeaderMinute = int(e.Minute + 1)
+	// Only set this flag once...
+	if e.VMIndex == 0 {
+		s.EOM = true
+	}
 
-	if pl.VMIndexFor(constants.FACTOID_CHAINID) == e.VMIndex {
-		s.FactoidState.EndOfPeriod(int(e.Minute))
-	}
-	if pl.VMIndexFor(constants.ADMIN_CHAINID) == e.VMIndex {
-		pl.AdminBlock.AddEndOfMinuteMarker(e.Minute)
-	}
 	e.MarkerSent = true
 
 	// We need to have all EOM markers before we start to clean up this height.
@@ -371,11 +400,6 @@ func (s *State) ProcessEOM(dbheight uint32, msg interfaces.IMsg) bool {
 			ecbody.AddEntry(mn)
 		}
 
-	}
-
-	// Add EOM to the EBlocks
-	for _, eb := range pl.NewEBlocks {
-		eb.AddEndOfMinuteMarker(e.Bytes()[0])
 	}
 
 	return true
@@ -398,43 +422,20 @@ func (s *State) ProcessDBSig(dbheight uint32, msg interfaces.IMsg) bool {
 	if !pl.VMs[dbs.VMIndex].SigComplete {
 		pl.SetSigComplete(int(dbs.VMIndex), true)
 
-		if dbs.IsLocal() {
-			s.AddDBState(true, pl.DirectoryBlock, pl.AdminBlock, s.GetFactoidState().GetCurrentBlock(), pl.EntryCreditBlock)
-			dbstate := s.DBStates.Get(dbheight)
-			dbs.DirectoryBlockKeyMR = dbstate.DirectoryBlock.GetKeyMR()
-
-			err := dbs.Sign(s)
-			if err != nil {
-				panic(err)
-			}
-
-			// Here we replace out of the process list the local DBS message with one
-			// that can be broadcast.  This is a bit of necessary trickery
-			pl.UndoLeaderAck(int(dbs.VMIndex))
-			ack, err := s.NewAck(dbheight, dbs)
-			if err != nil {
-				panic(err)
-			}
-			// Now we can broadcast the signature.
-			dbs.SetLocal(false)
-			// Leader Execute creates an acknowledgement and the EOM
-			s.NetworkOutMsgQueue() <- ack
-			s.NetworkOutMsgQueue() <- dbs
-		} else {
-			// TODO follower should validate signature here.
-			resp := dbs.Validate(s)
-			if resp != 1 {
-				return false
-			}
+		resp := dbs.Validate(s)
+		if resp != 1 {
+			return false
 		}
+
 	}
 
 	if !pl.SigComplete() {
 		return false
 	}
 
+	// Only mark the EOB true ONCE.  So we just pick a VM to key off of, i.e. zero
 	if dbs.VMIndex == 0 {
-		s.AddDBState(true, pl.DirectoryBlock, pl.AdminBlock, s.GetFactoidState().GetCurrentBlock(), pl.EntryCreditBlock)
+		s.EOB = true
 	}
 
 	return true
@@ -575,9 +576,8 @@ func (s *State) PutE(rt bool, adr [32]byte, v int64) {
 func (s *State) LeaderFor(msg interfaces.IMsg, hash []byte) bool {
 	pl := s.ProcessLists.Get(s.LLeaderHeight)
 	vmIndex := pl.VMIndexFor(hash)
-
 	msg.SetVMIndex(vmIndex)
-	found, vmi := pl.GetVirtualServers(pl.VMs[vmIndex].LeaderMinute, s.IdentityChainID)
+	found, vmi := pl.GetVirtualServers(s.LeaderMinute, s.IdentityChainID)
 	if !found {
 		return false
 	}
@@ -636,6 +636,7 @@ func (s *State) GetNewHash() interfaces.IHash {
 // Create a new Acknowledgement.  This Acknowledgement
 func (s *State) NewAck(dbheight uint32, msg interfaces.IMsg) (iack interfaces.IMsg, err error) {
 
+
 	vmIndex := msg.GetVMIndex()
 
 	pl := s.ProcessLists.Get(dbheight)
@@ -650,8 +651,8 @@ func (s *State) NewAck(dbheight uint32, msg interfaces.IMsg) (iack interfaces.IM
 	ack.MessageHash = msg.GetHash()
 	ack.LeaderChainID = s.IdentityChainID
 
-	last, ok := pl.GetLastLeaderAck(vmIndex).(*messages.Ack)
-	if !ok {
+	last := pl.GetLastLeaderAck(vmIndex)
+	if last == nil {
 		ack.Height = 0
 		ack.SerialHash = ack.MessageHash
 	} else {
@@ -664,6 +665,10 @@ func (s *State) NewAck(dbheight uint32, msg interfaces.IMsg) (iack interfaces.IM
 	pl.SetLastLeaderAck(vmIndex, ack)
 
 	ack.Sign(s)
+	//if s.FactomNodeName == "FNode1" {
+		fmt.Printf("ACK: %x %d %s\n",ack.GetHash().Bytes()[:3], ack.VMIndex, ack.String())
+		fmt.Printf("MSG: %x %d %s\n",msg.GetHash().Bytes()[:3], ack.VMIndex, msg.String())
+	//}
 
 	return ack, nil
 }

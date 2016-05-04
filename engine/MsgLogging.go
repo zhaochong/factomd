@@ -90,7 +90,7 @@ func (m *MsgLog) add2(fnode *FactomNode, out bool, peer string, where string, va
 	}
 
 	// If it has been 2 seconds, and we are printing, then print
-	if now-m.last > 0 && (fnode.State.GetOut() || m.all) {
+	if now-m.last > 1 && (fnode.State.GetOut() || m.all) {
 		m.prtMsgs(fnode.State)
 		m.last = now
 		m.msgCnt += len(m.MsgList) // Keep my counts
@@ -98,7 +98,7 @@ func (m *MsgLog) add2(fnode *FactomNode, out bool, peer string, where string, va
 		m.MsgList = m.MsgList[0:0] // Once printed, clear the list
 		// If it has been 4 seconds and we are NOT printing, then toss.
 		// This gives us a second to get to print.
-	} else if now-m.last > 4 {
+	} else if now-m.last > 8 {
 		m.msgCnt += len(m.MsgList) // Keep my counts
 		m.msgCntp += len(m.MsgList)
 		m.MsgList = m.MsgList[0:0] // Clear the record.

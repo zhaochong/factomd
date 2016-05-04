@@ -59,9 +59,8 @@ type VM struct {
 	LeaderMinute   int               // Where the leader is in acknowledging messages
 	MinuteComplete int               // Highest minute complete (0-9) by the follower
 	SigComplete    bool              // Lists that are signature complete
-	Undo           interfaces.IMsg   // The Leader needs one level of undo to handle DB Sigs.
-	LastLeaderAck  interfaces.IMsg   // The last Acknowledgement set by this leader
-	LastAck        interfaces.IMsg   // The last Acknowledgement set by this follower
+	LastLeaderAck  *messages.Ack     // The last Acknowledgement set by this leader
+	LastAck        *messages.Ack     // The last Acknowledgement set by this follower
 	missingTime    int64             // How long we have been waiting for a missing message
 }
 
@@ -100,11 +99,9 @@ func (p *ProcessList) GetVirtualServers(minute int, identityChainID interfaces.I
 	if !found {
 		return false, -1
 	}
-	// fmt.Println("Line 100 minute:",minute)
-	for i, fedix := range p.ServerMap[minute] {
-		if i == len(p.FedServers) {
-			break
-		}
+
+	for i:=0; i<len(p.FedServers); i++ {
+		fedix := p.ServerMap[minute][i]
 		if fedix == fedIndex {
 			return true, i
 		}
@@ -166,6 +163,27 @@ func (p *ProcessList) MakeMap() {
 		}
 	}
 }
+
+// This function will be replaced by a calculation from the Matryoshka hashes from the servers
+// but for now, we are just going to make it a function of the dbheight.
+func (p *ProcessList) PrintMap() string {
+	n := len(p.FedServers)
+	prt := " min"
+	for i:=0;i<n;i++ {
+		prt = fmt.Sprintf("%s%3d",prt,i)
+	}
+	prt = prt+"\n"
+	for i := 0; i < 10; i++ {
+		prt = fmt.Sprintf("%s%3d  ",prt,i)
+		for j := 0; j < len(p.FedServers); j++ {
+			prt = fmt.Sprintf("%s%2d ",prt,p.ServerMap[i][j])
+		}
+		prt = prt+"\n"
+	}
+	return prt
+}
+
+
 
 // Take the minute that has completed.  The minute height then is 1 plus that number
 // i.e. the minute height is 0, or 1, or 2, or ... or 10 (all done)
@@ -236,33 +254,27 @@ func (p *ProcessList) RemoveAuditServerHash(identityChainID interfaces.IHash) {
 }
 
 // Given a server index, return the last Ack
-func (p *ProcessList) GetLastAck(index int) interfaces.IMsg {
+func (p *ProcessList) GetLastAck(index int) *messages.Ack {
 	return p.VMs[index].LastAck
 }
 
 // Given a server index, return the last Ack
-func (p *ProcessList) SetLastAck(index int, msg interfaces.IMsg) error {
+func (p *ProcessList) SetLastAck(index int, msg *messages.Ack) error {
 	// Check the hash of the previous msg before we over write
 	p.VMs[index].LastAck = msg
 	return nil
 }
 
 // Given a server index, return the last Ack
-func (p *ProcessList) GetLastLeaderAck(index int) interfaces.IMsg {
+func (p *ProcessList) GetLastLeaderAck(index int) *messages.Ack {
 	return p.VMs[index].LastLeaderAck
 }
 
 // Given a server index, return the last Ack
-func (p *ProcessList) SetLastLeaderAck(index int, msg interfaces.IMsg) error {
+func (p *ProcessList) SetLastLeaderAck(index int, msg *messages.Ack) error {
 	// Check the hash of the previous msg before we over write
-	p.VMs[index].Undo = p.VMs[index].LastLeaderAck
 	p.VMs[index].LastLeaderAck = msg
 	return nil
-}
-
-func (p *ProcessList) UndoLeaderAck(index int) {
-	p.VMs[index].Height--
-	p.VMs[index].LastLeaderAck = p.VMs[index].Undo
 }
 
 func (p ProcessList) HasMessage() bool {
@@ -379,8 +391,8 @@ func (p *ProcessList) Process(state *State) (progress bool) {
 
 			var expectedSerialHash interfaces.IHash
 			var err error
-			last, ok := p.GetLastAck(i).(*messages.Ack)
-			if !ok || last.IsSameAs(thisAck) {
+			last := p.GetLastAck(i)
+			if last.IsSameAs(thisAck) {
 				expectedSerialHash = thisAck.SerialHash
 			} else {
 				expectedSerialHash, err = primitives.CreateHash(last.MessageHash, thisAck.MessageHash)
@@ -459,13 +471,19 @@ func (p *ProcessList) String() string {
 				sig = "Sig Complete"
 			}
 
-			buf.WriteString(fmt.Sprintf("  VM %d Fed %d %s %s\n", i, p.ServerMap[server.LeaderMinute][i], eom, sig))
+			buf.WriteString(fmt.Sprintf("  VM %d %s %s\n", i, eom, sig))
 			for j, msg := range server.List {
+
 
 				if j < server.Height {
 					buf.WriteString("  p")
 				} else {
 					buf.WriteString("   ")
+				}
+				if eom,ok := msg.(*messages.EOM); ok {
+					buf.WriteString(fmt.Sprintf("%2d min:%d VM:%2d",p.ServerMap[eom.Minute][i],eom.Minute,i))
+				}else{
+					buf.WriteString("  ")
 				}
 
 				if msg != nil {

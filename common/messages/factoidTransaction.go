@@ -97,7 +97,11 @@ func (m *FactoidTransaction) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *FactoidTransaction) Leader(state interfaces.IState) bool {
-	return state.LeaderFor(m, constants.FACTOID_CHAINID)
+	if state.LeaderFor(m, constants.FACTOID_CHAINID) {
+		fmt.Println("Factoid Leader dbht:",state.GetLeaderHeight(),state.GetFactomNodeName())
+		return true
+	}
+	return false
 }
 
 // Execute the leader functions of the given message

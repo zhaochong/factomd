@@ -256,6 +256,7 @@ func ReadConfig(filename string, folder string) *FactomdConfig {
 	cfg.Wallet.BoltDBPath = cfg.App.HomeDir + folder + cfg.Wallet.BoltDBPath
 	cfg.App.ExportDataSubpath = cfg.App.HomeDir + folder + cfg.App.ExportDataSubpath
 
+
 	return cfg
 }
 
