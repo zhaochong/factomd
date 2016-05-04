@@ -108,20 +108,24 @@ func (m *AddServerMsg) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *AddServerMsg) Leader(state interfaces.IState) bool {
+	fmt.Println("ddddddddddddddddddddddddddddddddddddddddddd")
 	return state.LeaderFor(m, constants.ADMIN_CHAINID)
 }
 
 // Execute the leader functions of the given message
 func (m *AddServerMsg) LeaderExecute(state interfaces.IState) error {
+	fmt.Println("ddeeeeeeeeeeeeeeeeeeeeeeeeeeedddddddddddddd")
 	return state.LeaderExecute(m)
 }
 
 // Returns true if this is a message for this server to execute as a follower
 func (m *AddServerMsg) Follower(interfaces.IState) bool {
+	fmt.Println("fffffffffffffffffffffffffffffffffffffffdddd")
 	return true
 }
 
 func (m *AddServerMsg) FollowerExecute(state interfaces.IState) error {
+	fmt.Println("ooooooooooooooooooooooooooooooooooddddddddd")
 	_, err := state.FollowerExecuteMsg(m)
 	return err
 }

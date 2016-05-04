@@ -28,13 +28,20 @@ func (s *State) Process() (progress bool) {
 
 	skip := false
 	dbstate := s.DBStates.Last()
+	if s.EOB {
+		s.LLeaderHeight = s.GetHighestRecordedBlock() + 1
+	}
+	if s.LastEOM {
+		s.ProcessLists.UpdateState(s.LLeaderHeight-1)
+	}
+
 	pl := s.ProcessLists.Get(s.LLeaderHeight)
 	if s.LLeaderHeight == 0 {
 		s.Leader, s.LeaderVMIndex = pl.GetVirtualServers(0, s.IdentityChainID)
 	}
 	if s.EOM {
 		min := pl.MinuteHeight()
-		if s.LeaderMinute+1 < min {
+		if s.Leader && s.LeaderMinute+1 < min {
 			skip = true
 		} else {
 
@@ -49,7 +56,7 @@ func (s *State) Process() (progress bool) {
 
 				// Get if this is a leader, and its VMIndex for this minute if so
 				s.Leader, s.LeaderVMIndex = pl.GetVirtualServers(min, s.IdentityChainID)
-				s.EOM = false
+
 				for _, vm := range pl.VMs {
 					vm.LastLeaderAck = vm.LastAck
 				}
@@ -62,6 +69,7 @@ func (s *State) Process() (progress bool) {
 					dbs.DirectoryBlockKeyMR = dbstate.DirectoryBlock.GetKeyMR()
 					dbs.DBHeight = s.LLeaderHeight
 					dbs.VMIndex = s.LeaderVMIndex
+					dbs.Timestamp = s.GetTimestamp()
 
 					err := dbs.Sign(s)
 					if err != nil {
@@ -72,28 +80,40 @@ func (s *State) Process() (progress bool) {
 					if err != nil {
 						panic(err)
 					}
+
 					// Leader Execute creates an acknowledgement and the EOM
-					s.inMsgQueue <- ack
-					dbs.LeaderExecute(s)
+					s.networkOutMsgQueue <- dbs
+					s.networkOutMsgQueue <- ack
+					s.followerMsgQueue <- ack
+					dbs.FollowerExecute(s)
 				}
+				s.LastEOM = true
 			}
-
-
+			s.EOM = false
 		}
-
 	}
+
 	if s.EOB {
 		s.Leader, s.LeaderVMIndex = pl.GetVirtualServers(0, s.IdentityChainID)
 		s.EOM = false
 		s.EOB = false
+		s.LastEOM = false
+		s.LeaderMinute=0
 	}
-	if !skip && s.Leader {
-		vm := pl.VMs[s.LeaderVMIndex]
+	if !s.LastEOM && !skip {
+		var vm *VM
+		if s.Leader {
+			vm = pl.VMs[s.LeaderVMIndex]
+		}
 		// To process a leader message, we have to have the follower process completely
 		// up to date.  Then we can validate the message.  Process is up to date if all
 		// messages in the process list have been processed by the follower, ie the Height
 		// is equal to the length of the process list.
-		if len(vm.List) == vm.Height {
+		//
+		// Note we may not be a leader at all, or we might not be the leader for a message
+		// by the time we get to it.  So we have to run through the list in all cases.
+		// If we are a leader, then we are gated by what our follower is doing.
+		if !s.Leader || len(vm.List) == vm.Height {
 			select {
 			case msg, _ := <-s.leaderMsgQueue:
 				v := msg.Validate(s)
@@ -184,12 +204,11 @@ func (s *State) FollowerExecuteMsg(m interfaces.IMsg) (bool, error) {
 
 		if pl != nil {
 			pl.AddToProcessList(ack, m)
-
 			pl.OldAcks[hashf] = ack
 			pl.OldMsgs[hashf] = m
-			delete(s.Acks, hashf)
-			delete(s.Holding, hashf)
 		}
+		delete(s.Acks, hashf)
+		delete(s.Holding, hashf)
 		return true, nil
 	}
 }
@@ -272,6 +291,22 @@ func (s *State) addEBlock(eblock interfaces.IEntryBlock) {
 }
 
 func (s *State) LeaderExecute(m interfaces.IMsg) error {
+	pl := s.ProcessLists.Get(s.LLeaderHeight)
+	found, vmi := pl.GetVirtualServers(s.LeaderMinute, s.IdentityChainID)
+	if m.GetVMHash()!= nil {
+		m.SetVMIndex(pl.VMIndexFor(m.GetVMHash()))
+	}
+	// If not a leader or not a leader for this message, then check if we
+	// have a follower task to execute.  If we do, then execute that.
+	if !found || m.GetVMIndex() != vmi {
+		if m.Follower(s) {
+			m.FollowerExecute(s)
+		}
+		return nil
+	}
+
+fmt.Println(s.GetFactomNodeName(), "EXECUTE: ",m.String())
+
 	dbheight := s.LLeaderHeight
 	ack, err := s.NewAck(dbheight, m)
 	if err != nil {
@@ -301,7 +336,6 @@ func (s *State) LeaderExecuteDBSig(m interfaces.IMsg) error {
 	// TODO: Check signatures here, and possibly invalidate the block before we
 	// save it to disk.
 	s.LeaderExecute(m)
-	s.LLeaderHeight++
 	return nil
 }
 
@@ -410,9 +444,6 @@ func (s *State) ProcessEOM(dbheight uint32, msg interfaces.IMsg) bool {
 // leader for the signature, it marks the sig complete for that list
 func (s *State) ProcessDBSig(dbheight uint32, msg interfaces.IMsg) bool {
 	pl := s.ProcessLists.Get(dbheight)
-	if !pl.EomComplete() {
-		return false
-	}
 
 	dbs, ok := msg.(*messages.DirectoryBlockSignature)
 	if !ok {
@@ -574,14 +605,10 @@ func (s *State) PutE(rt bool, adr [32]byte, v int64) {
 // Returns the Virtual Server Index for this hash if this server is the leader;
 // returns -1 if we are not the leader for this hash
 func (s *State) LeaderFor(msg interfaces.IMsg, hash []byte) bool {
-	pl := s.ProcessLists.Get(s.LLeaderHeight)
-	vmIndex := pl.VMIndexFor(hash)
-	msg.SetVMIndex(vmIndex)
-	found, vmi := pl.GetVirtualServers(s.LeaderMinute, s.IdentityChainID)
-	if !found {
-		return false
-	}
-	return vmIndex == vmi
+	var h []byte
+	copy(h,hash)
+	msg.SetVMHash(h)
+	return true
 }
 
 func (s *State) NewAdminBlock(dbheight uint32) interfaces.IAdminBlock {
@@ -666,8 +693,8 @@ func (s *State) NewAck(dbheight uint32, msg interfaces.IMsg) (iack interfaces.IM
 
 	ack.Sign(s)
 	//if s.FactomNodeName == "FNode1" {
-		fmt.Printf("ACK: %x %d %s\n",ack.GetHash().Bytes()[:3], ack.VMIndex, ack.String())
-		fmt.Printf("MSG: %x %d %s\n",msg.GetHash().Bytes()[:3], ack.VMIndex, msg.String())
+	//	fmt.Printf("ACK: %x %d %s\n",ack.GetHash().Bytes()[:3], ack.VMIndex, ack.String())
+	//	fmt.Printf("MSG: %x %d %s\n",msg.GetHash().Bytes()[:3], ack.VMIndex, msg.String())
 	//}
 
 	return ack, nil

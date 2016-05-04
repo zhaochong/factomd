@@ -77,8 +77,9 @@ type State struct {
 	Leader        bool
 	LeaderVMIndex int
 	OutputAllowed bool
-	EOM           bool // Set to true when all Process Lists have finished a minute
 	LeaderMinute  int  // The minute that just was processed by the follower, (1-10), set with EOM
+	EOM           bool // Set to true when all Process Lists have finished a minute
+	LastEOM	      bool // Freeze until I process the end of block
 	EOB           bool // Set to true when all Process Lists are complete for a block
 
 	// Maps
@@ -624,11 +625,14 @@ func (s *State) UpdateState() (progress bool) {
 	dbheight := s.GetHighestRecordedBlock()
 	plbase := s.ProcessLists.DBHeightBase
 	if plbase <= dbheight+1 {
-		progress = s.ProcessLists.UpdateState(dbheight + 1)
+		for s.ProcessLists.UpdateState(dbheight + 1) {
+			progress = true
+		}
 	}
 
-	p2 := s.DBStates.UpdateState()
-	progress = progress || p2
+	for s.DBStates.UpdateState() {
+		progress = true
+	}
 
 	s.catchupEBlocks()
 

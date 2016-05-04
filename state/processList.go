@@ -358,6 +358,7 @@ func (p *ProcessList) Process(state *State) (progress bool) {
 		plist := p.VMs[i].List
 	thisVM:
 		for j := p.VMs[i].Height; j < len(plist); j++ {
+
 			if plist[j] == nil {
 				now := time.Now().Unix()
 				if p.VMs[i].missingTime == 0 {
@@ -382,9 +383,6 @@ func (p *ProcessList) Process(state *State) (progress bool) {
 			thisAck, ok := oldAck.(*messages.Ack)
 			if !ok {
 				// corresponding acknowledgement not found
-				if state.GetOut() {
-					p.State.Println("!!!!!!! Missing acknowledgement in process list for", j)
-				}
 				plist[j] = nil
 				return
 			}

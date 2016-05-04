@@ -79,4 +79,7 @@ type IMsg interface {
 	// the indexes of these machines here.
 	GetVMIndex() int
 	SetVMIndex(int)
+	GetVMHash() []byte
+	SetVMHash(hash []byte)
+
 }

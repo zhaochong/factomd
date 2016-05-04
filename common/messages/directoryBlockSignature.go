@@ -112,15 +112,11 @@ func (m *DirectoryBlockSignature) Bytes() []byte {
 //  1   -- Message is valid
 func (m *DirectoryBlockSignature) Validate(state interfaces.IState) int {
 
-	// *********************************  NEEDS FIXED **************
-	// Need to check the signature for real. TODO:
-
 	isVer, err := m.VerifySignature()
 	if err != nil || !isVer {
 		// if there is an error during signature verification
 		// or if the signature is invalid
 		// the message is considered invalid
-
 		return -1
 	}
 
@@ -131,7 +127,7 @@ func (m *DirectoryBlockSignature) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *DirectoryBlockSignature) Leader(state interfaces.IState) bool {
-	return m.IsLocal()
+	return false
 }
 
 // Execute the leader functions of the given message

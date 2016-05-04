@@ -196,7 +196,7 @@ func (m *DBStateMissing) MarshalBinary() ([]byte, error) {
 }
 
 func (m *DBStateMissing) String() string {
-	return fmt.Sprintf("DBStateMissing: %d-%d", m.DBHeightStart, m.DBHeightEnd)
+	return fmt.Sprintf("DBSMiss: DBHeight Range Missing: %d-%d", m.DBHeightStart, m.DBHeightEnd)
 }
 
 func NewDBStateMissing(state interfaces.IState, dbheightStart uint32, dbheightEnd uint32) interfaces.IMsg {

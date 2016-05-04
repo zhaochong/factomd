@@ -110,7 +110,7 @@ func (list *DBStateList) Catchup() {
 
 	dbsHeight := list.GetHighestRecordedBlock()
 
-	if dbsHeight > list.State.LLeaderHeight {
+	if dbsHeight+1 > list.State.LLeaderHeight {
 		list.State.LLeaderHeight = dbsHeight + 1
 	}
 
@@ -280,10 +280,6 @@ func (list *DBStateList) UpdateState() (progress bool) {
 		}
 		list.LastTime = list.State.GetTimestamp() // If I saved or processed stuff, I'm good for a while
 		d.Saved = true                            // Only after all is done will I admit this state has been saved.
-
-		if d.DirectoryBlock.GetHeader().GetDBHeight() == list.State.LLeaderHeight {
-			list.State.EOB = true
-		}
 
 		list.State.LLeaderHeight = list.State.GetHighestRecordedBlock() + 1
 

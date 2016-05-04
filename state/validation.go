@@ -35,6 +35,7 @@ func (state *State) ValidatorLoop() {
 		var msg interfaces.IMsg
 	loop:
 		for i := 0; i < 100; i++ {
+
 			state.UpdateState()
 
 			select {
