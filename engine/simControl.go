@@ -24,18 +24,23 @@ func SimControl(listenTo int) {
 
 	var _ = time.Sleep
 
+	for {
+		l := make([]byte, 100)
+		var err error
+		// When running as a detatched process, this routine becomes a very tight loop and starves other goroutines.
+		// So, we will sleep before letting it check to see if Stdin has been reconnected
+		if _, err = os.Stdin.Read(l); err != nil {
+			time.Sleep(2 * time.Second)
+		} else {
+			handleCommand(l, listenTo)
+		}
+	}
+}
+
+func handleCommand(l []byte, listenTo int) {
 	var summary bool
 	var watchPL bool
 	var watchMessages bool
-
-	for {
-
-		l := make([]byte, 100)
-		var err error
-		if _, err = os.Stdin.Read(l); err != nil {
-			l = []byte("no command") // This is a hack to handle running in the background. (Eg: as a detatched process)
-			// Being unable to read from StdIn gives error, this pretends like "no command" was typed, which causes nothing (unlike simply hitting return)
-		}
 
 		// This splits up the command at anycodepoint that is not a letter, number of punctuation, so usually by spaces.
 		parseFunc := func(c rune) bool {
@@ -219,8 +224,6 @@ func SimControl(listenTo int) {
 				os.Stderr.WriteString("\n")
 				os.Stderr.WriteString("Most commands are case insensitive.\n")
 				os.Stderr.WriteString("-------------------------------------------------------------------------------\n\n")
-			// -- add node (and give its connections or topology)
-			// TODO JAYJAY Need to make an option that causes the p2p network to print out all messsages it gets and sends, for easier debugging.
 
 			default:
 			}
