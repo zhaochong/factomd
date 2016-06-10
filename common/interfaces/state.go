@@ -177,4 +177,10 @@ type IState interface {
 	FetchFactoidTransactionByHash(hash IHash) (ITransaction, error)
 	FetchECTransactionByHash(hash IHash) (IECBlockEntry, error)
 	FetchEntryByHash(IHash) (IEBEntry, error)
+
+	// FER section
+	ProcessRecentFERChainEntries()
+	ExchangeRateAuthorityIsValid(IEBEntry) bool
+	FerEntryIsValid(passedFEREntry IFEREntry) bool
+	GetPredictiveFER() (uint64)
 }
