@@ -36,6 +36,7 @@ func (s *State) NewMinute() {
 		v := s.Holding[k]
 
 		// Make sure we don't process any dups...
+
 		if _, ok := s.InternalReplay.Valid(v.GetHash().Fixed(), int64(v.GetTimestamp()/1000), int64(s.GetTimestamp()/1000)); !ok {
 			continue
 		}
@@ -720,10 +721,6 @@ func (s *State) Green() bool {
 	rec := s.DBStates.GetHighestRecordedBlock()
 	high := s.GetHighestKnownBlock()
 	s.GreenFlg = rec >= high-1
-
-	if int(s.DBStates.Complete) < len(s.DBStates.DBStates) {
-		s.GreenFlg = false
-	}
 
 	// If we were not green, but we are green now, set our timestamp
 	if !oldflg && s.GreenFlg {

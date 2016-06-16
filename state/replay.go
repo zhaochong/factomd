@@ -55,6 +55,10 @@ func (r *Replay) Valid(hash [32]byte, timestamp int64, systemtime int64) (index 
 			r.basetime = now-(numBuckets/2)
 			r.check = make(map[[32]byte]byte,0)
 	}
+	if r.center + 2*numBuckets < now {
+		r.center = now - 2*numBuckets
+	}
+
 	for r.center < now {
 			copy(r.buckets[:],r.buckets[1:])
 			r.buckets[numBuckets-1]=nil
