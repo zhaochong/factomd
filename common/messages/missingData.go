@@ -16,7 +16,7 @@ import (
 //Structure to request missing messages in a node's process list
 type MissingData struct {
 	MessageBase
-	Timestamp interfaces.ITimestamp
+	Timestamp primitives.Timestamp
 
 	RequestHash interfaces.IHash
 
@@ -202,7 +202,7 @@ func NewMissingData(state interfaces.IState, requestHash interfaces.IHash) inter
 	msg := new(MissingData)
 
 	msg.Peer2Peer = true // Always a peer2peer request.
-	msg.Timestamp = state.GetTimestamp()
+	msg.Timestamp.SetTimestamp(state.GetTimestamp())
 	msg.RequestHash = requestHash
 
 	state.AddDataRequest(requestHash, msg.GetHash())

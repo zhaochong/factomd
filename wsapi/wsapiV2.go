@@ -231,7 +231,7 @@ func HandleV2RevealEntry(state interfaces.IState, params interface{}) (interface
 
 	msg := new(messages.RevealEntryMsg)
 	msg.Entry = entry
-	msg.Timestamp = state.GetTimestamp()
+	msg.Timestamp.SetTimestamp(state.GetTimestamp())
 	state.APIQueue() <- msg
 
 	resp := new(RevealEntryResponse)

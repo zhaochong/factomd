@@ -18,7 +18,7 @@ import (
 
 type DBStateMissing struct {
 	MessageBase
-	Timestamp interfaces.ITimestamp
+	Timestamp primitives.Timestamp
 
 	DBHeightStart uint32 // First block missing
 	DBHeightEnd   uint32 // Last block missing.
@@ -196,7 +196,7 @@ func NewDBStateMissing(state interfaces.IState, dbheightStart uint32, dbheightEn
 	msg := new(DBStateMissing)
 
 	msg.Peer2Peer = true // Always a peer2peer request.
-	msg.Timestamp = state.GetTimestamp()
+	msg.Timestamp.SetTimestamp(state.GetTimestamp())
 	msg.DBHeightStart = dbheightStart
 	msg.DBHeightEnd = dbheightEnd
 

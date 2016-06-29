@@ -22,4 +22,5 @@ type ITimestamp interface {
 	GetTimeSecondsUInt32() uint32
 	MarshalBinary() ([]byte, error)
 	String() string
+	SetTimestamp(ITimestamp)
 }

@@ -106,7 +106,7 @@ type State struct {
 	FactoidTrans    int
 	NewEntryChains  int
 	NewEntries      int
-	LeaderTimestamp interfaces.ITimestamp
+	LeaderTimestamp primitives.Timestamp
 	// Maps
 	// ====
 	// For Follower
@@ -166,7 +166,7 @@ type State struct {
 
 	//For Replay / journal
 	IsReplaying     bool
-	ReplayTimestamp interfaces.ITimestamp
+	ReplayTimestamp primitives.Timestamp
 
 	// DBlock Height at which node has a complete set of eblocks+entries
 	EBDBHeightComplete uint32
@@ -953,7 +953,7 @@ func (s *State) GetLeaderTimestamp() interfaces.ITimestamp {
 }
 
 func (s *State) SetLeaderTimestamp(ts interfaces.ITimestamp) {
-	s.LeaderTimestamp = ts
+	s.LeaderTimestamp.SetTimestamp(ts)
 }
 
 //var _ IState = (*State)(nil)

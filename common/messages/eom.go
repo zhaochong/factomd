@@ -19,7 +19,7 @@ var _ = log.Printf
 
 type EOM struct {
 	MessageBase
-	Timestamp interfaces.ITimestamp
+	Timestamp primitives.Timestamp
 	Minute    byte
 
 	DBHeight  uint32

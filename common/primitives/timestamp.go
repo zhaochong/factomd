@@ -51,6 +51,10 @@ func (t Timestamp) SetTime(miliseconds uint64) {
 	t = Timestamp(miliseconds)
 }
 
+func (t Timestamp) SetTimestamp(timestamp interfaces.ITimestamp) {
+	t.SetTime(uint64(timestamp.GetTimeMilli()))
+}
+
 func (t Timestamp) GetTime() time.Time {
 	return time.Unix(int64(t/1000), int64(((t)%1000)*1000))
 }

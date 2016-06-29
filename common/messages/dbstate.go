@@ -23,7 +23,7 @@ import (
 
 type DBStateMsg struct {
 	MessageBase
-	Timestamp interfaces.ITimestamp
+	Timestamp primitives.Timestamp
 
 	//TODO: handle misformed DBStates!
 	DirectoryBlock   interfaces.IDirectoryBlock
@@ -246,7 +246,7 @@ func NewDBStateMsg(timestamp interfaces.ITimestamp,
 
 	msg.Peer2Peer = true
 
-	msg.Timestamp = timestamp
+	msg.Timestamp.SetTimestamp(timestamp)
 
 	msg.DirectoryBlock = d
 	msg.AdminBlock = a

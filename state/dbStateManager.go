@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
+	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/log"
 	"time"
 )
@@ -37,7 +38,7 @@ type DBState struct {
 
 type DBStateList struct {
 	SrcNetwork          bool // True if I got this block from the network.
-	LastTime            interfaces.ITimestamp
+	LastTime            primitives.Timestamp
 	SecondsBetweenTests int
 	Lastreq             int
 	State               *State
@@ -131,7 +132,7 @@ func (list *DBStateList) Catchup() {
 	if int(now.GetTimeSeconds()-list.LastTime.GetTimeSeconds()) < SecondsBetweenTests {
 		return
 	}
-	list.LastTime = now
+	list.LastTime.SetTimestamp(now)
 
 	begin := -1
 	end := -1
@@ -350,8 +351,8 @@ func (list *DBStateList) UpdateState() (progress bool) {
 
 		}
 
-		list.LastTime = list.State.GetTimestamp() // If I saved or processed stuff, I'm good for a while
-		d.Locked = true                           // Only after all is done will I admit this state has been saved.
+		list.LastTime.SetTimestamp(list.State.GetTimestamp()) // If I saved or processed stuff, I'm good for a while
+		d.Locked = true                                       // Only after all is done will I admit this state has been saved.
 
 		// Any updates required to the state as established by the AdminBlock are applied here.
 		d.AdminBlock.UpdateState(list.State)
@@ -396,7 +397,7 @@ func (list *DBStateList) Highest() uint32 {
 func (list *DBStateList) Put(dbState *DBState) {
 
 	// Hold off on any requests if I'm actually processing...
-	list.LastTime = list.State.GetTimestamp()
+	list.LastTime.SetTimestamp(list.State.GetTimestamp())
 
 	dblk := dbState.DirectoryBlock
 	dbheight := dblk.GetHeader().GetDBHeight()

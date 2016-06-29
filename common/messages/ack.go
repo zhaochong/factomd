@@ -17,8 +17,8 @@ import (
 //General acknowledge message
 type Ack struct {
 	MessageBase
-	Timestamp   interfaces.ITimestamp // Timestamp of Ack by Leader
-	MessageHash interfaces.IHash      // Hash of message acknowledged
+	Timestamp   primitives.Timestamp // Timestamp of Ack by Leader
+	MessageHash interfaces.IHash     // Hash of message acknowledged
 
 	DBHeight   uint32           // Directory Block Height that owns this ack
 	Height     uint32           // Height of this ack in this process list

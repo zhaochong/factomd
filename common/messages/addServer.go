@@ -19,9 +19,9 @@ import (
 
 type AddServerMsg struct {
 	MessageBase
-	Timestamp     interfaces.ITimestamp // Message Timestamp
-	ServerChainID interfaces.IHash      // ChainID of new server
-	ServerType    int                   // 0 = Federated, 1 = Audit
+	Timestamp     primitives.Timestamp // Message Timestamp
+	ServerChainID interfaces.IHash     // ChainID of new server
+	ServerType    int                  // 0 = Federated, 1 = Audit
 
 	Signature interfaces.IFullSignature
 }
@@ -258,7 +258,7 @@ func NewAddServerMsg(state interfaces.IState, serverType int) interfaces.IMsg {
 	msg := new(AddServerMsg)
 	msg.ServerChainID = state.GetIdentityChainID()
 	msg.ServerType = serverType
-	msg.Timestamp = state.GetTimestamp()
+	msg.Timestamp.SetTimestamp(state.GetTimestamp())
 
 	return msg
 

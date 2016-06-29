@@ -16,7 +16,7 @@ import (
 //A placeholder structure for messages
 type ServerFault struct {
 	MessageBase
-	Timestamp interfaces.ITimestamp
+	Timestamp primitives.Timestamp
 
 	ServerID interfaces.IHash
 	VMIndex  byte
@@ -236,9 +236,9 @@ func (a *ServerFault) IsSameAs(b *ServerFault) bool {
 // Support Functions
 //*******************************************************************************
 
-func NewServerFault(timeStamp interfaces.ITimestamp, serverID interfaces.IHash, vmIndex int, dbheight uint32, height uint32) *ServerFault {
+func NewServerFault(timestamp interfaces.ITimestamp, serverID interfaces.IHash, vmIndex int, dbheight uint32, height uint32) *ServerFault {
 	sf := new(ServerFault)
-	sf.Timestamp = timeStamp
+	sf.Timestamp.SetTimestamp(timestamp)
 	sf.VMIndex = byte(vmIndex)
 	sf.DBHeight = dbheight
 	sf.Height = height

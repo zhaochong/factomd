@@ -306,7 +306,7 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 
 	dbstatemsg, _ := msg.(*messages.DBStateMsg)
 
-	s.DBStates.LastTime = s.GetTimestamp()
+	s.DBStates.LastTime.SetTimestamp(s.GetTimestamp())
 	dbstate := s.AddDBState(false, // Not a new block; got it from the network
 		dbstatemsg.DirectoryBlock,
 		dbstatemsg.AdminBlock,
@@ -847,7 +847,7 @@ func (s *State) NewAck(msg interfaces.IMsg) (iack interfaces.IMsg) {
 	ack.DBHeight = s.LLeaderHeight
 	ack.VMIndex = vmIndex
 	ack.Minute = byte(s.ProcessLists.Get(s.LLeaderHeight).VMs[vmIndex].LeaderMinute)
-	ack.Timestamp = s.GetTimestamp()
+	ack.Timestamp.SetTimestamp(s.GetTimestamp())
 	ack.MessageHash = msg.GetMsgHash()
 	ack.LeaderChainID = s.IdentityChainID
 

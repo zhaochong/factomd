@@ -15,7 +15,7 @@ import (
 //A placeholder structure for messages
 type EOMTimeout struct {
 	MessageBase
-	Timestamp interfaces.ITimestamp
+	Timestamp primitives.Timestamp
 
 	Signature interfaces.IFullSignature
 }
