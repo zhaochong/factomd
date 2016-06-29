@@ -30,17 +30,17 @@ type MsgLog struct {
 	Enable  bool
 	sem     sync.Mutex
 	MsgList []*msglist
-	last    interfaces.ITimestamp
+	last    primitives.Timestamp
 	all     bool
 	nodeCnt int
 
-	start     interfaces.ITimestamp
+	start     primitives.Timestamp
 	msgCnt    int
 	msgPerSec int
 
 	// The last period (msg rate over the last period, so msg changes can be seen)
 	period     int
-	startp     interfaces.ITimestamp
+	startp     primitives.Timestamp
 	msgCntp    int
 	msgPerSecp int
 }
@@ -59,7 +59,7 @@ func (m *MsgLog) add2(fnode *FactomNode, out bool, peer string, where string, va
 	defer m.sem.Unlock()
 	now := fnode.State.GetTimestamp().GetTimeSeconds()
 	if m.start.GetTimeSeconds() == 0 {
-		m.start = fnode.State.GetTimestamp()
+		m.start.SetTimestamp(fnode.State.GetTimestamp())
 		m.last = m.start // last is start
 		m.period = 2
 		m.startp = m.start
@@ -122,7 +122,7 @@ func (m *MsgLog) PrtMsgs(state interfaces.IState) {
 
 		}
 	}
-	m.last = state.GetTimestamp()
+	m.last.SetTimestamp(state.GetTimestamp())
 	m.msgCnt += len(m.MsgList) // Keep my counts
 	m.msgCntp += len(m.MsgList)
 	m.MsgList = m.MsgList[0:0] // Once printed, clear the list

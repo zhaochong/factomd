@@ -18,7 +18,7 @@ import (
 type MissingMsgResponse struct {
 	MessageBase
 
-	Timestamp   interfaces.ITimestamp
+	Timestamp   primitives.Timestamp
 	AckResponse interfaces.IMsg
 	MsgResponse interfaces.IMsg
 
@@ -234,7 +234,7 @@ func NewMissingMsgResponse(state interfaces.IState, msgResponse interfaces.IMsg,
 	msg := new(MissingMsgResponse)
 
 	msg.Peer2Peer = true // Always a peer2peer request.
-	msg.Timestamp = state.GetTimestamp()
+	msg.Timestamp.SetTimestamp(state.GetTimestamp())
 	msg.MsgResponse = msgResponse
 	msg.AckResponse = ackResponse
 

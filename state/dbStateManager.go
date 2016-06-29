@@ -179,7 +179,7 @@ func (list *DBStateList) Catchup() {
 		fmt.Println("dddd ======================Ask for blocks", begin, end2)
 
 		list.State.RunLeader = false
-		list.State.StartDelay = list.State.GetTimestamp()
+		list.State.StartDelay.SetTimestamp(list.State.GetTimestamp())
 		list.State.NetworkOutMsgQueue() <- msg
 	}
 

@@ -18,7 +18,7 @@ import (
 type MissingMsg struct {
 	MessageBase
 
-	Timestamp         interfaces.ITimestamp
+	Timestamp         primitives.Timestamp
 	DBHeight          uint32
 	VM                int
 	ProcessListHeight uint32
@@ -215,7 +215,7 @@ func NewMissingMsg(state interfaces.IState, dbHeight uint32, processlistHeight u
 	msg := new(MissingMsg)
 
 	msg.Peer2Peer = true // Always a peer2peer request.
-	msg.Timestamp = state.GetTimestamp()
+	msg.Timestamp.SetTimestamp(state.GetTimestamp())
 	msg.DBHeight = dbHeight
 	msg.ProcessListHeight = processlistHeight
 

@@ -16,7 +16,7 @@ import (
 //A placeholder structure for messages
 type FactoidTransaction struct {
 	MessageBase
-	Timestamp   interfaces.ITimestamp
+	Timestamp   primitives.Timestamp
 	Transaction interfaces.ITransaction
 
 	//No signature!

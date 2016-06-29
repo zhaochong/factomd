@@ -27,7 +27,7 @@ func Test_Replay(test *testing.T) {
 
 	type mh struct {
 		hash [32]byte
-		time interfaces.ITimestamp
+		time primitives.Timestamp
 	}
 
 	XTrans := 10240 //61440 //145000

@@ -15,7 +15,7 @@ import (
 //A placeholder structure for messages
 type Heartbeat struct {
 	MessageBase
-	Timestamp       interfaces.ITimestamp
+	Timestamp       primitives.Timestamp
 	DBlockHash      interfaces.IHash //Hash of last Directory Block
 	IdentityChainID interfaces.IHash //Identity Chain ID
 

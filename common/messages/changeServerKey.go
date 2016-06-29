@@ -18,8 +18,8 @@ import (
 
 type ChangeServerKeyMsg struct {
 	MessageBase
-	Timestamp        interfaces.ITimestamp // Message Timestamp
-	IdentityChainID  interfaces.IHash      // ChainID of new server
+	Timestamp        primitives.Timestamp // Message Timestamp
+	IdentityChainID  interfaces.IHash     // ChainID of new server
 	AdminBlockChange byte
 	KeyType          byte
 	KeyPriority      byte
@@ -303,7 +303,7 @@ func NewChangeServerKeyMsg(state interfaces.IState, identityChain interfaces.IHa
 	msg.KeyType = keyType
 	msg.KeyPriority = keyPriority
 	msg.Key = key
-	msg.Timestamp = state.GetTimestamp()
+	msg.Timestamp.SetTimestamp(state.GetTimestamp())
 
 	return msg
 
