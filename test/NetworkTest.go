@@ -120,7 +120,7 @@ func main() {
 		}
 		msg := fmt.Sprintf("%d/%d/%d",msgcnt,bounces,oldcnt)
 		fmt.Printf("bbbb Machine: %32s Message Sent/Recieved/Duplicates: %10s\n", name, msg)
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(10 * time.Second)
 	}
 
 }
