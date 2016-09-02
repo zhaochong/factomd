@@ -187,12 +187,12 @@ func (m *Bounce) MarshalBinary() (data []byte, err error) {
 
 func (m *Bounce) String() string {
 	str := fmt.Sprintf("\nbbbb Origin: %32s Bounce Start:  %30s Hops: %5d Size: %5d\n", m.Name, m.Timestamp.String(),len(m.Stamps),m.SizeOf())
-	last := m.Timestamp.GetTimeMilli()
-	for _, ts := range m.Stamps {
-		elapse := ts.GetTimeMilli() - last
-		last = ts.GetTimeMilli()
-		str = fmt.Sprintf("%sbbbb %30s %4d.%03d seconds\n", str, ts.String(), elapse/1000, elapse%1000)
-	}
+//	last := m.Timestamp.GetTimeMilli()
+//	for _, ts := range m.Stamps {
+//		elapse := ts.GetTimeMilli() - last
+//		last = ts.GetTimeMilli()
+//		str = fmt.Sprintf("%sbbbb %30s %4d.%03d seconds\n", str, ts.String(), elapse/1000, elapse%1000)
+//	}
 	return str
 }
 
