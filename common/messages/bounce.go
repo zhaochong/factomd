@@ -13,6 +13,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"crypto/aes"
 )
 
 type Bounce struct {
@@ -20,6 +21,7 @@ type Bounce struct {
 	Name      string
 	Timestamp interfaces.Timestamp
 	Stamps    []interfaces.Timestamp
+	size      int
 }
 
 var _ interfaces.IMsg = (*Bounce)(nil)
@@ -33,9 +35,17 @@ func (m *Bounce) GetHash() interfaces.IHash {
 	return m.GetMsgHash()
 }
 
+func (m *Bounce) SizeOf() int {
+	m.GetMsgHash()
+	return m.size
+}
+
 func (m *Bounce) GetMsgHash() interfaces.IHash {
 	if m.MsgHash == nil {
 		data, err := m.MarshalForSignature()
+
+		m.size = len(data)
+
 		if err != nil {
 			return nil
 		}
@@ -177,12 +187,12 @@ func (m *Bounce) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *Bounce) String() string {
-	str := fmt.Sprintf("bbbb Origin: %32s Bounce Start:  %30s Hops: %5d\n", m.Name, m.Timestamp.String(),len(m.Stamps))
+	str := fmt.Sprintf("bbbb Origin: %32s Bounce Start:  %30s Hops: %5d Size: %5d\n", m.Name, m.Timestamp.String(),len(m.Stamps),m.SizeOf())
 	last := m.Timestamp.GetTimeMilli()
 	for _, ts := range m.Stamps {
 		elapse := ts.GetTimeMilli() - last
 		last = ts.GetTimeMilli()
-		str = fmt.Sprintf("%sbbbb %30s %4d.%3d seconds\n", str, ts.String(), elapse/1000, elapse%1000)
+		str = fmt.Sprintf("%sbbbb %30s %4d.%03d seconds\n", str, ts.String(), elapse/1000, elapse%1000)
 	}
 	return str
 }
