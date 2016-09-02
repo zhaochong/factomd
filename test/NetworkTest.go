@@ -109,8 +109,8 @@ func main() {
 
 	go listen()
 
+	timetosend := int64(0)
 	for {
-		timetosend := int64(0)
 		if msgcnt < 100 {
 			bounce := new(messages.Bounce)
 			bounce.Name = name
