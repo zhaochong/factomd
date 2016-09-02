@@ -300,7 +300,6 @@ func (c *Connection) goOnline() {
 	now := time.Now()
 	c.encoder = gob.NewEncoder(c.conn)
 	c.decoder = gob.NewDecoder(c.conn)
-	c.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 	c.attempts = 0
 	c.timeLastPing = now
 	c.timeLastAttempt = now
@@ -383,7 +382,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.SetWriteDeadline(time.Now().Add(20 * time.Millisecond))
+	c.conn.SetWriteDeadline(time.Now().Add(1000 * time.Millisecond))
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
@@ -403,6 +402,7 @@ func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
+		c.conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
 		err := c.decoder.Decode(&message)
 		switch {
 		case nil == err:
