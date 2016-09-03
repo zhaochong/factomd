@@ -283,7 +283,8 @@ func (c *Connection) dial() bool {
 	address := c.peer.AddressPort()
 	note(c.peer.PeerIdent(), "Connection.dial() dialing: %+v", address)
 	// conn, err := net.Dial("tcp", c.peer.Address)
-	conn, err := net.DialTimeout("tcp", address, time.Second*10)
+	//conn, err := net.DialTimeout("tcp", address, time.Second*10)
+	conn, err := net.Dial("tcp", address)
 	if nil != err {
 		c.setNotes(fmt.Sprintf("Connection.dial(%s) got error: %+v", address, err))
 		return false
