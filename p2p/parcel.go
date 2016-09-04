@@ -8,9 +8,6 @@ import (
 	"fmt"
 	"hash/crc32"
 	"strconv"
-	"github.com/FactomProject/factomd/common/interfaces"
-	"encoding/binary"
-	"github.com/FactomProject/factomd/common/primitives"
 )
 
 // Parcel is the atomic level of communication for the p2p network.  It contains within it the necessary info for
@@ -28,75 +25,11 @@ type ParcelHeader struct {
 	Version     uint16            // 2 bytes - the version of the protocol we are running.
 	Type        ParcelCommandType // 2 bytes - network level commands (eg: ping/pong)
 	Length      uint32            // 4 bytes - length of the payload (that follows this header) in bytes
+	TargetPeer  string            // ? bytes - "" or nil for broadcast, otherwise the destination peer's hash.
 	Crc32       uint32            // 4 bytes - data integrity hash (of the payload itself.)
 	NodeID      uint64
-	TargetPeer  string            // ? bytes - "" or nil for broadcast, otherwise the destination peer's hash.
-	PeerAddress string 	      // address of the peer set by connection to know who sent message (for tracking source of other peers)
-	PeerPort    string 	      // port of the peer , or we are listening on
-}
-
-var _ interfaces.BinaryMarshallable = (*Parcel)(nil)
-
-func (p *Parcel) MarshalBinary() ([]byte,error) {
-	var buf primitives.Buffer
-//	binary.Write(&buf,binary.BigEndian, uint32(p.Length)) // Will be patched up at the end
-	binary.Write(&buf,binary.BigEndian, uint32(p.Header.Network))
-	binary.Write(&buf,binary.BigEndian, uint16(p.Header.Version))
-	binary.Write(&buf,binary.BigEndian, uint16(p.Header.Type))
-	binary.Write(&buf,binary.BigEndian, uint32(p.Header.Length))
-	binary.Write(&buf,binary.BigEndian, uint32(p.Header.Crc32))
-	binary.Write(&buf,binary.BigEndian, uint64(p.Header.NodeID))
-	b := ([]byte)(p.Header.TargetPeer)
-	binary.Write(&buf,binary.BigEndian, uint32(len(b)))
-	buf.Write(b)
-	b = ([]byte)(p.Header.PeerAddress)
-	binary.Write(&buf,binary.BigEndian, uint32(len(b)))
-	buf.Write(b)
-	b = ([]byte)(p.Header.PeerPort)
-	binary.Write(&buf,binary.BigEndian, uint32(len(b)))
-	buf.Write(b)
-
-	b = p.Payload
-	binary.Write(&buf,binary.BigEndian, uint32(len(b)))
-	buf.Write(b)
-
-
-	// Patch up parcel length
-	data := buf.DeepCopyBytes()
-	blen := len(data)
-	data[0] = byte(blen>>24)
-	data[1] = byte(blen>>16)
-	data[2] = byte(blen>>8)
-	data[3] = byte(blen)
-	return data,nil
-}
-
-func (p *Parcel) UnmarshalBinary(data []byte) error {
-	_, err := p.UnmarshalBinaryData(data)
-	return err
-}
-
-func (p *Parcel) UnmarshalBinaryData(Data []byte) (newData[]byte, err error){
-//	p.Length, newData = int(binary.BigEndian.Uint32(Data)),Data[4:]
-	p.Header.Network, newData = NetworkID(binary.BigEndian.Uint32(Data)),newData[4:]
-	p.Header.Version, newData = (binary.BigEndian.Uint16(Data)),newData[2:]
-	p.Header.Type, newData = ParcelCommandType(binary.BigEndian.Uint16(Data)),newData[2:]
-	p.Header.Length, newData = binary.BigEndian.Uint32(Data),newData[4:]
-	p.Header.Crc32, newData = binary.BigEndian.Uint32(Data),newData[4:]
-	p.Header.NodeID, newData = binary.BigEndian.Uint64(Data),newData[8:]
-
-	blen, newData := binary.BigEndian.Uint32(Data),newData[4:]
-	p.Header.TargetPeer = (string)(newData[:blen])
-	blen, newData = binary.BigEndian.Uint32(Data),newData[4:]
-	p.Header.PeerAddress = (string)(newData[:blen])
-	blen, newData = binary.BigEndian.Uint32(Data),newData[4:]
-	p.Header.PeerPort = (string)(newData[:blen])
-
-	blen, newData = binary.BigEndian.Uint32(Data),newData[4:]
-	p.Payload = p.Payload[:0]
-	p.Payload = append(p.Payload,newData[:blen]...)
-
-	return
+	PeerAddress string // address of the peer set by connection to know who sent message (for tracking source of other peers)
+	PeerPort    string // port of the peer , or we are listening on
 }
 
 type ParcelCommandType uint16
