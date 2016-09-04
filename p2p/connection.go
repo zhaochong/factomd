@@ -18,7 +18,7 @@ import (
 // via two channels, send and recieve.  These channels take structs of type ConnectionCommand or ConnectionParcel
 // (defined below).
 type Connection struct {
-	conn           net.Conn
+	conn           *middle
 	SendChannel    chan interface{} // Send means "towards the network" Channel takes Parcels and ConnectionCommands
 	ReceiveChannel chan interface{} // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
 	// and as "address" for sending messages to specific nodes.
@@ -36,6 +36,29 @@ type Connection struct {
 	isPersistent    bool              // Persistent connections we always redail.
 	notes           string            // Notes about the connection, for debugging (eg: error)
 	metrics         ConnectionMetrics // Metrics about this connection
+}
+
+type middle struct {
+	conn net.Conn
+}
+func (m *middle)Write(b []byte)(int,error){
+	end := 10
+	if end > len(b) {
+		end = len(b)
+	}
+	fmt.Printf("bbbb Write %d bytes, Data:%x\n",len(b),b[:end])
+	return m.conn.Write(b)
+}
+func (m *middle)Read(b[]byte)(int,error) {
+	i,e := m.conn.Read(b)
+	end := 10
+	if end > len(b) {
+		end = len(b)
+	}
+	if e == nil {
+		fmt.Printf("bbbb Read %d bytes, Data: %x\n", len(b), b[:end])
+	}
+	return i,e
 }
 
 // Each connection is a simple state machine.  The state is managed by a single goroutine which also does netowrking.
@@ -110,7 +133,9 @@ const (
 
 // InitWithConn is called from our accept loop when a peer dials into us and we already have a network conn
 func (c *Connection) InitWithConn(conn net.Conn, peer Peer) *Connection {
-	c.conn = conn
+	m := new(middle)
+	c.conn = m
+	m.conn = conn
 	c.isOutGoing = false // InitWithConn is called by controller's accept() loop
 	c.commonInit(peer)
 	c.isPersistent = false
@@ -288,7 +313,9 @@ func (c *Connection) dial() bool {
 		c.setNotes(fmt.Sprintf("Connection.dial(%s) got error: %+v", address, err))
 		return false
 	}
-	c.conn = conn
+	m := new(middle)
+	c.conn = m
+	m.conn = conn
 	c.setNotes(fmt.Sprintf("Connection.dial(%s) was successful.", address))
 	return true
 }
@@ -324,7 +351,7 @@ func (c *Connection) goShutdown() {
 	c.goOffline()
 	c.updatePeer()
 	if nil != c.conn {
-		defer c.conn.Close()
+		defer c.conn.conn.Close()
 	}
 	c.decoder = nil
 	c.encoder = nil
@@ -382,7 +409,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.SetWriteDeadline(time.Now().Add(1000 * time.Millisecond))
+	c.conn.conn.SetWriteDeadline(time.Now().Add(1000 * time.Millisecond))
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
@@ -402,7 +429,7 @@ func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		c.conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
+		c.conn.conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
 		err := c.decoder.Decode(&message)
 		switch {
 		case nil == err:
