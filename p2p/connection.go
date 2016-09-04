@@ -20,7 +20,7 @@ import (
 type Connection struct {
 	conn           net.Conn
 	SendChannel    chan interface{} // Send means "towards the network" Channel takes Parcels and ConnectionCommands
-	ReceiveChannel chan interface{} // Recieve means "from the network" Channel sends Parcels and ConnectionCommands
+	ReceiveChannel chan interface{} // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
 	// and as "address" for sending messages to specific nodes.
 	encoder         *gob.Encoder      // Wire format is gobs in this version, may switch to binary
 	decoder         *gob.Decoder      // Wire format is gobs in this version, may switch to binary
@@ -283,8 +283,7 @@ func (c *Connection) dial() bool {
 	address := c.peer.AddressPort()
 	note(c.peer.PeerIdent(), "Connection.dial() dialing: %+v", address)
 	// conn, err := net.Dial("tcp", c.peer.Address)
-	//conn, err := net.DialTimeout("tcp", address, time.Second*10)
-	conn, err := net.Dial("udp", address)
+	conn, err := net.DialTimeout("tcp", address, time.Second*60)
 	if nil != err {
 		c.setNotes(fmt.Sprintf("Connection.dial(%s) got error: %+v", address, err))
 		return false
