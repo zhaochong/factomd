@@ -16,7 +16,7 @@ import (
 // Parcel is the atomic level of communication for the p2p network.  It contains within it the necessary info for
 // the networking protocol, plus the message that the Application is sending.
 type Parcel struct {
-	length  int
+	Length  int
 	Header  ParcelHeader
 	Payload []byte
 }
@@ -78,7 +78,7 @@ func (p *Parcel) UnmarshalBinary(data []byte) error {
 }
 
 func (p *Parcel) UnmarshalBinaryData(Data []byte) (newData[]byte, err error){
-	p.length, newData = int(binary.BigEndian.Uint32(Data)),Data[4:]
+	p.Length, newData = int(binary.BigEndian.Uint32(Data)),Data[4:]
 	p.Header.Network, newData = NetworkID(binary.BigEndian.Uint32(Data)),newData[4:]
 	p.Header.Version, newData = (binary.BigEndian.Uint16(Data)),newData[2:]
 	p.Header.Type, newData = ParcelCommandType(binary.BigEndian.Uint16(Data)),newData[2:]
