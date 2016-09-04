@@ -47,7 +47,7 @@ func (m *middle)Write(b []byte)(int,error){
 		end = len(b)
 	}
 	i,e := m.conn.Write(b)
-	fmt.Printf("bbbb Write %s %d bytes, Data:%x\n",time.Now().String(),len(b),b[:end])
+	fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
 	return i,e
 }
 func (m *middle)Read(b[]byte)(int,error) {
