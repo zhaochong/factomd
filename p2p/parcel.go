@@ -32,8 +32,8 @@ type ParcelHeader struct {
 	Crc32       uint32            // 4 bytes - data integrity hash (of the payload itself.)
 	NodeID      uint64
 	TargetPeer  string            // ? bytes - "" or nil for broadcast, otherwise the destination peer's hash.
-	PeerAddress string 						// address of the peer set by connection to know who sent message (for tracking source of other peers)
-	PeerPort    string 						// port of the peer , or we are listening on
+	PeerAddress string 	      // address of the peer set by connection to know who sent message (for tracking source of other peers)
+	PeerPort    string 	      // port of the peer , or we are listening on
 }
 
 var _ interfaces.BinaryMarshallable = (*Parcel)(nil)
