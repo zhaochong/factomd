@@ -46,7 +46,7 @@ func (m *middle)Write(b []byte)(int,error){
 	if end > len(b) {
 		end = len(b)
 	}
-	fmt.Printf("bbbb Write %d bytes, Data:%x\n",len(b),b[:end])
+	fmt.Printf("bbbb Write %d %d bytes, Data:%x\n",(time.Now().UnixNano()/1000)%1000000,len(b),b[:end])
 	return m.conn.Write(b)
 }
 func (m *middle)Read(b[]byte)(int,error) {
@@ -56,7 +56,7 @@ func (m *middle)Read(b[]byte)(int,error) {
 		end = len(b)
 	}
 	if e == nil {
-		fmt.Printf("bbbb Read %d bytes, Data: %x\n", len(b), b[:end])
+		fmt.Printf("bbbb Read %d %d bytes, Data: %x\n", (time.Now().UnixNano()/1000)%1000000, len(b), b[:end])
 	}
 	return i,e
 }
