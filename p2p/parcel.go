@@ -16,7 +16,6 @@ import (
 // Parcel is the atomic level of communication for the p2p network.  It contains within it the necessary info for
 // the networking protocol, plus the message that the Application is sending.
 type Parcel struct {
-	Length  int
 	Header  ParcelHeader
 	Payload []byte
 }
@@ -40,7 +39,7 @@ var _ interfaces.BinaryMarshallable = (*Parcel)(nil)
 
 func (p *Parcel) MarshalBinary() ([]byte,error) {
 	var buf primitives.Buffer
-	binary.Write(&buf,binary.BigEndian, uint32(p.Header.Length)) // Will be patched up at the end
+//	binary.Write(&buf,binary.BigEndian, uint32(p.Length)) // Will be patched up at the end
 	binary.Write(&buf,binary.BigEndian, uint32(p.Header.Network))
 	binary.Write(&buf,binary.BigEndian, uint16(p.Header.Version))
 	binary.Write(&buf,binary.BigEndian, uint16(p.Header.Type))
@@ -78,7 +77,7 @@ func (p *Parcel) UnmarshalBinary(data []byte) error {
 }
 
 func (p *Parcel) UnmarshalBinaryData(Data []byte) (newData[]byte, err error){
-	p.Length, newData = int(binary.BigEndian.Uint32(Data)),Data[4:]
+//	p.Length, newData = int(binary.BigEndian.Uint32(Data)),Data[4:]
 	p.Header.Network, newData = NetworkID(binary.BigEndian.Uint32(Data)),newData[4:]
 	p.Header.Version, newData = (binary.BigEndian.Uint16(Data)),newData[2:]
 	p.Header.Type, newData = ParcelCommandType(binary.BigEndian.Uint16(Data)),newData[2:]
