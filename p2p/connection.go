@@ -57,7 +57,7 @@ func (m *middle)Read(b[]byte)(int,error) {
 		end = len(b)
 	}
 	if e == nil {
-		fmt.Printf("bbbb Read  %2 %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
+		fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
 	}
 	return i,e
 }
