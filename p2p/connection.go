@@ -48,7 +48,13 @@ var WritesErr int
 var ReadsErr int
 
 func (m *middle)Write(b []byte)(int,error){
-	//end := 10
+
+	if m.conn.LocalAddr().String()==m.conn.RemoteAddr().String() {
+		fmt.Println("Middle Ignore",m.conn.LocalAddr().String())
+		return 0,nil
+	}
+
+	// /end := 10
 	//if end > len(b) {
 	//	end = len(b)
 	//}
@@ -62,6 +68,12 @@ func (m *middle)Write(b []byte)(int,error){
 	return i,e
 }
 func (m *middle)Read(b[]byte)(int,error) {
+
+	if m.conn.LocalAddr().String()==m.conn.RemoteAddr().String() {
+		fmt.Println("Middle Ignore",m.conn.LocalAddr().String())
+		return 0, nil
+	}
+
 	i,e := m.conn.Read(b)
 	//end := 10
 	//if end > len(b) {
@@ -339,10 +351,6 @@ func (c *Connection) dial() bool {
 
 // Called when we are online and connected to the peer.
 func (c *Connection) goOnline() {
-	fmt.Println("goonline",c.conn.conn.LocalAddr().String(), c.peer.Address)
-	if c.conn.conn.LocalAddr().String() == c.peer.Address {
-		return
-	}
 	debug(c.peer.PeerIdent(), "Connection.goOnline() called.")
 	c.state = ConnectionOnline
 	now := time.Now()
