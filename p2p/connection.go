@@ -339,6 +339,10 @@ func (c *Connection) dial() bool {
 
 // Called when we are online and connected to the peer.
 func (c *Connection) goOnline() {
+	fmt.Println("goonline",c.conn.conn.LocalAddr().String(), c.peer.Address)
+	if c.conn.conn.LocalAddr().String() == c.peer.Address {
+		return
+	}
 	debug(c.peer.PeerIdent(), "Connection.goOnline() called.")
 	c.state = ConnectionOnline
 	now := time.Now()
