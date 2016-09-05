@@ -36,9 +36,9 @@ type ParcelHeader struct {
 }
 
 var _ interfaces.BinaryMarshallable
-//var _ interfaces.BinaryMarshallable = (*Parcel)(nil)
+var _ interfaces.BinaryMarshallable = (*Parcel)(nil)
 
-func (p *Parcel) xMarshalBinary() ([]byte,error) {
+func (p *Parcel) MarshalBinary() ([]byte,error) {
 	var buf primitives.Buffer
 	binary.Write(&buf,binary.BigEndian, uint32(p.Length)) // Will be patched up at the end
 	binary.Write(&buf,binary.BigEndian, uint32(p.Header.Network))
@@ -99,7 +99,7 @@ func (p *Parcel) xMarshalBinary() ([]byte,error) {
 }
 
 
-func (p *Parcel) xUnmarshalBinary(data []byte) error {
+func (p *Parcel) UnmarshalBinary(data []byte) error {
 	_, err := p.UnmarshalBinaryData(data)
 	return err
 }

@@ -5,6 +5,7 @@ import (
 
 	. "github.com/FactomProject/factomd/p2p"
 	"fmt"
+	"bytes"
 )
 
 func TestParcelMarshal(t *testing.T) {
@@ -35,4 +36,29 @@ func TestParcelMarshal(t *testing.T) {
 	if len(data) != int(p2.Length) {
 		t.Fail()
 	}
+	if p.Header.Network != p2.Header.Network {
+		t.Fail()
+	}
+	if p.Header.Version != p2.Header.Version {
+		t.Fail()
+	}
+	if p.Header.Type != p2.Header.Type {
+		t.Fail()
+	}
+	if p.Header.NodeID != p2.Header.NodeID {
+		t.Fail()
+	}
+	if p.Header.TargetPeer != p2.Header.TargetPeer {
+		t.Fail()
+	}
+	if p.Header.PeerAddress != p2.Header.PeerAddress {
+		t.Fail()
+	}
+	if p.Header.PeerPort != p2.Header.PeerPort {
+		t.Fail()
+	}
+	if bytes.Compare(p.Payload, p2.Payload) != 0 {
+		t.Fail()
+	}
+
 }
