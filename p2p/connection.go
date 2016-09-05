@@ -195,9 +195,9 @@ func (c *Connection) Notes() string {
 
 func (c *Connection) commonInit(peer Peer) {
 	if c.conn != nil {
-		fmt.Println("Connecting:  me %s with peer %s\n", c.conn.conn.LocalAddr(), peer.Address)
+		fmt.Printf("Connecting:  me %s with peer %s\n", c.conn.conn.LocalAddr(), peer.Address)
 	}else{
-		fmt.Println("Connecting: me ? with peer %s\n",peer.Address)
+		fmt.Printf("Connecting: me ? with peer %s\n",peer.Address)
 	}
 	c.state = ConnectionInitialized
 	c.peer = peer
