@@ -109,18 +109,14 @@ func main() {
 
 	go listen()
 
-	timetosend := int64(0)
 	for {
 		if msgcnt < 100 {
 			bounce := new(messages.Bounce)
 			bounce.Name = name
 			bounce.Timestamp = primitives.NewTimestampNow()
 			p2pProxy.Send(bounce)
-			now := primitives.NewTimestampNow()
-			timetosend = now.GetTimeMilli()-bounce.Timestamp.GetTimeMilli()
 			msgcnt++
 		}
-		msg := fmt.Sprintf("%d/%d/%d",msgcnt,bounces,oldcnt)
 		fmt.Printf("bbbb Summary:  Bytes Read: %d Bytes Written %d Msg Sent %d Msg Received %d\n",p2p.Writes,p2p.Reads,msgcnt,bounces)
 		time.Sleep(20 * time.Second)
 	}
