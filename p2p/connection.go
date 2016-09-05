@@ -44,14 +44,20 @@ type middle struct {
 
 var Writes int
 var Reads int
+var WritesErr int
+var ReadsErr int
 
 func (m *middle)Write(b []byte)(int,error){
 	//end := 10
 	//if end > len(b) {
 	//	end = len(b)
 	//}
-	Writes += len(b)
 	i,e := m.conn.Write(b)
+	if e == nil {
+		Writes += len(b)
+	}else{
+		WritesErr++
+	}
 	//fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
 	return i,e
 }
@@ -64,7 +70,11 @@ func (m *middle)Read(b[]byte)(int,error) {
 	//if e == nil {
 	//	fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
 	//}
-	Reads += len(b)
+	if e == nil {
+		Reads += len(b)
+	}else{
+		ReadsErr++
+	}
 	return i,e
 }
 

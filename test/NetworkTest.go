@@ -117,7 +117,10 @@ func main() {
 			p2pProxy.Send(bounce)
 			msgcnt++
 		}
-		fmt.Printf("bbbb Summary:  Bytes Read: %d Bytes Written %d Msg Sent %d Msg Received %d\n",p2p.Writes,p2p.Reads,msgcnt,bounces)
+		fmt.Printf("bbbb Summary: Reads: %d errs %d Writes %d errs %d Msg Sent %d Msg Received %d\n",
+			p2p.Reads,p2p.ReadsErr,
+			p2p.Writes,p2p.WritesErr,
+			msgcnt,bounces)
 		time.Sleep(20 * time.Second)
 	}
 
