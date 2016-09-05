@@ -48,7 +48,6 @@ var WritesErr int
 var ReadsErr int
 
 func (m *middle)Write(b []byte)(int,error){
-	m.conn.
 	//end := 10
 	//if end > len(b) {
 	//	end = len(b)
