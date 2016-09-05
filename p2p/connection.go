@@ -62,6 +62,7 @@ func (m *middle)Write(b []byte)(int,error){
 	if e == nil {
 		Writes += len(b)
 	}else{
+		fmt.Println("Error:",e.Error())
 		WritesErr++
 	}
 	//fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
@@ -85,6 +86,7 @@ func (m *middle)Read(b[]byte)(int,error) {
 	if e == nil {
 		Reads += len(b)
 	}else{
+		fmt.Println("Error:",e.Error())
 		ReadsErr++
 	}
 	return i,e
