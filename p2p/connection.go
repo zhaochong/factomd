@@ -41,24 +41,30 @@ type Connection struct {
 type middle struct {
 	conn net.Conn
 }
+
+var Writes int
+var Reads int
+
 func (m *middle)Write(b []byte)(int,error){
-	end := 10
-	if end > len(b) {
-		end = len(b)
-	}
+	//end := 10
+	//if end > len(b) {
+	//	end = len(b)
+	//}
+	Writes += len(b)
 	i,e := m.conn.Write(b)
-	fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
+	//fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
 	return i,e
 }
 func (m *middle)Read(b[]byte)(int,error) {
 	i,e := m.conn.Read(b)
-	end := 10
-	if end > len(b) {
-		end = len(b)
-	}
-	if e == nil {
-		fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
-	}
+	//end := 10
+	//if end > len(b) {
+	//	end = len(b)
+	//}
+	//if e == nil {
+	//	fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
+	//}
+	Reads += len(b)
 	return i,e
 }
 

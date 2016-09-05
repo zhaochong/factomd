@@ -121,8 +121,8 @@ func main() {
 			msgcnt++
 		}
 		msg := fmt.Sprintf("%d/%d/%d",msgcnt,bounces,oldcnt)
-		fmt.Printf("bbbb %s Message Sent/Recieved/Duplicates: %10s TimetoSend %d.%03d\n", name, msg,timetosend/1000,timetosend%1000)
-		time.Sleep(10 * time.Second)
+		fmt.Printf("bbbb Summary:  Bytes Read: %d Bytes Written %d Msg Sent %d Msg Received %d\n",p2p.Writes,p2p.Reads,msgcnt,bounces)
+		time.Sleep(20 * time.Second)
 	}
 
 }
