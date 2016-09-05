@@ -35,9 +35,10 @@ type ParcelHeader struct {
 	PeerPort    string						// port of the peer , or we are listening on
 }
 
-var _ interfaces.BinaryMarshallable = (*Parcel)(nil)
+var _ interfaces.BinaryMarshallable
+//var _ interfaces.BinaryMarshallable = (*Parcel)(nil)
 
-func (p *Parcel) MarshalBinary() ([]byte,error) {
+func (p *Parcel) xMarshalBinary() ([]byte,error) {
 	var buf primitives.Buffer
 	binary.Write(&buf,binary.BigEndian, uint32(p.Length)) // Will be patched up at the end
 	binary.Write(&buf,binary.BigEndian, uint32(p.Header.Network))
@@ -98,7 +99,7 @@ func (p *Parcel) MarshalBinary() ([]byte,error) {
 }
 
 
-func (p *Parcel) UnmarshalBinary(data []byte) error {
+func (p *Parcel) xUnmarshalBinary(data []byte) error {
 	_, err := p.UnmarshalBinaryData(data)
 	return err
 }
