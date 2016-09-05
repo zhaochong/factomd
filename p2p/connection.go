@@ -414,7 +414,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
-		c.metrics.BytesSent += parcel.Header.Length
+		c.metrics.BytesSent += uint32(len(parcel.Payload))
 		c.metrics.MessagesSent += 1
 	default:
 		c.handleNetErrors(err)
@@ -435,7 +435,7 @@ func (c *Connection) processReceives() {
 		switch {
 		case nil == err:
 			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
-			c.metrics.BytesReceived += message.Header.Length
+			c.metrics.BytesReceived += uint32(len(message.Payload))
 			c.metrics.MessagesReceived += 1
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(message)
@@ -523,9 +523,6 @@ func (c *Connection) parcelValidity(parcel Parcel) uint8 {
 	case parcel.Header.Version < ProtocolVersionMinimum:
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to wrong version: %+v", parcel.Header)
 		return InvalidDisconnectPeer
-	case parcel.Header.Length != uint32(len(parcel.Payload)):
-		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to wrong length: %+v", parcel.Header)
-		return InvalidPeerDemerit
 	case parcel.Header.Crc32 != crc:
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to bad checksum: %+v", parcel.Header)
 		return InvalidPeerDemerit
