@@ -100,7 +100,6 @@ func (f *P2PProxy) Recieve() (interfaces.IMsg, error) {
 				}
 				if  1 < f.debugMode {
 					f.logMessage(msg, true) // NODE_TALK_FIX
-					fmt.Printf(".")
 				}
 				return msg, err
 			default:

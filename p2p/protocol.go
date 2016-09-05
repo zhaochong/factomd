@@ -134,7 +134,7 @@ func dot(dot string) {
 	if 5 < CurrentLoggingLevel {
 		switch dot {
 		case "":
-			fmt.Printf(".")
+
 		default:
 			fmt.Printf(dot)
 		}
