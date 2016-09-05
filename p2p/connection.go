@@ -48,6 +48,7 @@ var WritesErr int
 var ReadsErr int
 
 func (m *middle)Write(b []byte)(int,error){
+	m.conn.
 	//end := 10
 	//if end > len(b) {
 	//	end = len(b)
@@ -194,6 +195,8 @@ func (c *Connection) Notes() string {
 //////////////////////////////
 
 func (c *Connection) commonInit(peer Peer) {
+
+	fmt.Println("Connecting:  me %s with peer %s\n", c.conn.conn.LocalAddr(), peer.Address)
 	c.state = ConnectionInitialized
 	c.peer = peer
 	c.setNotes("commonInit()")
