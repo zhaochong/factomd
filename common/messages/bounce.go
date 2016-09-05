@@ -188,7 +188,24 @@ func (m *Bounce) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *Bounce) String() string {
-	str := fmt.Sprintf("\nbbbb Origin: %s %s Bounce Start:  %30s Hops: %5d Size: %5d ", time.Now().String(), strings.TrimSpace(m.Name), m.Timestamp.String(),len(m.Stamps),m.SizeOf())
+	// bbbb Origin: 2016-09-05 12:26:20.426954586 -0500 CDT left Bounce Start:             2016-09-05 12:26:05 Hops:     1 Size:    43 Last Hop Took 14.955 Average Hop: 14.955
+	now := time.Now()
+	t := fmt.Sprintf("%2d:%2d:%2d.%03d", now.Hour(),now.Minute(),now.Second(),now.Nanosecond()/1000000)
+	mill := m.Timestamp.GetTimeMilli()
+	mills := mill%1000
+	mill = mill / 1000
+	secs := mill %60
+	mill = mill / 60
+	mins := mill % 60
+	mill = mill / 60
+	hrs := mill % 24
+	t2 := fmt.Sprintf("%2d:%2d:%2d.%03d", hrs,mins,secs,mills)
+	str := fmt.Sprintf("\nbbbb Origin: %12s %10s Bounce Start: %12s Hops: %5d Size: %5d ",
+		t,
+		strings.TrimSpace(m.Name),
+		t2,
+		len(m.Stamps),m.SizeOf())
+
 	last := m.Timestamp.GetTimeMilli()
 	elapse := int64(0)
 	sum := elapse
