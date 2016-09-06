@@ -118,9 +118,9 @@ func main() {
 			msgcnt++
 		}
 		fmt.Printf("bbbb Summary: Reads: %d errs %d Writes %d errs %d Msg Sent %d Msg Received %d\n",
-			p2p.Reads,p2p.ReadsErr,
-			p2p.Writes,p2p.WritesErr,
-			msgcnt,bounces)
+			p2p.Reads, p2p.ReadsErr,
+			p2p.Writes, p2p.WritesErr,
+			msgcnt, bounces)
 		time.Sleep(20 * time.Second)
 	}
 

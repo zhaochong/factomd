@@ -76,13 +76,13 @@ func (m *middle)Read(b[]byte)(int,error) {
 	}
 
 	i,e := m.conn.Read(b)
-	//end := 10
-	//if end > len(b) {
-	//	end = len(b)
-	//}
-	//if e == nil {
-	//	fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
-	//}
+	end := 10
+	if end > len(b) {
+		end = len(b)
+	}
+	if e == nil {
+		fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
+	}
 	if e == nil {
 		Reads += len(b)
 	}else{
