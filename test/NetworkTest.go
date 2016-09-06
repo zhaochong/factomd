@@ -83,7 +83,7 @@ func listen() {
 				}
 			}
 			prtone = true
-			time.Sleep(10 * time.Second)
+			time.Sleep(1 * time.Millisecond)
 			continue
 		}
 
