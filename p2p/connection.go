@@ -215,7 +215,7 @@ func (c *Connection) commonInit(peer Peer) {
 	c.ReceiveChannel = make(chan interface{}, StandardChannelSize)
 	c.metrics = ConnectionMetrics{MomentConnected: time.Now()}
 	c.timeLastMetrics = time.Now()
-	c.timeLastAttempt = time.Now()
+	c.timeLastAttempt = time.Now().Add( -1 * TimeBetweenRedials)
 	c.timeLastStatus = time.Now()
 }
 
@@ -344,6 +344,13 @@ func (c *Connection) dial() bool {
 		c.setNotes(fmt.Sprintf("Connection.dial(%s) got error: %+v", address, err))
 		return false
 	}
+        
+        if err := conn.(*net.TCPConn).SetNoDelay(true); err != nil {
+		fmt.Printf("error, nodelay didn't take")
+		return false
+	}
+	
+	
 	m := new(middle)
 	c.conn = m
 	m.conn = conn
