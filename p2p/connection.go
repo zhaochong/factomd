@@ -339,7 +339,7 @@ func (c *Connection) dial() bool {
 	address := c.peer.AddressPort()
 	note(c.peer.PeerIdent(), "Connection.dial() dialing: %+v", address)
 	// conn, err := net.Dial("tcp", c.peer.Address)
-	conn, err := net.DialTimeout("tcp", address, time.Second*60)
+	conn, err := net.DialTimeout("tcp", address, time.Second*6)
 	if nil != err {
 		c.setNotes(fmt.Sprintf("Connection.dial(%s) got error: %+v", address, err))
 		return false
@@ -447,7 +447,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.conn.SetWriteDeadline(time.Now().Add(1000 * time.Millisecond))
+	c.conn.conn.SetWriteDeadline(time.Now().Add(100 * time.Millisecond))
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
@@ -467,7 +467,7 @@ func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		c.conn.conn.SetReadDeadline(time.Now().Add(1000 * time.Millisecond))
+		c.conn.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 		err := c.decoder.Decode(&message)
 		switch {
 		case nil == err:
