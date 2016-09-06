@@ -47,27 +47,28 @@ var Reads int
 var WritesErr int
 var ReadsErr int
 
-func (m *middle)Write(b []byte)(int,error){
+func (m *middle)Write(b []byte)(int,error) {
 
-	if m.conn.LocalAddr().String()==m.conn.RemoteAddr().String() {
-		fmt.Println("Middle Ignore",m.conn.LocalAddr().String())
-		return 0,nil
+	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
+		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
+		return 0, nil
 	}
 
 	// /end := 10
 	//if end > len(b) {
 	//	end = len(b)
 	//}
-	i,e := m.conn.Write(b)
-	if e == nil {
-		Writes += len(b)
-	}else{
-		fmt.Println("Error:",e.Error())
-		WritesErr++
+	for {
+		i, e := m.conn.Write(b)
+		if e == nil && i > 0 {
+			Writes += len(b)
+			return i, e
+		} else {
+			WritesErr++
+		}
 	}
-	//fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
-	return i,e
 }
+
 func (m *middle)Read(b[]byte)(int,error) {
 
 	if m.conn.LocalAddr().String()==m.conn.RemoteAddr().String() {
@@ -75,21 +76,15 @@ func (m *middle)Read(b[]byte)(int,error) {
 		return 0, nil
 	}
 
-	i,e := m.conn.Read(b)
-	end := 10
-	if end > len(b) {
-		end = len(b)
+	for {
+		i, e := m.conn.Read(b)
+		if e == nil && i > 0 {
+			Reads += len(b)
+			return i, e
+		} else {
+			ReadsErr++
+		}
 	}
-	if e == nil {
-		fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
-	}
-	if e == nil {
-		Reads += len(b)
-	}else{
-		fmt.Println("Error:",e.Error())
-		ReadsErr++
-	}
-	return i,e
 }
 
 // Each connection is a simple state machine.  The state is managed by a single goroutine which also does netowrking.
