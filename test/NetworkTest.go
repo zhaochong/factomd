@@ -111,7 +111,7 @@ func main() {
 	for {
 		if msgcnt < 10 {
 			bounce := new(messages.Bounce)
-			bounce.Number = msgcnt
+			bounce.Number = int32(msgcnt)
 			bounce.Name = name
 			bounce.Timestamp = primitives.NewTimestampNow()
 			p2pProxy.Send(bounce)
