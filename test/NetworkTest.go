@@ -108,8 +108,9 @@ func main() {
 	go listen()
 
 	for {
-		if msgcnt < 100 {
+		if msgcnt < 10 {
 			bounce := new(messages.Bounce)
+			bounce.Number = msgcnt
 			bounce.Name = name
 			bounce.Timestamp = primitives.NewTimestampNow()
 			p2pProxy.Send(bounce)
