@@ -77,12 +77,11 @@ func listen() {
 		if err != nil || msg == nil {
 			if !prtone {
 				if err != nil {
-					time.Sleep(1 * time.Millisecond)
-				} else {
-					fmt.Println("Msg is nil")
+					fmt.Println(err.Error())
 				}
 			}
 			prtone = true
+			time.Sleep(1 * time.Millisecond)
 			continue
 		}
 
