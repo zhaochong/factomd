@@ -16,3 +16,6 @@ import (
 func StartProfiler() {
 	log.Println(http.ListenAndServe("localhost:6060", nil))
 }
+func StartProfilerWithURL(url string) {
+	log.Println(http.ListenAndServe(url, nil))
+}

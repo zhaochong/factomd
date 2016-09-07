@@ -25,11 +25,10 @@ var name string
 
 func InitNetwork() {
 
-	go engine.StartProfiler()
-
 	namePtr := flag.String("name", fmt.Sprintf("%d", rand.Int()), "Name for this node")
 	networkPortOverridePtr := flag.String("networkPort", "8108", "Address for p2p network to listen on.")
 	peersPtr := flag.String("peers", "", "Array of peer addresses. ")
+	profilerURLPtr := flag.String("profiler", "localhost:6060", "Where profiler should listen")
 	netdebugPtr := flag.Int("netdebug", 0, "0-5: 0 = quiet, >0 = increasing levels of logging")
 	exclusivePtr := flag.Bool("exclusive", false, "If true, we only dial out to special/trusted peers.")
 
@@ -38,8 +37,11 @@ func InitNetwork() {
 	name = *namePtr
 	port := *networkPortOverridePtr
 	peers := *peersPtr
+	profilerURL := *profilerURLPtr
 	netdebug := *netdebugPtr
 	exclusive := *exclusivePtr
+
+	go engine.StartProfilerWithURL(profilerURL)
 
 	old = make(map[[32]byte]interfaces.IMsg, 0)
 	connectionMetricsChannel := make(chan interface{}, p2p.StandardChannelSize)
@@ -66,8 +68,7 @@ func InitNetwork() {
 		p2pNetwork.StartLogging(uint8(0))
 	}
 	p2pProxy.StartProxy()
-	// Command line peers lets us manually set special peers
-	p2pNetwork.DialSpecialPeersString("")
+
 }
 
 func listen() {
