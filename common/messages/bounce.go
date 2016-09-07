@@ -208,8 +208,8 @@ func (m *Bounce) String() string {
 	str := fmt.Sprintf("bbbb Origin: %12s  %10s-%03d-%03d Bounce Start: %12s Hops: %5d Size: %5d ",
 		t,
 		strings.TrimSpace(m.Name),
-		len(m.Stamps),
 		m.Number,
+		len(m.Stamps),
 		t2,
 		len(m.Stamps), m.SizeOf())
 
