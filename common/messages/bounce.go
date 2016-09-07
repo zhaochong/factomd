@@ -205,7 +205,7 @@ func (m *Bounce) String() string {
 	mill = mill / 60
 	hrs := mill % 24
 	t2 := fmt.Sprintf("%2d:%2d:%2d.%03d", hrs, mins, secs, mills)
-	str := fmt.Sprintf("bbbb Origin: %12s-%03d-%03d  %10s Bounce Start: %12s Hops: %5d Size: %5d ",
+	str := fmt.Sprintf("bbbb Origin: %12s  %10s-%03d-%03d Bounce Start: %12s Hops: %5d Size: %5d ",
 		t,
 		strings.TrimSpace(m.Name),
 		t2,
