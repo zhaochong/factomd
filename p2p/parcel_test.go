@@ -3,9 +3,9 @@ package p2p_test
 import (
 	"testing"
 
-	. "github.com/FactomProject/factomd/p2p"
-	"fmt"
 	"bytes"
+	"fmt"
+	. "github.com/FactomProject/factomd/p2p"
 )
 
 func TestParcelMarshal(t *testing.T) {
@@ -20,12 +20,12 @@ func TestParcelMarshal(t *testing.T) {
 	p.Header.PeerPort = "789"
 	p.Payload = []byte("This is a test")
 
-	data,err := p.MarshalBinary()
+	data, err := p.MarshalBinary()
 	if err != nil {
 		t.Fail()
 	}
 
-	fmt.Printf("Data: %x\n",data)
+	fmt.Printf("Data: %x\n", data)
 
 	p2 := new(Parcel)
 	err = p2.UnmarshalBinary(data)
