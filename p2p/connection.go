@@ -79,7 +79,7 @@ func (m *middle) goWrite() {
 
 func (m *middle) goRead() {
 	for !m.closeChans {
-		m.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
+		m.conn.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
 		var b [4096]byte
 		i,e := m.conn.Read(b[:])
 		if e == nil {
@@ -87,15 +87,14 @@ func (m *middle) goRead() {
 			Reads += i
 		} else {
 			ReadsErr++
+			time.Sleep(time.Millisecond)
 		}
 	}
 }
 
 
 func (m *middle) Write(b []byte) (int, error) {
-	b2 := make([]byte,len(b))
-	copy (b2,b)
-	m.writeChan <- b2
+	m.writeChan <- b
 	return len(b), nil
 }
 
