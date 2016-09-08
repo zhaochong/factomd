@@ -44,52 +44,69 @@ var WritesErr int
 var ReadsErr int
 
 type middle struct {
-	conn net.Conn
+	conn 				net.Conn
+	writeChan 	chan [] byte
+	readChan  	chan [] byte
+	closeChans 	bool
+}
+
+func NewMiddle() *middle {
+	m := new(middle)
+	m.writeChan = make(chan []byte,10000)
+	m.readChan = make(chan  []byte,10000)
+	go m.goRead()
+	go m.goWrite()
+	return m
 }
 
 func (m *middle) Close() {
 	m.conn.Close()
+	m.closeChans = true
 }
 
-func (m *middle) SetReadDeadline(t time.Time) {
-	m.conn.SetReadDeadline(t)
+func (m *middle) goWrite() {
+	for !m.closeChans {
+		b := <- m.writeChan
+		m.conn.SetWriteDeadline(time.Now().Add(1 * time.Millisecond))
+		_,e := m.conn.Write(b)
+		if e == nil {
+			Writes += len(b)
+		} else {
+			WritesErr++
+		}
+	}
 }
 
-func (m *middle) SetWriteDeadline(t time.Time) {
-	m.conn.SetWriteDeadline(t)
+func (m *middle) goRead() {
+	for !m.closeChans {
+		m.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
+		var b []byte
+		_,e := m.conn.Read(b)
+		if e == nil {
+			Reads += len(b)
+		} else {
+			ReadsErr++
+		}
+		m.readChan <- b
+	}
 }
+
 
 func (m *middle) Write(b []byte) (int, error) {
-
-	// /end := 10
-	//if end > len(b) {
-	//	end = len(b)
-	//}
-	i, e := m.conn.Write(b)
-	if e == nil {
-		Writes += len(b)
-	} else {
-		WritesErr++
-	}
-	//fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
-	return i, e
+	m.writeChan <- b
+	return len(b), nil
 }
+
 func (m *middle) Read(b []byte) (int, error) {
 
-	i, e := m.conn.Read(b)
-	//end := 10
-	//if end > len(b) {
-	//	end = len(b)
-	//}
-	//if e == nil {
-	//	fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
-	//}
-	if e == nil {
-		Reads += len(b)
-	} else {
-		ReadsErr++
+	select {
+	case rb := <-m.readChan:
+		copy(b, rb)
+		return len(b), nil
+	default:
 	}
-	return i, e
+	return 0, nil
+
 }
 
 // Each connection is a simple state machine.  The state is managed by a single goroutine which also does netowrking.
@@ -164,7 +181,7 @@ const (
 
 // InitWithConn is called from our accept loop when a peer dials into us and we already have a network conn
 func (c *Connection) InitWithConn(conn net.Conn, peer Peer) *Connection {
-	m := new(middle)
+	m := NewMiddle()
 	c.conn = m
 	m.conn = conn
 	c.isOutGoing = false // InitWithConn is called by controller's accept() loop
@@ -350,7 +367,7 @@ func (c *Connection) dial() bool {
 		return false
 	}
 
-	m := new(middle)
+	m := NewMiddle()
 	c.conn = m
 	m.conn = conn
 	c.setNotes(fmt.Sprintf("Connection.dial(%s) was successful.", address))
@@ -446,7 +463,6 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.SetWriteDeadline(time.Now().Add(1 * time.Millisecond))
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
@@ -466,7 +482,6 @@ func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		c.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
 		err := c.decoder.Decode(&message)
 		switch {
 		case nil == err:
