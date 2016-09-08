@@ -5,10 +5,10 @@
 package p2p
 
 import (
-	"encoding/binary"
+	//"encoding/binary"
 	"fmt"
 	"github.com/FactomProject/factomd/common/interfaces"
-	"github.com/FactomProject/factomd/common/primitives"
+	//"github.com/FactomProject/factomd/common/primitives"
 	"hash/crc32"
 	"strconv"
 )
@@ -38,7 +38,7 @@ type ParcelHeader struct {
 var _ interfaces.BinaryMarshallable
 
 //var _ interfaces.BinaryMarshallable = (*Parcel)(nil)
-
+/*
 // Gob does not really support the interfaces.BinaryMarshallable interface, so we are removing it for now.
 // Might add it back in for some other encoder/decoder
 func (p *Parcel) xMarshalBinary() ([]byte, error) {
@@ -142,7 +142,7 @@ func (p *Parcel) UnmarshalBinaryData(Data []byte) (newData []byte, err error) {
 	newData = newData[blen:]
 
 	return
-}
+}*/
 
 type ParcelCommandType uint16
 
