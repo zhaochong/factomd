@@ -627,7 +627,6 @@ func (c *Controller) shutdown() {
 
 func (c *Controller) networkStatusReport() {
 	durationSinceLastReport := time.Since(c.lastStatusReport)
-	note("ctrlr", "networkStatusReport() NetworkStatusInterval: %s durationSinceLastReport: %s c.lastStatusReport: %s", NetworkStatusInterval.String(), durationSinceLastReport.String(), c.lastStatusReport.String())
 	if durationSinceLastReport > NetworkStatusInterval {
 		c.lastStatusReport = time.Now()
 		silence("ctrlr", "\n\n\n\n")
