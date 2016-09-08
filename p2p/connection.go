@@ -52,11 +52,11 @@ func (m *middle) Close() {
 }
 
 func (m *middle) SetReadDeadline(t time.Time) {
-	m.SetReadDeadline(t)
+	m.conn.SetReadDeadline(t)
 }
 
 func (m *middle) SetWriteDeadline(t time.Time) {
-	m.SetWriteDeadline(t)
+	m.conn.SetWriteDeadline(t)
 }
 
 func (m *middle) Write(b []byte) (int, error) {
