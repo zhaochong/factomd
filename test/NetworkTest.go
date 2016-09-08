@@ -32,6 +32,7 @@ func InitNetwork() {
 	peersPtr := flag.String("peers", "", "Array of peer addresses. ")
 	netdebugPtr := flag.Int("netdebug", 0, "0-5: 0 = quiet, >0 = increasing levels of logging")
 	exclusivePtr := flag.Bool("exclusive", false, "If true, we only dial out to special/trusted peers.")
+	deadlinePtr := flag.Int64("deadline", 1, "Deadline for Reads and Writes to conn.")
 
 	flag.Parse()
 
@@ -40,6 +41,7 @@ func InitNetwork() {
 	peers := *peersPtr
 	netdebug := *netdebugPtr
 	exclusive := *exclusivePtr
+	p2p.Deadline = time.Duration(*deadlinePtr)
 
 	old = make(map[[32]byte]interfaces.IMsg, 0)
 	connectionMetricsChannel := make(chan interface{}, p2p.StandardChannelSize)

@@ -47,18 +47,15 @@ var Reads int
 var WritesErr int
 var ReadsErr int
 
+var Deadline time.Duration = time.Duration(100)
+
 func (m *middle) Write(b []byte) (int, error) {
-
-	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
-		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
-		return 0, nil
-	}
-
+	
 	// /end := 10
 	//if end > len(b) {
 	//	end = len(b)
 	//}
-	m.conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+	m.conn.SetWriteDeadline(time.Now().Add(Deadline * time.Millisecond))
 
 	i, e := m.conn.Write(b)
 	if e == nil {
@@ -71,12 +68,8 @@ func (m *middle) Write(b []byte) (int, error) {
 }
 func (m *middle) Read(b []byte) (int, error) {
 
-	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
-		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
-		return 0, nil
-	}
 
-	m.conn.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
+	m.conn.SetReadDeadline(time.Now().Add(Deadline * time.Millisecond))
 	i, e := m.conn.Read(b)
 	//end := 10
 	//if end > len(b) {
