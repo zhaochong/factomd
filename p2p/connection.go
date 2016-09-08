@@ -38,20 +38,21 @@ type Connection struct {
 	metrics         ConnectionMetrics // Metrics about this connection
 }
 
+type middle struct {
+	conn net.Conn
+}
+
 var Writes int
 var Reads int
 var WritesErr int
 var ReadsErr int
 
-type middle struct {
-	conn net.Conn
-}
-
-func (m *middle) Close() {
-	m.conn.Close()
-}
-
 func (m *middle) Write(b []byte) (int, error) {
+
+	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
+		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
+		return 0, nil
+	}
 
 	// /end := 10
 	//if end > len(b) {
@@ -69,6 +70,11 @@ func (m *middle) Write(b []byte) (int, error) {
 	return i, e
 }
 func (m *middle) Read(b []byte) (int, error) {
+
+	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
+		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
+		return 0, nil
+	}
 
 	m.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
 	i, e := m.conn.Read(b)
@@ -382,12 +388,12 @@ func (c *Connection) goOffline() {
 func (c *Connection) goShutdown() {
 	c.goOffline()
 	c.updatePeer()
+	if nil != c.conn {
+		defer c.conn.conn.Close()
+	}
 	c.decoder = nil
 	c.encoder = nil
 	c.state = ConnectionShuttingDown
-	if nil != c.conn {
-		c.conn.Close()
-	}
 }
 
 // processSends gets all the messages from the application and sends them out over the network
