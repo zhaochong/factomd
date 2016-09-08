@@ -83,11 +83,11 @@ func (m *middle) goRead() {
 		var b [4096]byte
 		i,e := m.conn.Read(b[:])
 		if e == nil {
+			m.readChan <- b[:i]
 			Reads += i
 		} else {
 			ReadsErr++
 		}
-		m.readChan <- b[:i]
 	}
 }
 
