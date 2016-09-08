@@ -38,21 +38,28 @@ type Connection struct {
 	metrics         ConnectionMetrics // Metrics about this connection
 }
 
-type middle struct {
-	conn net.Conn
-}
-
 var Writes int
 var Reads int
 var WritesErr int
 var ReadsErr int
 
-func (m *middle) Write(b []byte) (int, error) {
+type middle struct {
+	conn net.Conn
+}
 
-	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
-		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
-		return 0, nil
-	}
+func (m *middle) Close() {
+	m.conn.Close()
+}
+
+func (m *middle) SetReadDeadline(t time.Time) {
+	m.SetReadDeadline(t)
+}
+
+func (m *middle) SetWriteDeadline(t time.Time) {
+	m.SetWriteDeadline(t)
+}
+
+func (m *middle) Write(b []byte) (int, error) {
 
 	// /end := 10
 	//if end > len(b) {
@@ -68,11 +75,6 @@ func (m *middle) Write(b []byte) (int, error) {
 	return i, e
 }
 func (m *middle) Read(b []byte) (int, error) {
-
-	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
-		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
-		return 0, nil
-	}
 
 	i, e := m.conn.Read(b)
 	//end := 10
@@ -385,12 +387,12 @@ func (c *Connection) goOffline() {
 func (c *Connection) goShutdown() {
 	c.goOffline()
 	c.updatePeer()
-	if nil != c.conn {
-		defer c.conn.conn.Close()
-	}
 	c.decoder = nil
 	c.encoder = nil
 	c.state = ConnectionShuttingDown
+	if nil != c.conn {
+		c.conn.Close()
+	}
 }
 
 // processSends gets all the messages from the application and sends them out over the network
@@ -444,7 +446,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
+	c.conn.SetWriteDeadline(time.Now().Add(1 * time.Millisecond))
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
@@ -464,7 +466,7 @@ func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		c.conn.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
+		c.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
 		err := c.decoder.Decode(&message)
 		switch {
 		case nil == err:
