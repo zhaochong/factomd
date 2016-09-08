@@ -10,6 +10,7 @@ import (
 	"hash/crc32"
 	"io"
 	"net"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -21,7 +22,7 @@ type Connection struct {
 	conn           *middle
 	SendChannel    chan interface{} // Send means "towards the network" Channel takes Parcels and ConnectionCommands
 	ReceiveChannel chan interface{} // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
-																	// and as "address" for sending messages to specific nodes.
+	// and as "address" for sending messages to specific nodes.
 	encoder         *gob.Encoder      // Wire format is gobs in this version, may switch to binary
 	decoder         *gob.Decoder      // Wire format is gobs in this version, may switch to binary
 	peer            Peer              // the datastructure representing the peer we are talking to. defined in peer.go
@@ -78,6 +79,12 @@ func (m *middle) Read(b []byte) (int, error) {
 
 	m.conn.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
 	i, e := m.conn.Read(b)
+	if e != nil {
+		if strings.Contains(e.Error(), "i/o timeout") {
+			e = nil
+		}
+	}
+
 	//end := 10
 	//if end > len(b) {
 	//	end = len(b)
@@ -132,9 +139,9 @@ type ConnectionMetrics struct {
 	MessagesReceived uint32    // Keeping track of the data sent/recieved for console
 	PeerAddress      string    // Peer IP Address
 	PeerQuality      int32     // Quality of the connection.
-														 // Red: Below -50
-														 // Yellow: -50 - 100
-														 // Green: > 100
+	// Red: Below -50
+	// Yellow: -50 - 100
+	// Green: > 100
 	ConnectionState string // Basic state of the connection
 	ConnectionNotes string // Connectivity notes for the connection
 }
