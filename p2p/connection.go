@@ -10,7 +10,6 @@ import (
 	"hash/crc32"
 	"io"
 	"net"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -52,30 +51,30 @@ var Deadline time.Duration = time.Duration(100)
 
 func (m *middle) Write(b []byte) (int, error) {
 	
-	// /end := 10
-	//if end > len(b) {
-	//	end = len(b)
-	//}
 	m.conn.SetWriteDeadline(time.Now().Add(Deadline * time.Millisecond))
 
 	i, e := m.conn.Write(b)
-	if e == nil {
-		Writes += len(b)
-	} else {
+
+	Writes += i
+
+	if i > 0 {
+		e = nil
+	}
+
+	if e != nil {
 		WritesErr++
 	}
-	//fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
 	return i, e
 }
+
+
 func (m *middle) Read(b []byte) (int, error) {
 
-
 	m.conn.SetReadDeadline(time.Now().Add(Deadline * time.Millisecond))
+
 	i, e := m.conn.Read(b)
-	if e != nil {
-		if strings.Contains(e.Error(), "i/o timeout") {
-			e = nil
-		}
+	if i > 0 {
+		e = nil
 	}
 
 	//end := 10
@@ -85,9 +84,9 @@ func (m *middle) Read(b []byte) (int, error) {
 	//if e == nil {
 	//	fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
 	//}
-	if e == nil {
-		Reads += len(b)
-	} else {
+	Reads += i
+
+	if e != nil {
 		ReadsErr++
 	}
 	return i, e
