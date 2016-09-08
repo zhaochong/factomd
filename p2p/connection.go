@@ -58,7 +58,7 @@ func (m *middle) Write(b []byte) (int, error) {
 	//if end > len(b) {
 	//	end = len(b)
 	//}
-	m.conn.SetWriteDeadline(time.Now().Add(1 * time.Millisecond))
+	m.conn.SetWriteDeadline(time.Now().Add(10 * time.Millisecond))
 
 	i, e := m.conn.Write(b)
 	if e == nil {
@@ -76,7 +76,7 @@ func (m *middle) Read(b []byte) (int, error) {
 		return 0, nil
 	}
 
-	m.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
+	m.conn.SetReadDeadline(time.Now().Add(10 * time.Millisecond))
 	i, e := m.conn.Read(b)
 	//end := 10
 	//if end > len(b) {
