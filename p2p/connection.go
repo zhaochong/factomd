@@ -93,7 +93,9 @@ func (m *middle) goRead() {
 
 
 func (m *middle) Write(b []byte) (int, error) {
-	m.writeChan <- b
+	b2 := make([]byte,len(b))
+	copy (b2,b)
+	m.writeChan <- b2
 	return len(b), nil
 }
 
