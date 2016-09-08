@@ -402,7 +402,7 @@ func (c *Connection) processSends() {
 		case ConnectionParcel:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
 			parameters := message.(ConnectionParcel)
-			c.sendParcel(parameters.parcel)
+			go c.sendParcel(parameters.parcel)
 		case ConnectionCommand:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
 			parameters := message.(ConnectionCommand)
