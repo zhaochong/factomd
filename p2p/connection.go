@@ -68,9 +68,9 @@ func (m *middle) goWrite() {
 	for !m.closeChans {
 		b := <- m.writeChan
 		m.conn.SetWriteDeadline(time.Now().Add(1 * time.Millisecond))
-		_,e := m.conn.Write(b)
+		i,e := m.conn.Write(b)
 		if e == nil {
-			Writes += len(b)
+			Writes += i
 		} else {
 			WritesErr++
 		}
@@ -80,14 +80,14 @@ func (m *middle) goWrite() {
 func (m *middle) goRead() {
 	for !m.closeChans {
 		m.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
-		var b [1024]byte
-		_,e := m.conn.Read(b[:])
+		var b [4096]byte
+		i,e := m.conn.Read(b[:])
 		if e == nil {
-			Reads += len(b)
+			Reads += i
 		} else {
 			ReadsErr++
 		}
-		m.readChan <- b[:]
+		m.readChan <- b[:i]
 	}
 }
 
