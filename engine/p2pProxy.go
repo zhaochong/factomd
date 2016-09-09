@@ -40,6 +40,8 @@ type P2PProxy struct {
 type factomMessage struct {
 	message  []byte
 	peerHash string
+	appHash  string
+	appType  string
 }
 
 var _ interfaces.IPeer = (*P2PProxy)(nil)
@@ -76,7 +78,9 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 		fmt.Println("ERROR on Send: ", err)
 		return err
 	}
-	message := factomMessage{message: data, peerHash: msg.GetNetworkOrigin()}
+	hash := fmt.Sprintf("%x", msg.GetMsgHash().Bytes())
+	appType := fmt.Sprintf("%d", msg.GetMsgHash().Bytes())
+	message := factomMessage{message: data, peerHash: msg.GetNetworkOrigin(), appHash: hash, appType: appType}
 	if !msg.IsPeer2Peer() {
 		message.peerHash = ""
 	} else {
@@ -94,6 +98,7 @@ func (f *P2PProxy) Recieve() (interfaces.IMsg, error) {
 			switch data.(type) {
 			case factomMessage:
 				fmessage := data.(factomMessage)
+				f.trace(fmessage.appHash, fmessage.appType, "P2PProxy.Recieve()", "L")
 				msg, err := messages.UnmarshalMessage(fmessage.message)
 				if nil == err {
 					msg.SetNetworkOrigin(fmessage.peerHash)
@@ -214,6 +219,8 @@ func (f *P2PProxy) ManageOutChannel() {
 			parcel := p2p.NewParcel(p2p.CurrentNetwork, fmessage.message)
 			parcel.Header.Type = p2p.TypeMessage
 			parcel.Header.TargetPeer = fmessage.peerHash
+			parcel.Header.AppHash = fmessage.appHash
+			parcel.Header.AppType = fmessage.appType
 			p2p.BlockFreeChannelSend(f.ToNetwork, *parcel)
 		default:
 			fmt.Printf("Garbage on f.BrodcastOut. %+v", data)
@@ -227,12 +234,18 @@ func (f *P2PProxy) ManageInChannel() {
 		switch data.(type) {
 		case p2p.Parcel:
 			parcel := data.(p2p.Parcel)
-			message := factomMessage{message: parcel.Payload, peerHash: parcel.Header.TargetPeer}
+			f.trace(parcel.Header.AppHash, parcel.Header.AppType, "P2PProxy.ManageInChannel()", "K")
+			message := factomMessage{message: parcel.Payload, peerHash: parcel.Header.TargetPeer, appHash: parcel.Header.AppHash, appType: parcel.Header.AppType}
 			p2p.BlockFreeChannelSend(f.BroadcastIn, message)
 		default:
 			fmt.Printf("Garbage on f.FromNetwork. %+v", data)
 		}
 	}
+}
+
+func (f *P2PProxy) trace(appHash string, appType string, location string, sequence string) {
+	time := time.Now().Unix()
+	fmt.Printf("ParcelTrace, %s, %s, %s, %s, %d \n", appHash, sequence, appType, location, time)
 }
 
 func (f *P2PProxy) PeriodicStatusReport(fnodes []*FactomNode) {

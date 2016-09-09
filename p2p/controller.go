@@ -365,14 +365,17 @@ func (c *Controller) route() {
 		parcel := message.(Parcel)
 		TotalMessagesSent++
 		note("ctrlr", "Controller.route() got parcel from APPLICATION %+v", parcel.Header)
+		parcel.trace("controller.route().ToNetwork", "a")
 		if "" != parcel.Header.TargetPeer { // directed send
 			dot("&&h\n")
 			connection, present := c.connections[parcel.Header.TargetPeer]
 			if present { // We're still connected to the target
+				parcel.trace("controller.route().Directed Success", "b")
 				significant("ctrlr", "Controller.route() SUCCESS Directed send to %+v", parcel.Header.TargetPeer)
 				dot("&&i\n")
 				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
 			} else {
+				parcel.trace("controller.route().Directed Failed", "b")
 				significant("ctrlr", "Controller.route() FAILED! Target not present in connections! Directed send to %+v", parcel.Header.TargetPeer)
 				for key, _ := range c.connections {
 					significant("ctrlr", "Controller.route() %+v", key)
@@ -380,6 +383,7 @@ func (c *Controller) route() {
 			}
 		} else { // broadcast
 			dot("&&j\n")
+			parcel.trace("controller.route().Broadcast", "b")
 			note("ctrlr", "Controller.route() Broadcast send to %d peers", len(c.connections))
 			for _, connection := range c.connections {
 				dot("&&k\n")
@@ -400,10 +404,12 @@ func (c *Controller) handleParcelReceive(message interface{}, peerHash string, c
 	parcel.Header.TargetPeer = peerHash // Set the connection ID so the application knows which peer the message is from.
 	switch parcel.Header.Type {
 	case TypeMessage: // Application message, send it on.
+		parcel.trace("Controller.handleParcelReceive()-TypeMessage", "J")
 		dot("&&m\n")
 		ApplicationMessagesRecieved++
 		BlockFreeChannelSend(c.FromNetwork, parcel)
 	case TypePeerRequest: // send a response to the connection over its connection.SendChannel
+		parcel.trace("Controller.handleParcelReceive()-TypePeerRequest", "J")
 		dot("&&n\n")
 		// Get selection of peers from discovery
 		response := NewParcel(CurrentNetwork, c.discovery.SharePeers())
@@ -412,6 +418,7 @@ func (c *Controller) handleParcelReceive(message interface{}, peerHash string, c
 		BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: *response})
 		note("ctrlr", "Controller.route() sent the SharePeers response: %+v", response.MessageType())
 	case TypePeerResponse:
+		parcel.trace("Controller.handleParcelReceive()-TypePeerResponse", "J")
 		dot("&&o\n")
 		// Add these peers to our known peers
 		c.discovery.LearnPeers(parcel)

@@ -340,6 +340,7 @@ func (c *Connection) processSends() {
 		case ConnectionParcel:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
 			parameters := message.(ConnectionParcel)
+			parameters.parcel.trace("Connection.processSends()", "c")
 			c.sendParcel(parameters.parcel)
 		case ConnectionCommand:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
@@ -383,6 +384,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
 	c.conn.SetWriteDeadline(time.Now().Add(20 * time.Millisecond))
+	parcel.trace("Connection.sendParcel().c.encoder.Encode(parcel)", "d")
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
@@ -406,12 +408,14 @@ func (c *Connection) processReceives() {
 		err := c.decoder.Decode(&message)
 		switch {
 		case nil == err:
+			message.trace("Connection.processReceives().c.decoder.Decode(&message)-NoError", "E")
 			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
 			c.metrics.BytesReceived += message.Header.Length
 			c.metrics.MessagesReceived += 1
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(message)
 		default:
+			message.trace("Connection.processReceives().c.decoder.Decode(&message)-Error", "E")
 			c.handleNetErrors(err)
 			return
 		}
@@ -449,16 +453,19 @@ func (c *Connection) handleParcel(parcel Parcel) {
 	validity := c.parcelValidity(parcel)
 	switch validity {
 	case InvalidDisconnectPeer:
+		parcel.trace("Connection.handleParcel()-InvalidDisconnectPeer", "G")
 		debug(c.peer.PeerIdent(), "Connection.handleParcel() Disconnecting peer: %s", c.peer.PeerIdent())
 		c.attempts = MaxNumberOfRedialAttempts + 50 // so we don't redial invalid Peer
 		c.goShutdown()
 		return
 	case InvalidPeerDemerit:
+		parcel.trace("Connection.handleParcel()-InvalidPeerDemerit", "G")
 		debug(c.peer.PeerIdent(), "Connection.handleParcel() got invalid message")
 		parcel.Print()
 		c.peer.demerit()
 		return
 	case ParcelValid:
+		parcel.trace("Connection.handleParcel()-ParcelValid", "G")
 		c.peer.LastContact = time.Now() // We only update for valid messages (incluidng pings and heartbeats)
 		c.attempts = 0                  // reset since we are clearly in touch now.
 		c.peer.merit()                  // Increase peer quality score.
@@ -469,6 +476,7 @@ func (c *Connection) handleParcel(parcel Parcel) {
 		c.handleParcelTypes(parcel) // handles both network commands and application messages
 		return
 	default:
+		parcel.trace("Connection.handleParcel()-fatal", "G")
 		logfatal(c.peer.PeerIdent(), "handleParcel() unknown parcelValidity?: %+v ", validity)
 		return
 	}
@@ -486,22 +494,28 @@ func (c *Connection) parcelValidity(parcel Parcel) uint8 {
 	crc := crc32.Checksum(parcel.Payload, CRCKoopmanTable)
 	switch {
 	case parcel.Header.NodeID == NodeID: // We are talking to ourselves!
+		parcel.trace("Connection.isValidParcel()-loopback", "F")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to loopback!: %+v", parcel.Header)
 		c.peer.QualityScore = MinumumQualityScore - 50 // Ban ourselves for a week
 		return InvalidDisconnectPeer
 	case parcel.Header.Network != CurrentNetwork:
+		parcel.trace("Connection.isValidParcel()-network", "F")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to wrong network. Remote: %0x Us: %0x", parcel.Header.Network, CurrentNetwork)
 		return InvalidDisconnectPeer
 	case parcel.Header.Version < ProtocolVersionMinimum:
+		parcel.trace("Connection.isValidParcel()-version", "F")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to wrong version: %+v", parcel.Header)
 		return InvalidDisconnectPeer
 	case parcel.Header.Length != uint32(len(parcel.Payload)):
+		parcel.trace("Connection.isValidParcel()-length", "F")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to wrong length: %+v", parcel.Header)
 		return InvalidPeerDemerit
 	case parcel.Header.Crc32 != crc:
+		parcel.trace("Connection.isValidParcel()-checksum", "F")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to bad checksum: %+v", parcel.Header)
 		return InvalidPeerDemerit
 	default:
+		parcel.trace("Connection.isValidParcel()-ParcelValid", "F")
 		return ParcelValid
 	}
 	return ParcelValid
@@ -509,8 +523,10 @@ func (c *Connection) parcelValidity(parcel Parcel) uint8 {
 func (c *Connection) handleParcelTypes(parcel Parcel) {
 	switch parcel.Header.Type {
 	case TypeAlert:
+		parcel.trace("Connection.handleParcelTypes()-TypeAlert", "H")
 		significant(c.peer.PeerIdent(), "!!!!!!!!!!!!!!!!!! Alert: Alert feature not implemented.")
 	case TypePing:
+		parcel.trace("Connection.handleParcelTypes()-TypePing", "H")
 		// Send Pong
 		pong := NewParcel(CurrentNetwork, []byte("Pong"))
 		pong.Header.Type = TypePong
@@ -518,21 +534,26 @@ func (c *Connection) handleParcelTypes(parcel Parcel) {
 		parcel.Print()
 		BlockFreeChannelSend(c.SendChannel, ConnectionParcel{parcel: *pong})
 	case TypePong: // all we need is the timestamp which is set already
+		parcel.trace("Connection.handleParcelTypes()-TypePong", "H")
 		debug(c.peer.PeerIdent(), "handleParcelTypes() GOT Pong.")
 		return
 	case TypePeerRequest:
+		parcel.trace("Connection.handleParcelTypes()-TypePeerRequest", "H")
 		debug(c.peer.PeerIdent(), "handleParcelTypes() TypePeerRequest")
 		BlockFreeChannelSend(c.ReceiveChannel, ConnectionParcel{parcel: parcel}) // Controller handles these.
 	case TypePeerResponse:
+		parcel.trace("Connection.handleParcelTypes()-TypePeerResponse", "H")
 		debug(c.peer.PeerIdent(), "handleParcelTypes() TypePeerResponse")
 		BlockFreeChannelSend(c.ReceiveChannel, ConnectionParcel{parcel: parcel}) // Controller handles these.
 	case TypeMessage:
+		parcel.trace("Connection.handleParcelTypes()-TypeMessage", "H")
 		debug(c.peer.PeerIdent(), "handleParcelTypes() TypeMessage. Message is a: %s", parcel.MessageType())
 		// Store our connection ID so the controller can direct response to us.
 		parcel.Header.TargetPeer = c.peer.Hash
 		parcel.Header.NodeID = NodeID
 		BlockFreeChannelSend(c.ReceiveChannel, ConnectionParcel{parcel: parcel}) // Controller handles these.
 	default:
+		parcel.trace("Connection.handleParcelTypes()-unknown", "H")
 		significant(c.peer.PeerIdent(), "!!!!!!!!!!!!!!!!!! Got message of unknown type?")
 		parcel.Print()
 	}

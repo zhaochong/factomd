@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"strconv"
+	"time"
 )
 
 // Parcel is the atomic level of communication for the p2p network.  It contains within it the necessary info for
@@ -30,6 +31,9 @@ type ParcelHeader struct {
 	NodeID      uint64
 	PeerAddress string // address of the peer set by connection to know who sent message (for tracking source of other peers)
 	PeerPort    string // port of the peer , or we are listening on
+	AppHash     string // Application specific message hash, for tracing
+	AppType     string // Application specific message type, for tracing
+
 }
 
 type ParcelCommandType uint16
@@ -83,6 +87,11 @@ func (p *Parcel) Init(header ParcelHeader) *Parcel {
 func (p *Parcel) UpdateHeader() {
 	p.Header.Crc32 = crc32.Checksum(p.Payload, CRCKoopmanTable)
 	p.Header.Length = uint32(len(p.Payload))
+}
+
+func (p *Parcel) trace(location string, sequence string) {
+	time := time.Now().Unix()
+	fmt.Printf("ParcelTrace, %s, %s, %s, %s, %d \n", p.Header.AppHash, sequence, p.Header.AppType, location, time)
 }
 
 func (p *ParcelHeader) Print() {
