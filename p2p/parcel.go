@@ -54,8 +54,8 @@ var CommandStrings = map[ParcelCommandType]string{
 	TypeHeartbeat:    "Heartbeat",     // "Note, I'm still alive"
 	TypePing:         "Ping",          // "Are you there?"
 	TypePong:         "Pong",          // "yes, I'm here"
-	TypePeerRequest:  "Peer Request",  // "Please share some peers"
-	TypePeerResponse: "Peer Response", // "Here's some peers I know about."
+	TypePeerRequest:  "Peer-Request",  // "Please share some peers"
+	TypePeerResponse: "Peer-Response", // "Here's some peers I know about."
 	TypeAlert:        "Alert",         // network wide alerts (used in bitcoin to indicate criticalities)
 	TypeMessage:      "Message",       // Application level message
 }
@@ -65,6 +65,8 @@ const MaxPayloadSize = (1024 * 512) // 512KB
 
 func NewParcel(network NetworkID, payload []byte) *Parcel {
 	header := new(ParcelHeader).Init(network)
+	header.AppHash = "NetworkMessage"
+	header.AppType = "Network"
 	parcel := new(Parcel).Init(*header)
 	parcel.Payload = payload
 	parcel.UpdateHeader() // Updates the header with info about payload.
@@ -91,7 +93,7 @@ func (p *Parcel) UpdateHeader() {
 
 func (p *Parcel) trace(location string, sequence string) {
 	time := time.Now().Unix()
-	fmt.Printf("ParcelTrace, %s, %s, %s, %s, %d \n", p.Header.AppHash, sequence, p.Header.AppType, location, time)
+	fmt.Printf("\nParcelTrace, %s, %s, %s, %s, %s, %d \n", p.Header.AppHash, sequence, p.Header.AppType, CommandStrings[p.Header.Type], location, time)
 }
 
 func (p *ParcelHeader) Print() {

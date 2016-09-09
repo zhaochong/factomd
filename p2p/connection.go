@@ -415,7 +415,6 @@ func (c *Connection) processReceives() {
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(message)
 		default:
-			message.trace("Connection.processReceives().c.decoder.Decode(&message)-Error", "E")
 			c.handleNetErrors(err)
 			return
 		}
@@ -425,7 +424,7 @@ func (c *Connection) processReceives() {
 //handleNetErrors Reacts to errors we get from encoder or decoder
 func (c *Connection) handleNetErrors(err error) {
 	nerr, isNetError := err.(net.Error)
-	verbose(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got error: %+v", c.ConnectionState(), err)
+	significant(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got error: %+v", c.ConnectionState(), err)
 	switch {
 	case isNetError && nerr.Timeout(): /// buffer empty
 		return

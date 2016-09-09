@@ -79,7 +79,7 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 		return err
 	}
 	hash := fmt.Sprintf("%x", msg.GetMsgHash().Bytes())
-	appType := fmt.Sprintf("%d", msg.GetMsgHash().Bytes())
+	appType := fmt.Sprintf("%d", msg.Type())
 	message := factomMessage{message: data, peerHash: msg.GetNetworkOrigin(), appHash: hash, appType: appType}
 	if !msg.IsPeer2Peer() {
 		message.peerHash = ""
@@ -245,7 +245,7 @@ func (f *P2PProxy) ManageInChannel() {
 
 func (f *P2PProxy) trace(appHash string, appType string, location string, sequence string) {
 	time := time.Now().Unix()
-	fmt.Printf("ParcelTrace, %s, %s, %s, %s, %d \n", appHash, sequence, appType, location, time)
+	fmt.Printf("\nParcelTrace, %s, %s, %s, Message, %s, %d \n", appHash, sequence, appType, location, time)
 }
 
 func (f *P2PProxy) PeriodicStatusReport(fnodes []*FactomNode) {
