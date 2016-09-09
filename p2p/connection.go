@@ -50,7 +50,7 @@ var ReadsErr int
 var Deadline time.Duration = time.Duration(100)
 
 func (m *middle) Write(b []byte) (int, error) {
-	
+
 	m.conn.SetWriteDeadline(time.Now().Add(Deadline * time.Millisecond))
 
 	i, e := m.conn.Write(b)
@@ -66,7 +66,6 @@ func (m *middle) Write(b []byte) (int, error) {
 	}
 	return i, e
 }
-
 
 func (m *middle) Read(b []byte) (int, error) {
 
