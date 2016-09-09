@@ -375,11 +375,19 @@ func (c *Controller) route() {
 				dot("&&i\n")
 				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
 			} else {
-				parcel.trace("controller.route().Directed Failed", "b")
-				significant("ctrlr", "Controller.route() FAILED! Target not present in connections! Directed send to %+v", parcel.Header.TargetPeer)
-				for key, _ := range c.connections {
-					significant("ctrlr", "Controller.route() %+v", key)
+				var bestKey string
+				var bestQuality int32
+				bestQuality = MinumumQualityScore
+				for key, value := range c.connections {
+					if bestQuality < value.peer.QualityScore {
+						bestKey = key
+						bestQuality = value.peer.QualityScore
+					}
 				}
+				connection := c.connections[bestKey]
+				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
+				parcel.trace("controller.route().Directed No Address, sending to Random", "b")
+				significant("ctrlr", "Controller.route() No Address, sending to Random-  Directed send to %+v", parcel.Header.TargetPeer)
 			}
 		} else { // broadcast
 			dot("&&j\n")

@@ -81,9 +81,13 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	hash := fmt.Sprintf("%x", msg.GetMsgHash().Bytes())
 	appType := fmt.Sprintf("%d", msg.Type())
 	message := factomMessage{message: data, peerHash: msg.GetNetworkOrigin(), appHash: hash, appType: appType}
-	if !msg.IsPeer2Peer() {
+	switch {
+	case !msg.IsPeer2Peer():
 		message.peerHash = ""
-	} else {
+	case msg.IsPeer2Peer() && "" == msg.GetNetworkOrigin(): // directed, with no direction of who to send it to
+		message.peerHash = "RANDOM"
+	}
+	if msg.IsPeer2Peer() {
 		fmt.Printf("%s Sending directed to: %s message: %+v\n", time.Now().String(), msg.GetNetworkOrigin(), msg.String())
 	}
 	p2p.BlockFreeChannelSend(f.BroadcastOut, message)

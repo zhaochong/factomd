@@ -222,7 +222,7 @@ func (c *Connection) runLoop() {
 
 func (c *Connection) setNotes(format string, v ...interface{}) {
 	c.notes = fmt.Sprintf(format, v...)
-	note(c.peer.PeerIdent(), c.notes)
+	significant(c.peer.PeerIdent(), c.notes)
 }
 
 // dialLoop:  dials the connection until giving up. Called in offline or initializing states.
@@ -406,18 +406,19 @@ func (c *Connection) processReceives() {
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
 		c.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 		err := c.decoder.Decode(&message)
-		switch {
-		case nil == err:
-			message.trace("Connection.processReceives().c.decoder.Decode(&message)-NoError", "E")
-			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
-			c.metrics.BytesReceived += message.Header.Length
-			c.metrics.MessagesReceived += 1
-			message.Header.PeerAddress = c.peer.Address
-			c.handleParcel(message)
-		default:
+		// New error strategy for slow sync issue.  We report an error and for some types we will go
+		// offline.  But we rely on the message validation to decide if we got a valid message.
+		if nil != err {
 			c.handleNetErrors(err)
-			return
 		}
+		if 0 != message.Header.Network { // we got a parcel from the network.
+			message.trace("Connection.processReceives().c.decoder.Decode(&message)", "E")
+		}
+		note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
+		c.metrics.BytesReceived += message.Header.Length
+		c.metrics.MessagesReceived += 1
+		message.Header.PeerAddress = c.peer.Address
+		c.handleParcel(message)
 	}
 }
 
