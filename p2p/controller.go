@@ -242,6 +242,10 @@ func (c *Controller) acceptLoop(listener net.Listener) {
 	note("ctrlr", "Controller.acceptLoop() starting up")
 	for {
 		conn, err := listener.Accept()
+		if err := conn.(*net.TCPConn).SetNoDelay(true); err != nil {
+			panic("error, nodelay didn't take")
+
+		}
 		switch err {
 		case nil:
 			switch {

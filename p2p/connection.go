@@ -81,7 +81,7 @@ func (c *Connection) Receive() (p *Parcel, err error) {
 
 
 func (m *middle) Write(b []byte) (int, error) {
-	
+
 	m.conn.SetWriteDeadline(time.Now().Add(Deadline * time.Millisecond))
 
 	i, e := m.conn.Write(b)
@@ -98,7 +98,6 @@ func (m *middle) Write(b []byte) (int, error) {
 	//fmt.Println("Write Done",time.Now().String())
 	return i, e
 }
-
 
 func (m *middle) Read(b []byte) (int, error) {
 
