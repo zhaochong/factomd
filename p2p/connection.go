@@ -21,7 +21,10 @@ type Connection struct {
 	conn           *middle
 	SendChannel    chan interface{} // Send means "towards the network" Channel takes Parcels and ConnectionCommands
 	ReceiveChannel chan interface{} // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
-	// and as "address" for sending messages to specific nodes.
+	SendParcel     chan Parcel			// Parcels to send
+	ReceiveParcel  chan Parcel			// Parcels we have received
+
+																	// and as "address" for sending messages to specific nodes.
 	encoder         *gob.Encoder      // Wire format is gobs in this version, may switch to binary
 	decoder         *gob.Decoder      // Wire format is gobs in this version, may switch to binary
 	peer            Peer              // the datastructure representing the peer we are talking to. defined in peer.go
@@ -37,6 +40,34 @@ type Connection struct {
 	notes           string            // Notes about the connection, for debugging (eg: error)
 	metrics         ConnectionMetrics // Metrics about this connection
 }
+
+func (c *Connection) goSend() {
+	for {
+		for c.state == ConnectionOnline {
+			select {
+			case p := <-c.SendParcel:
+				c.encoder.Encode(p)
+			default:
+				time.Sleep(1 * time.Millisecond)
+			}
+		}
+	}
+}
+
+func (c *Connection) goReceive() {
+	for {
+		for c.state == ConnectionOnline {
+			message := new(Parcel)
+			message.Header = *new(ParcelHeader)
+			c.decoder.Decode(*message)
+			if len(message.Payload) > 0 {
+				c.ReceiveChannel <- message
+				fmt.Println("Send", message.String())
+			}
+		}
+	}
+}
+
 
 type middle struct {
 	conn net.Conn
@@ -57,10 +88,6 @@ func (m *middle) Write(b []byte) (int, error) {
 
 	Writes += i
 
-	if i > 0 {
-		e = nil
-	}
-
 	if e != nil {
 		WritesErr++
 	}
@@ -73,17 +100,7 @@ func (m *middle) Read(b []byte) (int, error) {
 	m.conn.SetReadDeadline(time.Now().Add(Deadline * time.Millisecond))
 
 	i, e := m.conn.Read(b)
-	if i > 0 {
-		e = nil
-	}
 
-	//end := 10
-	//if end > len(b) {
-	//	end = len(b)
-	//}
-	//if e == nil {
-	//	fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
-	//}
 	Reads += i
 
 	if e != nil {
@@ -213,6 +230,8 @@ func (c *Connection) commonInit(peer Peer) {
 	c.setNotes("commonInit()")
 	c.SendChannel = make(chan interface{}, StandardChannelSize)
 	c.ReceiveChannel = make(chan interface{}, StandardChannelSize)
+	c.SendParcel = make(chan Parcel, StandardChannelSize)
+	c.ReceiveParcel = make(chan Parcel, StandardChannelSize)
 	c.metrics = ConnectionMetrics{MomentConnected: time.Now()}
 	c.timeLastMetrics = time.Now()
 	c.timeLastAttempt = time.Now().Add(-1 * TimeBetweenRedials)
@@ -375,6 +394,10 @@ func (c *Connection) goOnline() {
 	parcel := NewParcel(CurrentNetwork, []byte("Peer Request"))
 	parcel.Header.Type = TypePeerRequest
 	BlockFreeChannelSend(c.SendChannel, ConnectionParcel{parcel: *parcel})
+
+	go c.goSend()
+	go c.goReceive()
+
 }
 
 func (c *Connection) goOffline() {
@@ -404,7 +427,7 @@ func (c *Connection) processSends() {
 		case ConnectionParcel:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
 			parameters := message.(ConnectionParcel)
-			go c.sendParcel(parameters.parcel)
+			c.sendParcel(parameters.parcel)
 		case ConnectionCommand:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
 			parameters := message.(ConnectionCommand)
@@ -446,7 +469,9 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	err := c.encoder.Encode(parcel)
+	c.SendParcel <- parcel
+	var err error
+	//err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
 		c.metrics.BytesSent += uint32(len(parcel.Payload))
@@ -465,7 +490,12 @@ func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		err := c.decoder.Decode(&message)
+		var err error
+		select {
+		case message = <- c.ReceiveParcel:
+		default:
+		}
+//		err := c.decoder.Decode(&message)
 		switch {
 		case nil == err:
 			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
