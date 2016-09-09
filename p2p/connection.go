@@ -411,14 +411,16 @@ func (c *Connection) processReceives() {
 		if nil != err {
 			c.handleNetErrors(err)
 		}
+		// Since we can get blank parcels, we check that the network is set (defaults initialized to zero)
+		// This way we know it's a legitimate parcel, and that we should act on it (eg: if it is the wrong network) or wrong version of software we hang up. Don't want to hang up on people due to temp. network errors.
 		if 0 != message.Header.Network { // we got a parcel from the network.
 			message.trace("Connection.processReceives().c.decoder.Decode(&message)", "E")
+			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
+			c.metrics.BytesReceived += message.Header.Length
+			c.metrics.MessagesReceived += 1
+			message.Header.PeerAddress = c.peer.Address
+			c.handleParcel(message)
 		}
-		note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
-		c.metrics.BytesReceived += message.Header.Length
-		c.metrics.MessagesReceived += 1
-		message.Header.PeerAddress = c.peer.Address
-		c.handleParcel(message)
 	}
 }
 

@@ -385,9 +385,10 @@ func (c *Controller) route() {
 					}
 				}
 				connection := c.connections[bestKey]
+				parcel.Header.TargetPeer = bestKey
 				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
-				parcel.trace("controller.route().Directed No Address, sending to Random", "b")
-				significant("ctrlr", "Controller.route() No Address, sending to Random-  Directed send to %+v", parcel.Header.TargetPeer)
+				parcel.trace("controller.route().Directed No Address, sending to random", "b")
+				significant("ctrlr", "Controller.route() No Address, sending to Random-  Directed send to %+v", bestKey)
 			}
 		} else { // broadcast
 			dot("&&j\n")
