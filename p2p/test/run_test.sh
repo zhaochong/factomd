@@ -19,6 +19,7 @@ if [ $? -eq 0 ]; then
 
   # echo "Start the Vagrant boxes"
   # vagrant reload --provision
+  vagrant up
   
   echo "About to delete .factom"
   vagrant ssh leader -c "rm -rf ~/.factom"
@@ -32,31 +33,33 @@ if [ $? -eq 0 ]; then
   vagrant ssh follower -c "mkdir ~/.factom/m2"
 
   echo "Start the leader"
-  vagrant ssh leader -c "cd /vagrant/bin/ && ./leader.sh"  
+  vagrant ssh leader -c "cd /vagrant/bin/ && ./leader.sh" 
 
-  echo "Start the wallet on leader"
-  vagrant ssh leader -c "cd /vagrant/bin/ && ./wallet.sh"  
+  vagrant ssh leader -c "nohup /vagrant/bin/factomd -peers=\"10.0.99.2:8110\" -networkPort=8110 -network=LOCAL -blktime=20 -netdebug=1 -exclusive=true >> /vagrant/output/leader.out 2>&1 & "
 
-  echo "Sleep while waiting for the leader to make 12 blocks."
-  sleep 240
+  # echo "Start the wallet on leader"
+  # vagrant ssh leader -c "cd /vagrant/bin/ && nohup ./fctwallet > /vagrant/output/leader-wallet.out 2>&1 &"  
 
-  echo "Add entries"
-  vagrant ssh leader -c "cd /vagrant/bin/ && ./entries.sh"  
+  # echo "Sleep while waiting for the leader to make 12 blocks."
+  # sleep 240
 
-  echo "Sleep while waiting for the leader to make 6 blocks."
-  sleep 120
+  # echo "Add entries"
+  # vagrant ssh leader -c "cd /vagrant/bin/ && ./entries.sh"  
 
-  echo "Start the follower"
-  vagrant ssh follower -c "cd /vagrant/bin/ && ./follower.sh"
+  # echo "Sleep while waiting for the leader to make 6 blocks."
+  # sleep 120
 
-  while true ;
-  do
-    echo "Block Heights. CTRL-C to quit."
-    echo "Leader:"
-    vagrant ssh leader -c "/home/vagrant/factom/factom-cli get height"  
-    echo "Follower:"
-    vagrant ssh leader -c "/home/vagrant/factom/factom-cli get height"  
-    sleep 5
-  done
+  # echo "Start the follower"
+  # vagrant ssh follower -c "cd /vagrant/bin/ && ./follower.sh"
+
+  # while true ;
+  # do
+  #   echo "Block Heights. CTRL-C to quit."
+  #   echo "Leader:"
+  #   vagrant ssh leader -c "/vagrant/bin/factom-cli get height"  
+  #   echo "Follower:"
+  #   vagrant ssh follower -c "/vagrant/bin/factom-cli get height"  
+  #   sleep 5
+  # done
 
 fi
