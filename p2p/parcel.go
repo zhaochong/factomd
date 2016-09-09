@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"github.com/FactomProject/factomd/common/interfaces"
 	//"github.com/FactomProject/factomd/common/primitives"
+	"encoding/binary"
+	"github.com/FactomProject/factomd/common/primitives"
 	"hash/crc32"
 	"strconv"
-	"github.com/FactomProject/factomd/common/primitives"
-	"encoding/binary"
 )
 
 // Parcel is the atomic level of communication for the p2p network.  It contains within it the necessary info for

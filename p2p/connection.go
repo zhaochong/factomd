@@ -69,16 +69,15 @@ func (c *Connection) Receive() (p *Parcel, err error) {
 	p = new(Parcel)
 	verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
 	err = c.decoder.Decode(&pack)
-	if len(pack.Payload)>0 {
+	if len(pack.Payload) > 0 {
 		err = p.UnmarshalBinary(pack.Payload)
 		if err != nil {
-			return nil,err
+			return nil, err
 		}
 		return p, nil
 	}
-	return nil,err
+	return nil, err
 }
-
 
 func (m *middle) Write(b []byte) (int, error) {
 
@@ -89,7 +88,7 @@ func (m *middle) Write(b []byte) (int, error) {
 	Writes += i
 
 	if i > 0 {
-		//e = nil
+		e = nil
 	}
 
 	if e != nil {
@@ -106,7 +105,7 @@ func (m *middle) Read(b []byte) (int, error) {
 	i, e := m.conn.Read(b)
 
 	if i > 0 {
-		//e = nil
+		e = nil
 	}
 
 	//end := 10

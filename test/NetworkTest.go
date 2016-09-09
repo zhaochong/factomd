@@ -73,17 +73,10 @@ func InitNetwork() {
 }
 
 func listen() {
-	prtone := false
 
 	for {
 		msg, err := p2pProxy.Recieve()
 		if err != nil || msg == nil {
-			if !prtone {
-				if err != nil {
-					fmt.Println(err.Error())
-				}
-			}
-			prtone = true
 			time.Sleep(1 * time.Millisecond)
 			continue
 		}
@@ -91,9 +84,9 @@ func listen() {
 		bounce, ok := msg.(*messages.Bounce)
 
 		if old[msg.GetHash().Fixed()] == nil {
-			prtone = false
+
 			old[msg.GetHash().Fixed()] = msg
-			if ok && len(bounce.Stamps) < 10 {
+			if ok && len(bounce.Stamps) < 20 {
 				bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 				p2pProxy.Send(msg)
 			}
