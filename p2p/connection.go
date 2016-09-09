@@ -63,6 +63,11 @@ var connectionStateStrings = map[uint8]string{
 	ConnectionClosed:       "Closed",
 }
 
+// ConnectionParcel is sent to convey an appication message destined for the network.
+type ConnectionParcel struct {
+	parcel Parcel
+}
+
 // ConnectionMetrics is used to encapsulate various metrics about the connection.
 type ConnectionMetrics struct {
 	MomentConnected  time.Time // when the connection started.
@@ -314,7 +319,7 @@ func (c *Connection) goOnline() {
 	// Now ask the other side for the peers they know about.
 	parcel := NewParcel(CurrentNetwork, []byte("Peer Request"))
 	parcel.Header.Type = TypePeerRequest
-	BlockFreeChannelSend(c.SendChannel, ConnectionParcel{parcel: *parcel})
+	BlockFreeChannelSend(c.SendChannel, parcel)
 }
 
 func (c *Connection) goOffline() {
