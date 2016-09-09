@@ -18,7 +18,7 @@ func TestParcelMarshal(t *testing.T) {
 	p.Header.NodeID = 4
 	p.Header.PeerAddress = "456"
 	p.Header.PeerPort = "789"
-	p.Payload = []byte("This is a test")
+	p.Payload = []byte("This adsf fasdf asdf asdfasdfa sdfasdfasdfasd fasdf asdfasdf asdf asdfasdf asdfasdfasdf is a test")
 
 	data, err := p.MarshalBinary()
 	if err != nil {

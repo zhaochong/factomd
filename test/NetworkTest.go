@@ -93,7 +93,7 @@ func listen() {
 		if old[msg.GetHash().Fixed()] == nil {
 			prtone = false
 			old[msg.GetHash().Fixed()] = msg
-			if ok && len(bounce.Stamps) < 10 {
+			if ok && len(bounce.Stamps) < 20 {
 				bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 				p2pProxy.Send(msg)
 			}

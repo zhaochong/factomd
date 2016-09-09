@@ -181,6 +181,9 @@ func (p *Parcel) Print() {
 }
 
 func (p *Parcel) MessageType() string {
+	if p == nil {
+		return ""
+	}
 	return (fmt.Sprintf("[%s]", CommandStrings[p.Header.Type]))
 }
 
