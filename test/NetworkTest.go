@@ -74,6 +74,7 @@ func InitNetwork() {
 
 func listen() {
 	prtone := false
+
 	for {
 		msg, err := p2pProxy.Recieve()
 		if err != nil || msg == nil {
@@ -87,19 +88,22 @@ func listen() {
 			continue
 		}
 
+		bounce, ok := msg.(*messages.Bounce)
+
 		if old[msg.GetHash().Fixed()] == nil {
 			prtone = false
 			old[msg.GetHash().Fixed()] = msg
-			bounce, ok := msg.(*messages.Bounce)
-			if ok && len(bounce.Stamps) < 100 {
+			if ok && len(bounce.Stamps) < 10 {
 				bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 				p2pProxy.Send(msg)
-				fmt.Println(msg.String())
 			}
 			bounces++
 		} else {
 			oldcnt++
 		}
+
+		fmt.Println(msg.String())
+
 	}
 }
 
@@ -109,11 +113,12 @@ func main() {
 	go listen()
 
 	for {
-		if msgcnt < 10 {
+		if msgcnt < 1000 {
 			bounce := new(messages.Bounce)
 			bounce.Number = int32(msgcnt)
 			bounce.Name = name
 			bounce.Timestamp = primitives.NewTimestampNow()
+			bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 			p2pProxy.Send(bounce)
 			msgcnt++
 		}
@@ -121,7 +126,7 @@ func main() {
 			p2p.Reads, p2p.ReadsErr,
 			p2p.Writes, p2p.WritesErr,
 			msgcnt, bounces)
-		time.Sleep(20 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 }

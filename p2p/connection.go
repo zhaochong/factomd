@@ -49,6 +49,37 @@ var ReadsErr int
 
 var Deadline time.Duration = time.Duration(100)
 
+type ParcelPack struct {
+	Payload []byte
+}
+
+func (c *Connection) Send(p Parcel) (err error) {
+	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, p.MessageType())
+	var pack ParcelPack
+	pack.Payload, err = p.MarshalBinary()
+	if err != nil {
+		return err
+	}
+	err = c.encoder.Encode(pack)
+	return err
+}
+
+func (c *Connection) Receive() (p *Parcel, err error) {
+	var pack ParcelPack
+	p = new(Parcel)
+	verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
+	err = c.decoder.Decode(&pack)
+	if len(pack.Payload)>0 {
+		err = p.UnmarshalBinary(pack.Payload)
+		if err != nil {
+			return nil,err
+		}
+		return p, nil
+	}
+	return nil,err
+}
+
+
 func (m *middle) Write(b []byte) (int, error) {
 	
 	m.conn.SetWriteDeadline(time.Now().Add(Deadline * time.Millisecond))
@@ -58,12 +89,13 @@ func (m *middle) Write(b []byte) (int, error) {
 	Writes += i
 
 	if i > 0 {
-		e = nil
+		//e = nil
 	}
 
 	if e != nil {
 		WritesErr++
 	}
+	//fmt.Println("Write Done",time.Now().String())
 	return i, e
 }
 
@@ -73,8 +105,9 @@ func (m *middle) Read(b []byte) (int, error) {
 	m.conn.SetReadDeadline(time.Now().Add(Deadline * time.Millisecond))
 
 	i, e := m.conn.Read(b)
+
 	if i > 0 {
-		e = nil
+		//e = nil
 	}
 
 	//end := 10
@@ -89,6 +122,7 @@ func (m *middle) Read(b []byte) (int, error) {
 	if e != nil {
 		ReadsErr++
 	}
+	//fmt.Println("Read Done",time.Now().String())
 	return i, e
 }
 
@@ -445,8 +479,9 @@ func (c *Connection) handleCommand(command ConnectionCommand) {
 func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
-	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	err := c.encoder.Encode(parcel)
+
+	err := c.Send(parcel)
+
 	switch {
 	case nil == err:
 		c.metrics.BytesSent += uint32(len(parcel.Payload))
@@ -463,16 +498,16 @@ func (c *Connection) sendParcel(parcel Parcel) {
 // -- we run out of data to recieve (which gives an io.EOF which is handled by handleNetErrors)
 func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
-		var message Parcel
-		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		err := c.decoder.Decode(&message)
+
+		message, err := c.Receive()
+
 		switch {
 		case nil == err:
 			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
 			c.metrics.BytesReceived += uint32(len(message.Payload))
 			c.metrics.MessagesReceived += 1
 			message.Header.PeerAddress = c.peer.Address
-			c.handleParcel(message)
+			c.handleParcel(*message)
 		default:
 			c.handleNetErrors(err)
 			return

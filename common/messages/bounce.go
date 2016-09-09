@@ -212,9 +212,9 @@ func (m *Bounce) String() string {
 		len(m.Stamps),
 		t2,
 		len(m.Stamps), m.SizeOf())
-
+	nowms := primitives.NewTimestampNow().GetTimeMilli()
 	last := m.Timestamp.GetTimeMilli()
-	elapse := int64(0)
+	elapse := nowms-last
 	sum := elapse
 	for _, ts := range m.Stamps {
 		elapse = ts.GetTimeMilli() - last
@@ -227,7 +227,7 @@ func (m *Bounce) String() string {
 		sign = "-"
 		sum = sum * -1
 	}
-	avg := sum / int64(len(m.Stamps))
+	avg := sum / (int64(len(m.Stamps))+1)
 	str = str + fmt.Sprintf("Last Hop Took %d.%03d Average Hop: %s%d.%03d", elapse/1000, elapse%1000, sign, avg/1000, avg%1000)
 	return str
 }
