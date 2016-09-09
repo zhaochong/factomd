@@ -47,34 +47,36 @@ var Reads int
 var WritesErr int
 var ReadsErr int
 
-func (m *middle) Write(b []byte) (int, error) {
+var Deadline time.Duration = time.Duration(100)
 
-	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
-		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
-		return 0, nil
+func (m *middle) Write(b []byte) (int, error) {
+	
+	m.conn.SetWriteDeadline(time.Now().Add(Deadline * time.Millisecond))
+
+	i, e := m.conn.Write(b)
+
+	Writes += i
+
+	if i > 0 {
+		e = nil
 	}
 
-	// /end := 10
-	//if end > len(b) {
-	//	end = len(b)
-	//}
-	i, e := m.conn.Write(b)
-	if e == nil {
-		Writes += len(b)
-	} else {
+	if e != nil {
 		WritesErr++
 	}
-	//fmt.Printf("bbbb Write %s %d/%d bytes, Data:%x\n",time.Now().String(),len(b),i,b[:end])
 	return i, e
 }
+
+
 func (m *middle) Read(b []byte) (int, error) {
 
-	if m.conn.LocalAddr().String() == m.conn.RemoteAddr().String() {
-		fmt.Println("Middle Ignore", m.conn.LocalAddr().String())
-		return 0, nil
-	}
+	m.conn.SetReadDeadline(time.Now().Add(Deadline * time.Millisecond))
 
 	i, e := m.conn.Read(b)
+	if i > 0 {
+		e = nil
+	}
+
 	//end := 10
 	//if end > len(b) {
 	//	end = len(b)
@@ -82,9 +84,9 @@ func (m *middle) Read(b []byte) (int, error) {
 	//if e == nil {
 	//	fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
 	//}
-	if e == nil {
-		Reads += len(b)
-	} else {
+	Reads += i
+
+	if e != nil {
 		ReadsErr++
 	}
 	return i, e
@@ -402,7 +404,7 @@ func (c *Connection) processSends() {
 		case ConnectionParcel:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
 			parameters := message.(ConnectionParcel)
-			c.sendParcel(parameters.parcel)
+			go c.sendParcel(parameters.parcel)
 		case ConnectionCommand:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
 			parameters := message.(ConnectionCommand)
@@ -444,7 +446,6 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.conn.SetWriteDeadline(time.Now().Add(100 * time.Millisecond))
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
@@ -464,7 +465,6 @@ func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		c.conn.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 		err := c.decoder.Decode(&message)
 		switch {
 		case nil == err:
