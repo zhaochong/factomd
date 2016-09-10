@@ -55,6 +55,7 @@ func (m *middle) Receive() (p *Parcel, err error) {
 		fmt.Println("Incoming Messages",len(m.incoming)+1)
 		return p, nil
 	default:
+		time.Sleep(10*time.Millisecond)
 		return nil, nil
 	}
 }

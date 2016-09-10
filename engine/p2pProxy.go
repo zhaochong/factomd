@@ -82,6 +82,7 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	} else {
 		fmt.Printf("%s Sending directed to: %s message: %+v\n", time.Now().String(), msg.GetNetworkOrigin(), msg.String())
 	}
+	fmt.Println("P2PProxy Send: ",msg.String())
 	p2p.BlockFreeChannelSend(f.BroadcastOut, message)
 	return nil
 }
@@ -213,6 +214,7 @@ func (f *P2PProxy) ManageOutChannel() {
 			parcel := p2p.NewParcel(p2p.CurrentNetwork, fmessage.message)
 			parcel.Header.Type = p2p.TypeMessage
 			parcel.Header.TargetPeer = fmessage.peerHash
+			fmt.Println("P2PProxy ManageOutChannel parcel")
 			p2p.BlockFreeChannelSend(f.ToNetwork, *parcel)
 		default:
 			fmt.Printf("Garbage on f.BrodcastOut. %+v", data)

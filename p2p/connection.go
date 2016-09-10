@@ -172,6 +172,7 @@ func (c *Connection) Start() {
 // runloop OWNs the connection.  It is the only goroutine that can change values in the connection struct
 // runLoop operates the state machine and routes messages out to network (messages from network are routed in processReceives)
 func (c *Connection) runLoop() {
+	fmt.Println("Online:" ,c.state == ConnectionOnline)
 	for ConnectionClosed != c.state { // loop exits when we hit shutdown state
 		// time.Sleep(time.Second * 1) // This can be a tight loop, don't want to starve the application
 		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
@@ -319,15 +320,12 @@ func (c *Connection) goOnline() {
 	// Now ask the other side for the peers they know about.
 	parcel := NewParcel(CurrentNetwork, []byte("Peer Request"))
 	parcel.Header.Type = TypePeerRequest
-	BlockFreeChannelSend(c.SendChannel, parcel)
+	BlockFreeChannelSend(c.SendChannel, ConnectionParcel{parcel: *parcel})
 }
 
 func (c *Connection) goOffline() {
 	debug(c.peer.PeerIdent(), "Connection.goOffline()")
 	c.state = ConnectionOffline
-	if c.conn != nil {
-		c.conn.closed = true
-	}
 	c.attempts = 0
 	c.peer.demerit()
 }
@@ -346,13 +344,21 @@ func (c *Connection) goShutdown() {
 // processSends gets all the messages from the application and sends them out over the network
 func (c *Connection) processSends() {
 	// note(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
-	for 0 < len(c.SendChannel) && ConnectionOnline == c.state {
-		message := <-c.SendChannel
+	if c.state != ConnectionOnline {
+		fmt.Println("So Sad.  Offline")
+		return
+	}
+	select {
+	case message := <- c.SendChannel:
+
+		fmt.Println("Process Sends handles message")
+
 		switch message.(type) {
 		case ConnectionParcel:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
 			parameters := message.(ConnectionParcel)
-			go c.sendParcel(parameters.parcel)
+			fmt.Println("Sending Parcel allong in processSends")
+			c.sendParcel(parameters.parcel)
 		case ConnectionCommand:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
 			parameters := message.(ConnectionCommand)

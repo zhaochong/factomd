@@ -366,9 +366,17 @@ func (c *Controller) route() {
 	// specific peer, otherwise, broadcast.
 	// significant("ctrlr", "Controller.route() size of ToNetwork channel: %d", len(c.ToNetwork))
 	dot("&&e\n")
-	for 0 < len(c.ToNetwork) { // effectively "While there are messages"
-		dot("&&f\n")
-		message := <-c.ToNetwork
+
+	// effectively "While there are messages"
+	loop:
+	for {
+		var message interface{}
+		select {
+		case message = <- c.ToNetwork:
+		default:
+			break loop
+		}
+
 		dot("&&g\n")
 		parcel := message.(Parcel)
 		TotalMessagesSent++
@@ -387,11 +395,13 @@ func (c *Controller) route() {
 				}
 			}
 		} else { // broadcast
+			fmt.Println("Broadcast Message")
 			dot("&&j\n")
 			note("ctrlr", "Controller.route() Broadcast send to %d peers", len(c.connections))
 			for _, connection := range c.connections {
 				dot("&&k\n")
 				verbose("ctrlr", "Controller.route() Send to peer %s ", connection.peer.Hash)
+				fmt.Println("Route: Off to SendChannel",len(connection.SendChannel))
 				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
 			}
 		}

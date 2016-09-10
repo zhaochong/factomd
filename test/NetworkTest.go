@@ -95,6 +95,7 @@ func listen() {
 			old[msg.GetHash().Fixed()] = msg
 			if ok && len(bounce.Stamps) < 20 {
 				bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
+				fmt.Println("Sending",bounce.String())
 				p2pProxy.Send(msg)
 			}
 			bounces++
@@ -119,6 +120,7 @@ func main() {
 			bounce.Name = name
 			bounce.Timestamp = primitives.NewTimestampNow()
 			bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
+			fmt.Println("Sending",bounce.String())
 			p2pProxy.Send(bounce)
 			msgcnt++
 		}
