@@ -82,7 +82,7 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	} else {
 		fmt.Printf("%s Sending directed to: %s message: %+v\n", time.Now().String(), msg.GetNetworkOrigin(), msg.String())
 	}
-	fmt.Println("P2PProxy Send: ",msg.String())
+	fmt.Println("P2PProxy Send: ", msg.String())
 	p2p.BlockFreeChannelSend(f.BroadcastOut, message)
 	return nil
 }

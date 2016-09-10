@@ -368,13 +368,13 @@ func (c *Controller) route() {
 	dot("&&e\n")
 
 	// effectively "While there are messages"
-	loop:
+loop2:
 	for {
 		var message interface{}
 		select {
-		case message = <- c.ToNetwork:
+		case message = <-c.ToNetwork:
 		default:
-			break loop
+			break loop2
 		}
 
 		dot("&&g\n")
@@ -401,7 +401,7 @@ func (c *Controller) route() {
 			for _, connection := range c.connections {
 				dot("&&k\n")
 				verbose("ctrlr", "Controller.route() Send to peer %s ", connection.peer.Hash)
-				fmt.Println("Route: Off to SendChannel",len(connection.SendChannel))
+				fmt.Println("Route: Off to SendChannel", len(connection.SendChannel))
 				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
 			}
 		}

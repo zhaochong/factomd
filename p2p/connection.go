@@ -172,7 +172,7 @@ func (c *Connection) Start() {
 // runloop OWNs the connection.  It is the only goroutine that can change values in the connection struct
 // runLoop operates the state machine and routes messages out to network (messages from network are routed in processReceives)
 func (c *Connection) runLoop() {
-	fmt.Println("Online:" ,c.state == ConnectionOnline)
+	fmt.Println("Online:", c.state == ConnectionOnline)
 	for ConnectionClosed != c.state { // loop exits when we hit shutdown state
 		// time.Sleep(time.Second * 1) // This can be a tight loop, don't want to starve the application
 		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
@@ -349,7 +349,7 @@ func (c *Connection) processSends() {
 		return
 	}
 	select {
-	case message := <- c.SendChannel:
+	case message := <-c.SendChannel:
 
 		fmt.Println("Process Sends handles message")
 
