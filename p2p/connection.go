@@ -344,27 +344,29 @@ func (c *Connection) goShutdown() {
 // processSends gets all the messages from the application and sends them out over the network
 func (c *Connection) processSends() {
 	// note(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
-	if c.state != ConnectionOnline {
-		fmt.Println("So Sad.  Offline")
-		return
-	}
-	select {
-	case message := <-c.SendChannel:
 
-		fmt.Println("Process Sends handles message")
+sendLoop:
+	for ConnectionOnline == c.state {
 
-		switch message.(type) {
-		case ConnectionParcel:
-			verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
-			parameters := message.(ConnectionParcel)
-			fmt.Println("Sending Parcel allong in processSends")
-			c.sendParcel(parameters.parcel)
-		case ConnectionCommand:
-			verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
-			parameters := message.(ConnectionCommand)
-			c.handleCommand(parameters)
+		select {
+		case message := <-c.SendChannel:
+			fmt.Println("Process Sends handles message")
+
+			switch message.(type) {
+			case ConnectionParcel:
+				verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
+				parameters := message.(ConnectionParcel)
+				fmt.Println("Sending Parcel allong in processSends")
+				c.sendParcel(parameters.parcel)
+			case ConnectionCommand:
+				verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
+				parameters := message.(ConnectionCommand)
+				c.handleCommand(parameters)
+			default:
+				logfatal(c.peer.PeerIdent(), "processSends() unknown message?: %+v ", message)
+			}
 		default:
-			logfatal(c.peer.PeerIdent(), "processSends() unknown message?: %+v ", message)
+			break sendLoop
 		}
 	}
 }
@@ -443,15 +445,19 @@ func (c *Connection) handleNetErrors(err error) {
 	case isNetError && nerr.Timeout(): /// buffer empty
 		return
 	case isNetError && nerr.Temporary(): /// Temporary error, try to reconnect.
+		fmt.Println("ERROR GoOffline 1")
 		c.setNotes(fmt.Sprintf("handleNetErrors() Temporary error: %+v", nerr))
 		c.goOffline()
 	case io.EOF == err, io.ErrClosedPipe == err: // Remote hung up
+		fmt.Println("ERROR GoOffline 2")
 		c.setNotes(fmt.Sprintf("handleNetErrors() Remote hung up - error: %+v", err))
 		c.goOffline()
 	case err == syscall.EPIPE: // "write: broken pipe"
+		fmt.Println("ERROR GoOffline 3")
 		c.setNotes(fmt.Sprintf("handleNetErrors() Broken Pipe: %+v", err))
 		c.goOffline()
 	default:
+		fmt.Println("ERROR GoOffline 4")
 		significant(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got unhandled coding error: %+v", c.ConnectionState(), err)
 		c.setNotes(fmt.Sprintf("handleNetErrors() Unhandled error: %+v", err))
 		c.goOffline()
