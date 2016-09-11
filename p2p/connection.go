@@ -454,6 +454,8 @@ func (c *Connection) processReceives() {
 		case err != nil:
 			c.handleNetErrors(err)
 			return
+		default:
+			return
 		}
 	}
 }
