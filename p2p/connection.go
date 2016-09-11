@@ -5,13 +5,13 @@
 package p2p
 
 import (
-	"encoding/gob"
 	"fmt"
 	"hash/crc32"
 	"io"
 	"net"
 	"syscall"
 	"time"
+	"encoding/gob"
 )
 
 // Connection represents a single connection to another peer over the network. It communicates with the application
@@ -38,20 +38,6 @@ type Connection struct {
 	metrics         ConnectionMetrics // Metrics about this connection
 }
 
-type middle struct {
-	conn net.Conn
-}
-
-var Writes int
-var Reads int
-var WritesErr int
-var ReadsErr int
-
-var Deadline time.Duration = time.Duration(100)
-
-type ParcelPack struct {
-	Payload []byte
-}
 
 func (c *Connection) Send(p Parcel) (err error) {
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, p.MessageType())
@@ -79,50 +65,6 @@ func (c *Connection) Receive() (p *Parcel, err error) {
 	return nil, err
 }
 
-func (m *middle) Write(b []byte) (int, error) {
-
-	m.conn.SetWriteDeadline(time.Now().Add(Deadline * time.Millisecond))
-
-	i, e := m.conn.Write(b)
-
-	Writes += i
-
-	if i > 0 {
-		e = nil
-	}
-
-	if e != nil {
-		WritesErr++
-	}
-	//fmt.Println("Write Done",time.Now().String())
-	return i, e
-}
-
-func (m *middle) Read(b []byte) (int, error) {
-
-	m.conn.SetReadDeadline(time.Now().Add(Deadline * time.Millisecond))
-
-	i, e := m.conn.Read(b)
-
-	if i > 0 {
-		e = nil
-	}
-
-	//end := 10
-	//if end > len(b) {
-	//	end = len(b)
-	//}
-	//if e == nil {
-	//	fmt.Printf("bbbb Read  %s %d bytes, Data: %x\n", time.Now().String(), len(b), b[:end])
-	//}
-	Reads += i
-
-	if e != nil {
-		ReadsErr++
-	}
-	//fmt.Println("Read Done",time.Now().String())
-	return i, e
-}
 
 // Each connection is a simple state machine.  The state is managed by a single goroutine which also does netowrking.
 // The flow is this:  Connection gets initialized, and either has a peer or a net connection (From an accept())
@@ -394,6 +336,7 @@ func (c *Connection) goOnline() {
 	debug(c.peer.PeerIdent(), "Connection.goOnline() called.")
 	c.state = ConnectionOnline
 	now := time.Now()
+	c.conn.Init()
 	c.encoder = gob.NewEncoder(c.conn)
 	c.decoder = gob.NewDecoder(c.conn)
 	c.attempts = 0
@@ -420,7 +363,7 @@ func (c *Connection) goShutdown() {
 	c.goOffline()
 	c.updatePeer()
 	if nil != c.conn {
-		defer c.conn.conn.Close()
+		defer c.conn.Close()
 	}
 	c.decoder = nil
 	c.encoder = nil
@@ -436,7 +379,7 @@ func (c *Connection) processSends() {
 		case ConnectionParcel:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
 			parameters := message.(ConnectionParcel)
-			go c.sendParcel(parameters.parcel)
+			c.sendParcel(parameters.parcel)
 		case ConnectionCommand:
 			verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
 			parameters := message.(ConnectionCommand)
@@ -479,6 +422,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 
 	err := c.Send(parcel)
+	//err := c.conn.Send(parcel)
 
 	switch {
 	case nil == err:
@@ -497,16 +441,17 @@ func (c *Connection) sendParcel(parcel Parcel) {
 func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 
-		message, err := c.Receive()
+		//message, err := c.Receive()
+		message, err := c.conn.Receive()
 
 		switch {
-		case nil == err:
+		case message != nil:
 			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
 			c.metrics.BytesReceived += uint32(len(message.Payload))
 			c.metrics.MessagesReceived += 1
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(*message)
-		default:
+		case err != nil:
 			c.handleNetErrors(err)
 			return
 		}
