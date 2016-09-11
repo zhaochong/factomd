@@ -71,7 +71,7 @@ func (m *middle) goWrite() {
 			m.conn.Write(magic)
 			m.conn.Write(data)
 		default:
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * 10)
 		}
 	}
 }
@@ -79,9 +79,10 @@ func (m *middle) goWrite() {
 func (m *middle) FullRead(buff []byte) error {
 	sum := 0
 	for sum < len(buff) {
+		//m.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
 		i, _ := m.conn.Read(buff[sum:])
 		if i == 0 {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 		sum += i
 	}
@@ -90,8 +91,6 @@ func (m *middle) FullRead(buff []byte) error {
 
 func (m *middle) goRead() {
 	for !m.closed {
-
-		//m.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
 
 		m.Sync()
 
