@@ -156,7 +156,6 @@ func (c *Controller) DialSpecialPeersString(peersString string) {
 	}
 	peerAddresses := strings.FieldsFunc(peersString, parseFunc)
 	for _, peerAddress := range peerAddresses {
-		fmt.Println("Dialing Peer: ", peerAddress)
 		ipPort := strings.Split(peerAddress, ":")
 		if len(ipPort) == 2 {
 			peer := new(Peer).Init(ipPort[0], ipPort[1], 0, SpecialPeer, 0)
@@ -395,13 +394,11 @@ loop2:
 				}
 			}
 		} else { // broadcast
-			fmt.Println("Broadcast Message")
 			dot("&&j\n")
 			note("ctrlr", "Controller.route() Broadcast send to %d peers", len(c.connections))
 			for _, connection := range c.connections {
 				dot("&&k\n")
 				verbose("ctrlr", "Controller.route() Send to peer %s ", connection.peer.Hash)
-				fmt.Println("Route: Off to SendChannel", len(connection.SendChannel))
 				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
 			}
 		}

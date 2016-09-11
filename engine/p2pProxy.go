@@ -73,16 +73,12 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	f.logMessage(msg, false) // NODE_TALK_FIX
 	data, err := msg.MarshalBinary()
 	if err != nil {
-		fmt.Println("ERROR on Send: ", err)
 		return err
 	}
 	message := factomMessage{message: data, peerHash: msg.GetNetworkOrigin()}
 	if !msg.IsPeer2Peer() {
 		message.peerHash = ""
-	} else {
-		fmt.Printf("%s Sending directed to: %s message: %+v\n", time.Now().String(), msg.GetNetworkOrigin(), msg.String())
 	}
-	fmt.Println("P2PProxy Send: ", msg.String())
 	p2p.BlockFreeChannelSend(f.BroadcastOut, message)
 	return nil
 }
@@ -104,7 +100,6 @@ func (f *P2PProxy) Recieve() (interfaces.IMsg, error) {
 				}
 				return msg, err
 			default:
-				fmt.Printf("Garbage on f.BroadcastIn. %+v", data)
 			}
 		}
 	default:
@@ -173,11 +168,9 @@ func (p *P2PProxy) logMessage(msg interfaces.IMsg, received bool) {
 }
 
 func (p *P2PProxy) ManageLogging() {
-	fmt.Printf("setting up message logging")
 	file, err := os.OpenFile("message_log.csv", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
 	p.logFile = *file
 	if nil != err {
-		fmt.Printf("Unable to open logging file. %v", err)
 		panic("unable to open logging file")
 	}
 	writer := bufio.NewWriter(&p.logFile)
@@ -192,7 +185,6 @@ func (p *P2PProxy) ManageLogging() {
 			line := fmt.Sprintf("%d, %s, %t, %d, %s, %d\n", message.mtype, message.hash, message.received, message.time, message.target, elapsedMinutes)
 			_, err := p.logWriter.Write([]byte(line))
 			if nil != err {
-				fmt.Printf("Error writing to logging file. %v", err)
 				panic("Error writing to logging file")
 			}
 		default:
@@ -214,7 +206,6 @@ func (f *P2PProxy) ManageOutChannel() {
 			parcel := p2p.NewParcel(p2p.CurrentNetwork, fmessage.message)
 			parcel.Header.Type = p2p.TypeMessage
 			parcel.Header.TargetPeer = fmessage.peerHash
-			fmt.Println("P2PProxy ManageOutChannel parcel")
 			p2p.BlockFreeChannelSend(f.ToNetwork, *parcel)
 		default:
 			fmt.Printf("Garbage on f.BrodcastOut. %+v", data)

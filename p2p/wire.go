@@ -18,9 +18,10 @@ type middle struct {
 	closed   bool
 }
 
+var _ = fmt.Print
+
 func (m *middle) Init() {
 	if m.incoming == nil {
-		fmt.Println("Make Channels")
 		m.incoming = make(chan *Parcel, 10000)
 		m.outgoing = make(chan *Parcel, 10000)
 	}
@@ -43,16 +44,12 @@ func (m *middle) Send(p *Parcel) (err error) {
 		}
 	}
 	m.outgoing <- p
-	fmt.Println("Outgoing messages", len(m.outgoing))
-	fmt.Println("Incoming Messages", len(m.incoming))
 	return nil
 }
 
 func (m *middle) Receive() (p *Parcel, err error) {
 	select {
 	case p := <-m.incoming:
-		fmt.Println("Outgoing messages", len(m.outgoing))
-		fmt.Println("Incoming Messages", len(m.incoming)+1)
 		return p, nil
 	default:
 		time.Sleep(10 * time.Millisecond)
@@ -63,26 +60,20 @@ func (m *middle) Receive() (p *Parcel, err error) {
 // goWrite pulls from the outgoing queue, and marshals and sends parcels across the wire.
 //
 func (m *middle) goWrite() {
-	fmt.Println("Write Opening!")
 	for !m.closed {
 		select {
 		case p := <-m.outgoing:
 			data, err := p.MarshalBinary()
 			if err != nil {
-				fmt.Println("Marshal Error")
 				continue
 			}
-			fmt.Printf("Putting %x\n", data)
 			m.conn.SetWriteDeadline(time.Now().Add(1 * time.Millisecond))
 			m.conn.Write(magic)
 			m.conn.Write(data)
-			fmt.Println("Write Data")
 		default:
-			fmt.Print("Write Queue empty\r")
 			time.Sleep(time.Millisecond * 100)
 		}
 	}
-	fmt.Println("Write Closing")
 }
 
 func (m *middle) FullRead(buff []byte) error {
@@ -98,40 +89,34 @@ func (m *middle) FullRead(buff []byte) error {
 }
 
 func (m *middle) goRead() {
-	fmt.Println("Read Opening")
 	for !m.closed {
 
-		m.conn.SetWriteDeadline(time.Now().Add(1 * time.Millisecond))
+		//m.conn.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
 
 		m.Sync()
 
 		var lengthb [4]byte
 		err := m.FullRead(lengthb[:])
 		if err != nil {
-			fmt.Println("Read error ", err.Error())
 			time.Sleep(time.Millisecond * 100)
 			continue
 		}
 
 		length := int(binary.BigEndian.Uint32(lengthb[:]))
 		data := make([]byte, length)
-		fmt.Println("Length:", length, len(data))
 		copy(data[:4], lengthb[:])
 		m.FullRead(data[4:])
 
 		p := new(Parcel)
-		fmt.Printf("Getting %x\n", data)
 		err = p.UnmarshalBinary(data)
 
 		m.incoming <- p
 	}
-	fmt.Println("Read Closing")
 }
 
 var magic = []byte{0x7e, 0xa3, 0x9d, 0xA6}
 
 func (m *middle) Sync() {
-	fmt.Println("Syncing")
 	var b = []byte{0}
 loop:
 	for {
@@ -144,11 +129,9 @@ loop:
 				r, _ = m.conn.Read(b)
 			}
 			if b[0] != magic[i] {
-				fmt.Print("Start over...\n")
 				continue loop
 			}
 		}
 		break loop
 	}
-	fmt.Print("Synced\n")
 }

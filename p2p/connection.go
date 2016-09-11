@@ -172,7 +172,6 @@ func (c *Connection) Start() {
 // runloop OWNs the connection.  It is the only goroutine that can change values in the connection struct
 // runLoop operates the state machine and routes messages out to network (messages from network are routed in processReceives)
 func (c *Connection) runLoop() {
-	fmt.Println("Online:", c.state == ConnectionOnline)
 	for ConnectionClosed != c.state { // loop exits when we hit shutdown state
 		// time.Sleep(time.Second * 1) // This can be a tight loop, don't want to starve the application
 		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
@@ -293,7 +292,6 @@ func (c *Connection) dial() bool {
 	}
 
 	if err := conn.(*net.TCPConn).SetNoDelay(true); err != nil {
-		fmt.Printf("error, nodelay didn't take")
 		return false
 	}
 
@@ -350,13 +348,11 @@ sendLoop:
 
 		select {
 		case message := <-c.SendChannel:
-			fmt.Println("Process Sends handles message")
 
 			switch message.(type) {
 			case ConnectionParcel:
 				verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
 				parameters := message.(ConnectionParcel)
-				fmt.Println("Sending Parcel allong in processSends")
 				c.sendParcel(parameters.parcel)
 			case ConnectionCommand:
 				verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
@@ -433,6 +429,8 @@ func (c *Connection) processReceives() {
 		case err != nil:
 			c.handleNetErrors(err)
 			return
+		default:
+			return
 		}
 	}
 }
@@ -445,19 +443,15 @@ func (c *Connection) handleNetErrors(err error) {
 	case isNetError && nerr.Timeout(): /// buffer empty
 		return
 	case isNetError && nerr.Temporary(): /// Temporary error, try to reconnect.
-		fmt.Println("ERROR GoOffline 1")
 		c.setNotes(fmt.Sprintf("handleNetErrors() Temporary error: %+v", nerr))
 		c.goOffline()
 	case io.EOF == err, io.ErrClosedPipe == err: // Remote hung up
-		fmt.Println("ERROR GoOffline 2")
 		c.setNotes(fmt.Sprintf("handleNetErrors() Remote hung up - error: %+v", err))
 		c.goOffline()
 	case err == syscall.EPIPE: // "write: broken pipe"
-		fmt.Println("ERROR GoOffline 3")
 		c.setNotes(fmt.Sprintf("handleNetErrors() Broken Pipe: %+v", err))
 		c.goOffline()
 	default:
-		fmt.Println("ERROR GoOffline 4")
 		significant(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got unhandled coding error: %+v", c.ConnectionState(), err)
 		c.setNotes(fmt.Sprintf("handleNetErrors() Unhandled error: %+v", err))
 		c.goOffline()
