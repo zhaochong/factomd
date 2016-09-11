@@ -683,7 +683,7 @@ func SimControl(listenTo int) {
 
 				for _, fn := range fnodes {
 					fn.State.Delay = nnn
-					os.Stderr.WriteString(fmt.Sprintf("Setting Delay on communications from %10s to %2d.%01d Seconds\n", fn.State.FactomNodeName, nnn/1000, nnn%1000))
+					os.Stderr.WriteString(fmt.Sprintf("Setting Delay on communications from %10s to %2d.%03d Seconds\n", fn.State.FactomNodeName, nnn/1000, nnn%1000))
 				}
 
 				for _, f := range fnodes {

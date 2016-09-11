@@ -6,9 +6,9 @@ package p2p
 
 import (
 	"encoding/gob"
+	"fmt"
 	"net"
 	"time"
-	"fmt"
 )
 
 var _ = fmt.Print
@@ -18,11 +18,10 @@ type middle struct {
 	encoder *gob.Encoder // Wire format is gobs in this version, may switch to binary
 	decoder *gob.Decoder // Wire format is gobs in this version, may switch to binary
 
-	output	chan *Parcel
-	input   chan *Parcel
+	output chan *Parcel
+	input  chan *Parcel
 
-	isNew 	bool
-
+	isNew bool
 }
 
 var Writes int
@@ -36,14 +35,13 @@ type ParcelPack struct {
 	Payload []byte
 }
 
-func (m *middle) Init () {
+func (m *middle) Init() {
 	m.encoder = gob.NewEncoder(m)
 	m.decoder = gob.NewDecoder(m)
 
-	m.output = make(chan *Parcel,10000)
-	m.input  = make(chan *Parcel,10000)
+	m.output = make(chan *Parcel, 10000)
+	m.input = make(chan *Parcel, 10000)
 
-	go m.goOutput()
 	go m.goInput()
 }
 
@@ -53,15 +51,22 @@ func (m *middle) Close() {
 	m.encoder = nil
 }
 
-func (m *middle) goOutput() {
+func (m *middle) goOutput(p *Parcel) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			time.Sleep(100 * time.Millisecond)
+			return
+		}
+	}()
+
 	for {
 		if m.encoder != nil {
-			p := <-m.output
 			pack := new(ParcelPack)
 			var err error
 			pack.Payload, err = p.MarshalBinary()
 			if err != nil || len(pack.Payload) == 0 {
-				continue
+				return
 			}
 			m.encoder.Encode(pack)
 		}
@@ -69,6 +74,14 @@ func (m *middle) goOutput() {
 }
 
 func (m *middle) goInput() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			time.Sleep(100 * time.Millisecond)
+			go m.goInput()
+		}
+	}()
+
 	for m.decoder != nil {
 		var pack ParcelPack
 		p := new(Parcel)
@@ -84,13 +97,13 @@ func (m *middle) goInput() {
 }
 
 func (m *middle) Send(p Parcel) (err error) {
-	m.output <- &p
-	return err
+	go m.goOutput(&p)
+	return
 }
 
 func (m *middle) Receive() (p *Parcel, err error) {
 	select {
-	case p = <- m.input:
+	case p = <-m.input:
 	default:
 	}
 	return

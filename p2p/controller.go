@@ -194,7 +194,9 @@ func (c *Controller) AddPeer(conn net.Conn) {
 
 func (c *Controller) NetworkStop() {
 	debug("ctrlr", "NetworkStop %+v", c)
-	BlockFreeChannelSend(c.commandChannel, CommandShutdown{})
+	if c != nil && c.commandChannel != nil {
+		BlockFreeChannelSend(c.commandChannel, CommandShutdown{})
+	}
 }
 
 func (c *Controller) AdjustPeerQuality(peerHash string, adjustment int32) {

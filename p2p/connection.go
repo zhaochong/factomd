@@ -5,13 +5,13 @@
 package p2p
 
 import (
+	"encoding/gob"
 	"fmt"
 	"hash/crc32"
 	"io"
 	"net"
 	"syscall"
 	"time"
-	"encoding/gob"
 )
 
 // Connection represents a single connection to another peer over the network. It communicates with the application
@@ -37,34 +37,6 @@ type Connection struct {
 	notes           string            // Notes about the connection, for debugging (eg: error)
 	metrics         ConnectionMetrics // Metrics about this connection
 }
-
-
-func (c *Connection) Send(p Parcel) (err error) {
-	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, p.MessageType())
-	var pack ParcelPack
-	pack.Payload, err = p.MarshalBinary()
-	if err != nil {
-		return err
-	}
-	err = c.encoder.Encode(pack)
-	return err
-}
-
-func (c *Connection) Receive() (p *Parcel, err error) {
-	var pack ParcelPack
-	p = new(Parcel)
-	verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-	err = c.decoder.Decode(&pack)
-	if len(pack.Payload) > 0 {
-		err = p.UnmarshalBinary(pack.Payload)
-		if err != nil {
-			return nil, err
-		}
-		return p, nil
-	}
-	return nil, err
-}
-
 
 // Each connection is a simple state machine.  The state is managed by a single goroutine which also does netowrking.
 // The flow is this:  Connection gets initialized, and either has a peer or a net connection (From an accept())
@@ -421,8 +393,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 
-	err := c.Send(parcel)
-	//err := c.conn.Send(parcel)
+	err := c.conn.Send(parcel)
 
 	switch {
 	case nil == err:
