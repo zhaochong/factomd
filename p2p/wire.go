@@ -60,17 +60,16 @@ func (m *middle) goOutput(p *Parcel) {
 		}
 	}()
 
-	for {
-		if m.encoder != nil {
-			pack := new(ParcelPack)
-			var err error
-			pack.Payload, err = p.MarshalBinary()
-			if err != nil || len(pack.Payload) == 0 {
-				return
-			}
-			m.encoder.Encode(pack)
+	if m.encoder != nil {
+		pack := new(ParcelPack)
+		var err error
+		pack.Payload, err = p.MarshalBinary()
+		if err != nil || len(pack.Payload) == 0 {
+			return
 		}
+		m.encoder.Encode(pack)
 	}
+
 }
 
 func (m *middle) goInput() {
