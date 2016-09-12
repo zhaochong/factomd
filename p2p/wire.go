@@ -39,7 +39,6 @@ func (m *middle) Init() {
 	m.encoder = gob.NewEncoder(m)
 	m.decoder = gob.NewDecoder(m)
 
-	m.output = make(chan *Parcel, 10000)
 	m.input = make(chan *Parcel, 10000)
 
 	go m.goInput()
@@ -59,16 +58,6 @@ func (m *middle) goOutput(p *Parcel) {
 			return
 		}
 	}()
-
-	if m.encoder != nil {
-		pack := new(ParcelPack)
-		var err error
-		pack.Payload, err = p.MarshalBinary()
-		if err != nil || len(pack.Payload) == 0 {
-			return
-		}
-		m.encoder.Encode(pack)
-	}
 
 }
 
@@ -96,8 +85,16 @@ func (m *middle) goInput() {
 }
 
 func (m *middle) Send(p Parcel) (err error) {
-	go m.goOutput(&p)
-	return
+	if m.encoder != nil {
+		pack := new(ParcelPack)
+		var err error
+		pack.Payload, err = p.MarshalBinary()
+		if err != nil && len(pack.Payload) == 0 {
+			return err
+		}
+		m.encoder.Encode(pack)
+	}
+	return err
 }
 
 func (m *middle) Receive() (p *Parcel, err error) {
@@ -110,7 +107,7 @@ func (m *middle) Receive() (p *Parcel, err error) {
 
 func (m *middle) Write(b []byte) (int, error) {
 
-	m.conn.SetWriteDeadline(time.Now().Add(Deadline * time.Millisecond))
+	m.conn.SetWriteDeadline(time.Now().Add(Deadline))
 
 	i, e := m.conn.Write(b)
 
@@ -129,7 +126,7 @@ func (m *middle) Write(b []byte) (int, error) {
 
 func (m *middle) Read(b []byte) (int, error) {
 
-	m.conn.SetReadDeadline(time.Now().Add(Deadline * time.Millisecond))
+	m.conn.SetReadDeadline(time.Now().Add(Deadline))
 
 	i, e := m.conn.Read(b)
 
