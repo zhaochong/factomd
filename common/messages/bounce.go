@@ -43,7 +43,6 @@ func (m *Bounce) SizeOf() int {
 }
 
 func (m *Bounce) GetMsgHash() interfaces.IHash {
-	if m.MsgHash == nil {
 		data, err := m.MarshalForSignature()
 
 		m.size = len(data)
@@ -52,7 +51,6 @@ func (m *Bounce) GetMsgHash() interfaces.IHash {
 			return nil
 		}
 		m.MsgHash = primitives.Sha(data)
-	}
 	return m.MsgHash
 }
 
