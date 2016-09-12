@@ -22,44 +22,67 @@ if [ $? -eq 0 ]; then
   vagrant up
   
   echo "About to delete .factom"
-  vagrant ssh leader -c "rm -rf ~/.factom"
-  vagrant ssh follower -c "rm -rf ~/.factom"
+  ssh -n leader "rm -rf ~/.factom"
+  ssh -n follower "rm -rf ~/.factom"
   echo "About to create .factom"
-  vagrant ssh leader -c "mkdir ~/.factom"
-  vagrant ssh follower -c "mkdir ~/.factom"
-  
+  ssh -n leader "mkdir ~/.factom"
+  ssh -n follower "mkdir ~/.factom"
+
   echo "About to create .factom/m2"
-  vagrant ssh leader -c "mkdir ~/.factom/m2"
-  vagrant ssh follower -c "mkdir ~/.factom/m2"
+  ssh -n leader "mkdir ~/.factom/m2"
+  ssh -n follower "mkdir ~/.factom/m2"
 
   echo "Start the leader"
-  vagrant ssh leader -c "cd /vagrant/bin/ && ./leader.sh" 
+  ssh -n leader "cd /vagrant/bin/ && ./leader.sh" 
 
-  vagrant ssh leader -c "nohup /vagrant/bin/factomd -peers=\"10.0.99.2:8110\" -networkPort=8110 -network=LOCAL -blktime=20 -netdebug=1 -exclusive=true >> /vagrant/output/leader.out 2>&1 & "
+  # ssh -n leader "nohup /vagrant/bin/factomd -peers=\"10.0.99.2:8110\" -networkPort=8110 -network=LOCAL -blktime=20 -netdebug=1 -exclusive=true >> /vagrant/output/leader.out 2>&1 & "
 
-  # echo "Start the wallet on leader"
-  # vagrant ssh leader -c "cd /vagrant/bin/ && nohup ./fctwallet > /vagrant/output/leader-wallet.out 2>&1 &"  
+  echo "Start the wallet on leader"
+  ssh -n leader "cd /vagrant/bin/ && nohup ./fctwallet > /vagrant/output/leader-wallet.out 2>&1 &"  
 
-  # echo "Sleep while waiting for the leader to make 12 blocks."
-  # sleep 240
+  echo "Sleep while waiting for the leader to make 12 blocks."
+  sleep 240
 
-  # echo "Add entries"
-  # vagrant ssh leader -c "cd /vagrant/bin/ && ./entries.sh"  
+  echo "Add entries"
+  ssh -n leader "cd /vagrant/bin/ && ./entries.sh"  
 
-  # echo "Sleep while waiting for the leader to make 6 blocks."
-  # sleep 120
+  echo "Sleep while waiting for the leader to make 6 blocks."
+  sleep 120
 
-  # echo "Start the follower"
-  # vagrant ssh follower -c "cd /vagrant/bin/ && ./follower.sh"
+  
+# to remove the modifications:
+# sudo tc qdisc del dev eth0 root
 
-  # while true ;
-  # do
-  #   echo "Block Heights. CTRL-C to quit."
-  #   echo "Leader:"
-  #   vagrant ssh leader -c "/vagrant/bin/factom-cli get height"  
-  #   echo "Follower:"
-  #   vagrant ssh follower -c "/vagrant/bin/factom-cli get height"  
-  #   sleep 5
-  # done
+  # echo "Turn on latency on the follower"
+  # ssh -n follower "sudo tc qdisc add dev enp0s3 root netem delay 400ms"
+
+  echo "Start the follower"
+  ssh -n follower "cd /vagrant/bin/ && ./follower.sh"
+
+  while true ;
+  do
+    echo "Block Heights. CTRLto quit."
+    echo "Leader:"
+    ssh -n leader "/vagrant/bin/factom-cli get height"  
+    echo "Follower:"
+    ssh -n follower "/vagrant/bin/factom-cli get height"  
+    sleep 5
+    done
 
 fi
+
+
+# Simulate 1 second delay with 25% packet loss:
+# sudo tc qdisc add dev eth0 root netem delay 1000ms loss 25%
+
+# to view the current modifications and status:
+# sudo tc -s qdisc
+
+# to remove the modifications:
+# sudo tc qdisc del dev eth0 root
+
+
+# to simulate low bandwidth:
+# sudo tc qdisc add dev eth0 root handle 1:0 netem delay 1000ms
+# sudo tc qdisc add dev eth0 parent 1:1 handle 10: tbf rate 4096kbit buffer 1600 limit 3000
+# tc -s qdisc ls dev eth0
