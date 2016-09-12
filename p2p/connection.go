@@ -426,6 +426,7 @@ func (c *Connection) processReceives() {
 			c.handleNetErrors(err)
 			return
 		default:
+			time.Sleep(10 * time.Millisecond)
 			return
 		}
 	}

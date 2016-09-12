@@ -41,7 +41,7 @@ func InitNetwork() {
 	peers := *peersPtr
 	netdebug := *netdebugPtr
 	exclusive := *exclusivePtr
-	p2p.Deadline = time.Duration(*deadlinePtr)
+	p2p.Deadline = time.Duration(*deadlinePtr) * time.Millisecond
 
 	old = make(map[[32]byte]interfaces.IMsg, 0)
 	connectionMetricsChannel := make(chan interface{}, p2p.StandardChannelSize)
