@@ -62,7 +62,7 @@ func NetStart(s *state.State) {
 	timeOffsetPtr := flag.Int("timedelta", 0, "Maximum timeDelta in milliseconds to offset each node.  Simulates deltas in system clocks over a network.")
 	keepMismatchPtr := flag.Bool("keepmismatch", false, "If true, do not discard DBStates even when a majority of DBSignatures have a different hash")
 	startDelayPtr := flag.Int("startdelay", 20, "Delay to start processing messages, in seconds")
-	deadlinePtr := flag.Int("deadline", 20, "Timeout Delay in milliseconds used on Reads and Writes to the network comm")
+	deadlinePtr := flag.Int("deadline", 10, "Timeout Delay in milliseconds used on Reads and Writes to the network comm")
 
 	flag.Parse()
 

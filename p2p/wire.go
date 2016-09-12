@@ -18,9 +18,6 @@ type middle struct {
 	encoder *gob.Encoder // Wire format is gobs in this version, may switch to binary
 	decoder *gob.Decoder // Wire format is gobs in this version, may switch to binary
 
-	output chan *Parcel
-	input  chan *Parcel
-
 	isNew bool
 }
 
@@ -38,10 +35,6 @@ type ParcelPack struct {
 func (m *middle) Init() {
 	m.encoder = gob.NewEncoder(m)
 	m.decoder = gob.NewDecoder(m)
-
-	m.input = make(chan *Parcel, 10000)
-
-	go m.goInput()
 }
 
 func (m *middle) Close() {
@@ -50,42 +43,9 @@ func (m *middle) Close() {
 	m.encoder = nil
 }
 
-func (m *middle) goOutput(p *Parcel) {
-
-	defer func() {
-		if r := recover(); r != nil {
-			time.Sleep(100 * time.Millisecond)
-			return
-		}
-	}()
-
-}
-
-func (m *middle) goInput() {
-
-	defer func() {
-		if r := recover(); r != nil {
-			time.Sleep(100 * time.Millisecond)
-			go m.goInput()
-		}
-	}()
-
-	for m.decoder != nil {
-		var pack ParcelPack
-		p := new(Parcel)
-		err := m.decoder.Decode(&pack)
-		if len(pack.Payload) > 0 {
-			err = p.UnmarshalBinary(pack.Payload)
-			if err != nil {
-				continue
-			}
-			m.input <- p
-		}
-	}
-}
-
 func (m *middle) Send(p Parcel) (err error) {
 	if m.encoder != nil {
+		m.conn.SetWriteDeadline(time.Now().Add(Deadline))
 		pack := new(ParcelPack)
 		var err error
 		pack.Payload, err = p.MarshalBinary()
@@ -98,16 +58,21 @@ func (m *middle) Send(p Parcel) (err error) {
 }
 
 func (m *middle) Receive() (p *Parcel, err error) {
-	select {
-	case p = <-m.input:
-	default:
+	var pack ParcelPack
+	p = new(Parcel)
+	m.conn.SetReadDeadline(time.Now().Add(Deadline))
+	err = m.decoder.Decode(&pack)
+	if len(pack.Payload) > 0 {
+		err = p.UnmarshalBinary(pack.Payload)
+		if err != nil {
+			return nil, err
+		}
+		return p, err
 	}
-	return
+	return nil, err
 }
 
 func (m *middle) Write(b []byte) (int, error) {
-
-	m.conn.SetWriteDeadline(time.Now().Add(Deadline))
 
 	i, e := m.conn.Write(b)
 
@@ -125,8 +90,6 @@ func (m *middle) Write(b []byte) (int, error) {
 }
 
 func (m *middle) Read(b []byte) (int, error) {
-
-	m.conn.SetReadDeadline(time.Now().Add(Deadline))
 
 	i, e := m.conn.Read(b)
 
