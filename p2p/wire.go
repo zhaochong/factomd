@@ -39,12 +39,37 @@ func (m *middle) Init() {
 	m.encoder = gob.NewEncoder(m)
 	m.decoder = gob.NewDecoder(m)
 
+	m.output = make(chan *Parcel, 10000)
+	m.input = make(chan *Parcel, 10000)
+
+	go m.goInput()
 }
 
 func (m *middle) Close() {
 	m.conn.Close()
 	m.decoder = nil
 	m.encoder = nil
+}
+
+func (m *middle) goOutput(p *Parcel) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			time.Sleep(100 * time.Millisecond)
+			return
+		}
+	}()
+
+	if m.encoder != nil {
+		pack := new(ParcelPack)
+		var err error
+		pack.Payload, err = p.MarshalBinary()
+		if err != nil || len(pack.Payload) == 0 {
+			return
+		}
+		m.encoder.Encode(pack)
+	}
+
 }
 
 func (m *middle) goInput() {
@@ -56,29 +81,31 @@ func (m *middle) goInput() {
 		}
 	}()
 
-}
-
-func (m *middle) Send(p Parcel) (err error) {
-	pack := new(ParcelPack)
-	pack.Payload, err = p.MarshalBinary()
-	if err != nil && len(pack.Payload) == 0 {
-		return err
-	}
-	return m.encoder.Encode(pack)
-}
-
-func (m *middle) Receive() (p *Parcel, err error) {
-	if m.decoder != nil {
+	for m.decoder != nil {
 		var pack ParcelPack
 		p := new(Parcel)
 		err := m.decoder.Decode(&pack)
 		if len(pack.Payload) > 0 {
 			err = p.UnmarshalBinary(pack.Payload)
-			return nil, err
+			if err != nil {
+				continue
+			}
+			m.input <- p
 		}
-		return p, err
 	}
-	return nil, nil
+}
+
+func (m *middle) Send(p Parcel) (err error) {
+	go m.goOutput(&p)
+	return
+}
+
+func (m *middle) Receive() (p *Parcel, err error) {
+	select {
+	case p = <-m.input:
+	default:
+	}
+	return
 }
 
 func (m *middle) Write(b []byte) (int, error) {

@@ -279,7 +279,7 @@ func NetStart(s *state.State) {
 	}
 
 	connectionMetricsChannel := make(chan interface{}, p2p.StandardChannelSize)
-	p2p.Deadline = time.Duration(deadline * 1000000)
+	p2p.Deadline = time.Duration(deadline) * time.Millisecond
 
 	if enableNet {
 
