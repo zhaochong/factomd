@@ -38,7 +38,6 @@ type Connection struct {
 	metrics         ConnectionMetrics // Metrics about this connection
 }
 
-
 // Each connection is a simple state machine.  The state is managed by a single goroutine which also does netowrking.
 // The flow is this:  Connection gets initialized, and either has a peer or a net connection (From an accept())
 // If no network connection, the Connection dials.  If the dial is successful, it moves to the Online state
@@ -427,6 +426,7 @@ func (c *Connection) processReceives() {
 			c.handleNetErrors(err)
 			return
 		default:
+			time.Sleep(10 * time.Millisecond)
 			return
 		}
 	}
