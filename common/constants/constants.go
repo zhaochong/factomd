@@ -165,6 +165,7 @@ const (
 	TYPE_REMOVE_FED_SERVER               // 7
 	TYPE_ADD_FED_SERVER_KEY              // 8
 	TYPE_ADD_BTC_ANCHOR_KEY              // 9
+	TYPE_SERVER_FAULT
 )
 
 //---------------------------------------------------------------------
