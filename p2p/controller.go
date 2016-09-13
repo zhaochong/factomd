@@ -372,22 +372,26 @@ func (c *Controller) route() {
 			note("ctrlr", "Controller.route() Broadcast send to %d peers", len(c.connections))
 			for _, connection := range c.connections {
 				dot("&&k\n")
-				verbose("ctrlr", "Controller.route() Send to peer %s ", connection.peer.Hash)
+				significant("ctrlr", "Controller.route() Send to peer %s ", connection.peer.Hash)
 				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
 			}
 		case RandomPeerFlag: // Find a random peer, send to that peer.
+			significant("ctrlr", "Controller.route() Directed FINDING RANDOM Target: %s Type: %s #Number Connections: %d", parcel.Header.TargetPeer, parcel.Header.AppType, len(c.connections))
 			bestKey := ""
 			for key := range c.connections {
 				switch {
-				case 0 == len(key):
+				case 0 == len(bestKey):
 					bestKey = key
-				case 3 == rand.Intn(3):
+				case 2 == rand.Intn(3):
 					bestKey = key
 				}
+				significant("ctrlr", "Directed Random: bestKey: %s, key: %s", bestKey, key)
 			}
 			parcel.Header.TargetPeer = bestKey
+			significant("ctrlr", "Controller.route() Directed FOUND RANDOM Target: %s Type: %s ", parcel.Header.TargetPeer, parcel.Header.AppType)
 			c.doDirectedSend(parcel)
 		default: // Check if we're connected to the peer, if not drop message.
+			significant("ctrlr", "Controller.route() Directed Neither Random nor Broadcast: %s Type: %s ", parcel.Header.TargetPeer, parcel.Header.AppType)
 			c.doDirectedSend(parcel)
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"math/rand"
 	"net"
 	"syscall"
 	"time"
@@ -175,6 +176,9 @@ func (c *Connection) runLoop() {
 		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
 		c.updateStats()                   // Update controller with metrics
 		c.connectionStatusReport()
+		if 2 == rand.Intn(10) {
+			significant(c.peer.PeerFixedIdent(), "Connection.runloop() STATE IS: %s", connectionStateStrings[c.state])
+		}
 		switch c.state {
 		case ConnectionInitialized:
 			if MinumumQualityScore > c.peer.QualityScore && !c.isPersistent {
@@ -333,7 +337,7 @@ func (c *Connection) goShutdown() {
 
 // processSends gets all the messages from the application and sends them out over the network
 func (c *Connection) processSends() {
-	// note(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
+	significant(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
 	for 0 < len(c.SendChannel) && ConnectionOnline == c.state {
 		message := <-c.SendChannel
 		switch message.(type) {
@@ -384,7 +388,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
 	c.conn.SetWriteDeadline(time.Now().Add(20 * time.Millisecond))
-	parcel.trace("Connection.sendParcel().c.encoder.Encode(parcel)", "d")
+	parcel.trace("Connection.sendParcel().encoder.Encode(parcel)", "d")
 	err := c.encoder.Encode(parcel)
 	switch {
 	case nil == err:
@@ -433,7 +437,7 @@ func (c *Connection) handleNetErrors(err error) {
 		return
 	case isNetError && nerr.Temporary(): /// Temporary error, try to reconnect.
 		c.setNotes(fmt.Sprintf("handleNetErrors() Temporary error: %+v", nerr))
-		c.goOffline()
+		// c.goOffline()
 	case io.EOF == err, io.ErrClosedPipe == err: // Remote hung up
 		c.setNotes(fmt.Sprintf("handleNetErrors() Remote hung up - error: %+v", err))
 		c.goOffline()

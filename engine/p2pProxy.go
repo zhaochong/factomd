@@ -204,6 +204,11 @@ func (p *P2PProxy) ManageLogging() {
 				fmt.Printf("Error writing to logging file. %v", err)
 				panic("Error writing to logging file")
 			}
+		case string:
+			message := item.(string)
+			if "stop" == message {
+				return
+			}
 		default:
 			fmt.Printf("Garbage on p.logging. %+v", item)
 			break
