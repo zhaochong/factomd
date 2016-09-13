@@ -19,7 +19,16 @@ func TestServerFaultMarshalUnmarshal(t *testing.T) {
 	sf.DBHeight = 0x44556677
 	sf.Height = 0x88990011
 
-	//sf.SignatureList
+	core, err := sf.MarshalCore()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	for i := 0; i < 10; i++ {
+		priv := testHelper.NewPrimitivesPrivateKey(uint64(i))
+		sig := priv.Sign(core)
+		sf.SignatureList.List = append(sf.SignatureList.List, sig)
+	}
+	sf.SignatureList.Length = uint32(len(sf.SignatureList.List))
 
 	bin, err := sf.MarshalBinary()
 	if err != nil {
@@ -64,7 +73,7 @@ func TestServerFaultMarshalUnmarshal(t *testing.T) {
 		t.Errorf("Invalid len of SignatureList.List")
 	} else {
 		for i := range sf.SignatureList.List {
-			if sf.SignatureList.List[i].IsSameAs(sf2.SignatureList.List[i]) {
+			if sf.SignatureList.List[i].IsSameAs(sf2.SignatureList.List[i]) == false {
 				t.Errorf("Invalid SignatureList.List at %v", i)
 			}
 		}
