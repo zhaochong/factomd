@@ -132,7 +132,6 @@ func listen() {
 			fmt.Println("OLD:", msg.String())
 		}
 
-
 	}
 }
 
@@ -143,7 +142,7 @@ func main() {
 
 	for {
 		bounce := new(messages.Bounce)
-		bounce.Number = int32(p2pRequestSent+1)
+		bounce.Number = int32(p2pRequestSent + 1)
 		bounce.Name = name
 		bounce.Timestamp = primitives.NewTimestampNow()
 		bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
@@ -162,7 +161,7 @@ func main() {
 				p2p.Reads, p2p.ReadsErr,
 				p2p.Writes, p2p.WritesErr,
 				p2pRequestSent, p2pRequestReceived,
-				p2pSent,p2pReceived)
+				p2pSent, p2pReceived)
 			time.Sleep(10 * time.Second)
 		} else {
 			fmt.Printf("netTest(%s): Reads: %d errs %d Writes %d errs %d  ::: broadcast sent: %d broadcast received: %d\n",
