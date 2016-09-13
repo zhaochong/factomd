@@ -42,6 +42,8 @@ var (
 	CurrentLoggingLevel                  = Errors // Start at verbose because it takes a few seconds for the controller to adjust to what you set.
 	CurrentNetwork                       = TestNet
 	NetworkListenPort                    = "8108"
+	BroadcastFlag                        = "<BROADCAST>"
+	RandomPeerFlag                       = "<RANDOMPEER>"
 	NodeID                        uint64 = 0           // Random number used for loopback protection
 	MinumumQualityScore           int32  = -200        // if a peer's score is less than this we ignore them.
 	BannedQualityScore            int32  = -2147000000 // Used to ban a peer

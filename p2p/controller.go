@@ -366,32 +366,8 @@ func (c *Controller) route() {
 		TotalMessagesSent++
 		note("ctrlr", "Controller.route() got parcel from APPLICATION %+v", parcel.Header)
 		parcel.trace("controller.route().ToNetwork", "a")
-		if "" != parcel.Header.TargetPeer { // directed send
-			dot("&&h\n")
-			connection, present := c.connections[parcel.Header.TargetPeer]
-			if present { // We're still connected to the target
-				parcel.trace("controller.route().Directed Success", "b")
-				significant("ctrlr", "Controller.route() SUCCESS Directed send to %+v", parcel.Header.TargetPeer)
-				dot("&&i\n")
-				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
-			} else {
-				var bestKey string
-				var bestQuality int32
-				bestQuality = MinumumQualityScore
-				for key, value := range c.connections {
-					if bestQuality < value.peer.QualityScore {
-						bestKey = key
-						bestQuality = value.peer.QualityScore
-					}
-				}
-				connection := c.connections[bestKey]
-				parcel.Header.TargetPeer = bestKey
-				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
-				parcel.trace("controller.route().Directed No Address, sending to random", "b")
-				significant("ctrlr", "Controller.route() No Address, sending to Random-  Directed send to %+v", bestKey)
-			}
-		} else { // broadcast
-			dot("&&j\n")
+		switch parcel.Header.TargetPeer {
+		case BroadcastFlag: // Send to all peers
 			parcel.trace("controller.route().Broadcast", "b")
 			note("ctrlr", "Controller.route() Broadcast send to %d peers", len(c.connections))
 			for _, connection := range c.connections {
@@ -399,7 +375,34 @@ func (c *Controller) route() {
 				verbose("ctrlr", "Controller.route() Send to peer %s ", connection.peer.Hash)
 				BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
 			}
+		case RandomPeerFlag: // Find a random peer, send to that peer.
+			bestKey := ""
+			for key := range c.connections {
+				switch {
+				case 0 == len(key):
+					bestKey = key
+				case 3 == rand.Intn(3):
+					bestKey = key
+				}
+			}
+			parcel.Header.TargetPeer = bestKey
+			c.doDirectedSend(parcel)
+		default: // Check if we're connected to the peer, if not drop message.
+			c.doDirectedSend(parcel)
 		}
+	}
+}
+
+func (c *Controller) doDirectedSend(parcel Parcel) {
+	connection, present := c.connections[parcel.Header.TargetPeer]
+	if present { // We're still connected to the target
+		parcel.trace("controller.route().Directed Success", "b")
+		significant("ctrlr", "Controller.route() SUCCESS Directed send to %+v", parcel.Header.TargetPeer)
+		dot("&&i\n")
+		BlockFreeChannelSend(connection.SendChannel, ConnectionParcel{parcel: parcel})
+	} else {
+		parcel.trace("controller.route().Directed FAILURE not connected. Dropping message.", "b")
+		significant("ctrlr", "Controller.route() Directed FAILURE not connected. Dropping message. %+v", parcel.Header.TargetPeer)
 	}
 }
 
