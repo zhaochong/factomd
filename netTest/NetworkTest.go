@@ -95,7 +95,7 @@ func listen() {
 
 		if old[msg.GetHash().Fixed()] == nil {
 			old[msg.GetHash().Fixed()] = msg
-			if ok1 && len(bounce.Stamps) < 20 {
+			if ok1 && len(bounce.Stamps) < 5{
 				if isp2p {
 					bounceReply = new(messages.BounceReply)
 					bounceReply.Number = bounce.Number
@@ -118,7 +118,7 @@ func listen() {
 					broadcastSent++
 				}
 			}
-			if ok2 && len(bounceReply.Stamps) < 20 {
+			if ok2 && len(bounceReply.Stamps) < 5 {
 				bounceReply.Stamps = append(bounceReply.Stamps, primitives.NewTimestampNow())
 				p2pProxy.Send(msg)
 				old[msg.GetHash().Fixed()] = msg
@@ -162,14 +162,14 @@ func main() {
 				p2p.Writes, p2p.WritesErr,
 				p2pRequestSent, p2pRequestReceived,
 				p2pSent, p2pReceived)
-			time.Sleep(10 * time.Second)
+
 		} else {
 			fmt.Printf("netTest(%s): Reads: %d errs %d Writes %d errs %d  ::: broadcast sent: %d broadcast received: %d\n",
 				name,
 				p2p.Reads, p2p.ReadsErr,
 				p2p.Writes, p2p.WritesErr,
 				broadcastSent, broadcastReceived)
-			time.Sleep(10 * time.Second)
 		}
+		time.Sleep(10 * time.Second)
 	}
 }
