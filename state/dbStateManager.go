@@ -484,14 +484,7 @@ func (list *DBStateList) UpdateState() (progress bool) {
 
 	list.Catchup()
 
-	ht := list.State.GetHighestRecordedBlock()
-
 	for i, d := range list.DBStates {
-
-		// Only need to process new blocks
-		if d.DirectoryBlock.GetHeader().GetDBHeight() <= ht {
-			continue
-		}
 
 		//fmt.Printf("dddd %20s %10s --- %10s %10v %10s %10v \n", "DBStateList Update", list.State.FactomNodeName, "Looking at", i, "DBHeight", list.Base+uint32(i))
 
@@ -504,7 +497,7 @@ func (list *DBStateList) UpdateState() (progress bool) {
 			continue
 		}
 
-		if i > 1 {
+		if i > 0 {
 			progress = list.FixupLinks(list.DBStates[i-1], d)
 		}
 		progress = list.ProcessBlocks(d) || progress
