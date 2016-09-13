@@ -124,11 +124,13 @@ func listen() {
 				p2pReceived++
 				p2pSent++
 			}
+			fmt.Println("    ", msg.String())
+
 		} else {
 			oldcnt++
+			fmt.Println("OLD:", msg.String())
 		}
 
-		fmt.Println(msg.String())
 
 	}
 }
@@ -154,14 +156,16 @@ func main() {
 		old[bounce.GetHash().Fixed()] = bounce
 
 		if isp2p {
-			fmt.Printf("netTest: Reads: %d errs %d Writes %d errs %d  ::p2p:: request sent: %d request recieved %d sent: %d received: %d\n",
+			fmt.Printf("netTest(%s): Reads: %d errs %d Writes %d errs %d  ::p2p:: request sent: %d request recieved %d sent: %d received: %d\n",
+				name,
 				p2p.Reads, p2p.ReadsErr,
 				p2p.Writes, p2p.WritesErr,
 				p2pRequestSent, p2pRequestReceived,
 				p2pSent,p2pReceived)
 			time.Sleep(10 * time.Second)
 		} else {
-			fmt.Printf("netTest: Reads: %d errs %d Writes %d errs %d  ::: broadcast sent: %d broadcast received: %d\n",
+			fmt.Printf("netTest(%s): Reads: %d errs %d Writes %d errs %d  ::: broadcast sent: %d broadcast received: %d\n",
+				name,
 				p2p.Reads, p2p.ReadsErr,
 				p2p.Writes, p2p.WritesErr,
 				broadcastSent, broadcastReceived)
