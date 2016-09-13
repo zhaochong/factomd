@@ -99,8 +99,8 @@ func listen() {
 				if isp2p {
 					for i:=0; i<200; i++ {
 						bounceReply = new(messages.BounceReply)
-						bounceReply.Number = bounce.Number+int32(i)
-						bounceReply.Name = bounce.Name
+						bounceReply.Number = int32(i)
+						bounceReply.Name = name
 						bounceReply.Timestamp = bounce.Timestamp
 						bounceReply.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 
@@ -109,9 +109,10 @@ func listen() {
 
 						p2pProxy.Send(bounceReply)
 						old[msg.GetHash().Fixed()] = msg
-						p2pRequestReceived++
+
 						p2pSent++
 					}
+					p2pRequestReceived++
 				} else {
 					bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 					p2pProxy.Send(msg)
@@ -120,7 +121,7 @@ func listen() {
 					broadcastSent++
 				}
 			}
-			if ok2 && len(bounceReply.Stamps) < 5 {
+			if false && ok2 && len(bounceReply.Stamps) < 5 {
 				bounceReply.Stamps = append(bounceReply.Stamps, primitives.NewTimestampNow())
 				p2pProxy.Send(msg)
 				old[msg.GetHash().Fixed()] = msg
