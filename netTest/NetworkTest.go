@@ -6,13 +6,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
+	"time"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/engine"
 	"github.com/FactomProject/factomd/p2p"
-	"math/rand"
-	"time"
 )
 
 var p2pProxy *engine.P2PProxy
@@ -95,7 +96,7 @@ func listen() {
 
 		if old[msg.GetHash().Fixed()] == nil {
 			old[msg.GetHash().Fixed()] = msg
-			if ok1 && len(bounce.Stamps) < 5{
+			if ok1 && len(bounce.Stamps) < 5 {
 				if isp2p {
 					bounceReply = new(messages.BounceReply)
 					bounceReply.Number = bounce.Number
@@ -106,7 +107,7 @@ func listen() {
 					bounceReply.SetOrigin(bounce.GetOrigin())
 					bounceReply.SetNetworkOrigin(bounce.GetNetworkOrigin())
 
-					p2pProxy.Send(msg)
+					p2pProxy.Send(bounceReply)
 					old[msg.GetHash().Fixed()] = msg
 					p2pRequestReceived++
 					p2pSent++
