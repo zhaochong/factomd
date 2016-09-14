@@ -176,7 +176,7 @@ func (c *Connection) runLoop() {
 		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
 		c.updateStats()                   // Update controller with metrics
 		c.connectionStatusReport()
-		if 2 == rand.Intn(10) {
+		if 2 == rand.Intn(1000) {
 			significant(c.peer.PeerFixedIdent(), "Connection.runloop() STATE IS: %s", connectionStateStrings[c.state])
 		}
 		switch c.state {
@@ -226,7 +226,7 @@ func (c *Connection) runLoop() {
 
 func (c *Connection) setNotes(format string, v ...interface{}) {
 	c.notes = fmt.Sprintf(format, v...)
-	significant(c.peer.PeerIdent(), c.notes)
+	note(c.peer.PeerIdent(), c.notes)
 }
 
 // dialLoop:  dials the connection until giving up. Called in offline or initializing states.
@@ -337,7 +337,7 @@ func (c *Connection) goShutdown() {
 
 // processSends gets all the messages from the application and sends them out over the network
 func (c *Connection) processSends() {
-	significant(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
+	// note(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
 	for 0 < len(c.SendChannel) && ConnectionOnline == c.state {
 		message := <-c.SendChannel
 		switch message.(type) {
@@ -410,20 +410,17 @@ func (c *Connection) processReceives() {
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
 		c.conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 		err := c.decoder.Decode(&message)
-		// New error strategy for slow sync issue.  We report an error and for some types we will go
-		// offline.  But we rely on the message validation to decide if we got a valid message.
-		if nil != err {
-			c.handleNetErrors(err)
-		}
-		// Since we can get blank parcels, we check that the network is set (defaults initialized to zero)
-		// This way we know it's a legitimate parcel, and that we should act on it (eg: if it is the wrong network) or wrong version of software we hang up. Don't want to hang up on people due to temp. network errors.
-		if 0 != message.Header.Network { // we got a parcel from the network.
-			message.trace("Connection.processReceives().c.decoder.Decode(&message)", "E")
+		message.trace("Connection.processReceives().c.decoder.Decode(&message)", "E")
+		switch {
+		case nil == err:
 			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
 			c.metrics.BytesReceived += message.Header.Length
 			c.metrics.MessagesReceived += 1
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(message)
+		default:
+			c.handleNetErrors(err)
+			return
 		}
 	}
 }
@@ -431,13 +428,13 @@ func (c *Connection) processReceives() {
 //handleNetErrors Reacts to errors we get from encoder or decoder
 func (c *Connection) handleNetErrors(err error) {
 	nerr, isNetError := err.(net.Error)
-	significant(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got error: %+v", c.ConnectionState(), err)
+	verbose(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got error: %+v", c.ConnectionState(), err)
 	switch {
 	case isNetError && nerr.Timeout(): /// buffer empty
 		return
 	case isNetError && nerr.Temporary(): /// Temporary error, try to reconnect.
 		c.setNotes(fmt.Sprintf("handleNetErrors() Temporary error: %+v", nerr))
-		// c.goOffline()
+		c.goOffline()
 	case io.EOF == err, io.ErrClosedPipe == err: // Remote hung up
 		c.setNotes(fmt.Sprintf("handleNetErrors() Remote hung up - error: %+v", err))
 		c.goOffline()
@@ -503,7 +500,6 @@ func (c *Connection) parcelValidity(parcel Parcel) uint8 {
 		parcel.trace("Connection.isValidParcel()-loopback", "F")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to loopback!: %+v", parcel.Header)
 		c.peer.QualityScore = MinumumQualityScore - 50 // Ban ourselves for a week
-		return InvalidDisconnectPeer
 	case parcel.Header.Network != CurrentNetwork:
 		parcel.trace("Connection.isValidParcel()-network", "F")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to wrong network. Remote: %0x Us: %0x", parcel.Header.Network, CurrentNetwork)
@@ -532,8 +528,8 @@ func (c *Connection) handleParcelTypes(parcel Parcel) {
 		parcel.trace("Connection.handleParcelTypes()-TypeAlert", "H")
 		significant(c.peer.PeerIdent(), "!!!!!!!!!!!!!!!!!! Alert: Alert feature not implemented.")
 	case TypePing:
-		parcel.trace("Connection.handleParcelTypes()-TypePing", "H")
 		// Send Pong
+		parcel.trace("Connection.handleParcelTypes()-TypePing", "H")
 		pong := NewParcel(CurrentNetwork, []byte("Pong"))
 		pong.Header.Type = TypePong
 		debug(c.peer.PeerIdent(), "handleParcelTypes() GOT PING, Sending Pong: %s", pong.String())
@@ -541,18 +537,22 @@ func (c *Connection) handleParcelTypes(parcel Parcel) {
 		BlockFreeChannelSend(c.SendChannel, ConnectionParcel{parcel: *pong})
 	case TypePong: // all we need is the timestamp which is set already
 		parcel.trace("Connection.handleParcelTypes()-TypePong", "H")
+
 		debug(c.peer.PeerIdent(), "handleParcelTypes() GOT Pong.")
 		return
 	case TypePeerRequest:
-		parcel.trace("Connection.handleParcelTypes()-TypePeerRequest", "H")
 		debug(c.peer.PeerIdent(), "handleParcelTypes() TypePeerRequest")
+		parcel.trace("Connection.handleParcelTypes()-TypePeerRequest", "H")
+
 		BlockFreeChannelSend(c.ReceiveChannel, ConnectionParcel{parcel: parcel}) // Controller handles these.
 	case TypePeerResponse:
 		parcel.trace("Connection.handleParcelTypes()-TypePeerResponse", "H")
+
 		debug(c.peer.PeerIdent(), "handleParcelTypes() TypePeerResponse")
 		BlockFreeChannelSend(c.ReceiveChannel, ConnectionParcel{parcel: parcel}) // Controller handles these.
 	case TypeMessage:
 		parcel.trace("Connection.handleParcelTypes()-TypeMessage", "H")
+
 		debug(c.peer.PeerIdent(), "handleParcelTypes() TypeMessage. Message is a: %s", parcel.MessageType())
 		// Store our connection ID so the controller can direct response to us.
 		parcel.Header.TargetPeer = c.peer.Hash
@@ -560,6 +560,7 @@ func (c *Connection) handleParcelTypes(parcel Parcel) {
 		BlockFreeChannelSend(c.ReceiveChannel, ConnectionParcel{parcel: parcel}) // Controller handles these.
 	default:
 		parcel.trace("Connection.handleParcelTypes()-unknown", "H")
+
 		significant(c.peer.PeerIdent(), "!!!!!!!!!!!!!!!!!! Got message of unknown type?")
 		parcel.Print()
 	}
