@@ -84,8 +84,12 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	switch {
 	case !msg.IsPeer2Peer():
 		message.peerHash = p2p.BroadcastFlag
+		f.trace(message.appHash, message.appType, "P2PProxy.Send() - BroadcastFlag", "a")
 	case msg.IsPeer2Peer() && 0 == len(message.peerHash): // directed, with no direction of who to send it to
 		message.peerHash = p2p.RandomPeerFlag
+		f.trace(message.appHash, message.appType, "P2PProxy.Send() - RandomPeerFlag", "a")
+	default:
+		f.trace(message.appHash, message.appType, "P2PProxy.Send() - Addressed by hash", "a")
 	}
 	if msg.IsPeer2Peer() {
 		fmt.Printf("%s Sending directed to: %s message: %+v\n", time.Now().String(), message.peerHash, msg.String())
@@ -102,7 +106,7 @@ func (f *P2PProxy) Recieve() (interfaces.IMsg, error) {
 			switch data.(type) {
 			case factomMessage:
 				fmessage := data.(factomMessage)
-				f.trace(fmessage.appHash, fmessage.appType, "P2PProxy.Recieve()", "L")
+				f.trace(fmessage.appHash, fmessage.appType, "P2PProxy.Recieve()", "N")
 				msg, err := messages.UnmarshalMessage(fmessage.message)
 				if nil == err {
 					msg.SetNetworkOrigin(fmessage.peerHash)
@@ -230,6 +234,7 @@ func (f *P2PProxy) ManageOutChannel() {
 			parcel.Header.TargetPeer = fmessage.peerHash
 			parcel.Header.AppHash = fmessage.appHash
 			parcel.Header.AppType = fmessage.appType
+			parcel.Trace("P2PProxy.ManageOutChannel()", "b")
 			p2p.BlockFreeChannelSend(f.ToNetwork, *parcel)
 		default:
 			fmt.Printf("Garbage on f.BrodcastOut. %+v", data)
@@ -243,7 +248,7 @@ func (f *P2PProxy) ManageInChannel() {
 		switch data.(type) {
 		case p2p.Parcel:
 			parcel := data.(p2p.Parcel)
-			f.trace(parcel.Header.AppHash, parcel.Header.AppType, "P2PProxy.ManageInChannel()", "K")
+			f.trace(parcel.Header.AppHash, parcel.Header.AppType, "P2PProxy.ManageInChannel()", "M")
 			message := factomMessage{message: parcel.Payload, peerHash: parcel.Header.TargetPeer, appHash: parcel.Header.AppHash, appType: parcel.Header.AppType}
 			p2p.BlockFreeChannelSend(f.BroadcastIn, message)
 		default:

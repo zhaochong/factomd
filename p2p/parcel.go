@@ -91,7 +91,7 @@ func (p *Parcel) UpdateHeader() {
 	p.Header.Length = uint32(len(p.Payload))
 }
 
-func (p *Parcel) trace(location string, sequence string) {
+func (p *Parcel) Trace(location string, sequence string) {
 	time := time.Now().Unix()
 	fmt.Printf("\nParcelTrace, %s, %s, %s, %s, %s, %d \n", p.Header.AppHash, sequence, p.Header.AppType, CommandStrings[p.Header.Type], location, time)
 }
