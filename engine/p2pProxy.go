@@ -170,7 +170,7 @@ type messageLog struct {
 }
 
 func (p *P2PProxy) logMessage(msg interfaces.IMsg, received bool) {
-	if 1 < p.debugMode {
+	if 2 < p.debugMode {
 		// if constants.DBSTATE_MSG == msg.Type() {
 		// fmt.Printf("AppMsgLogging: \n Type: %s \n Network Origin: %s \n Message: %s", msg.Type(), msg.GetNetworkOrigin(), msg.String())
 		// }
