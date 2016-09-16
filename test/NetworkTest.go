@@ -32,7 +32,6 @@ func InitNetwork() {
 	peersPtr := flag.String("peers", "", "Array of peer addresses. ")
 	netdebugPtr := flag.Int("netdebug", 0, "0-5: 0 = quiet, >0 = increasing levels of logging")
 	exclusivePtr := flag.Bool("exclusive", false, "If true, we only dial out to special/trusted peers.")
-	deadlinePtr := flag.Int64("deadline", 1, "Deadline for Reads and Writes to conn.")
 
 	flag.Parse()
 
@@ -41,7 +40,6 @@ func InitNetwork() {
 	peers := *peersPtr
 	netdebug := *netdebugPtr
 	exclusive := *exclusivePtr
-	p2p.Deadline = time.Duration(*deadlinePtr)
 
 	old = make(map[[32]byte]interfaces.IMsg, 0)
 	connectionMetricsChannel := make(chan interface{}, p2p.StandardChannelSize)
@@ -73,30 +71,34 @@ func InitNetwork() {
 }
 
 func listen() {
-
+	prtone := false
 	for {
 		msg, err := p2pProxy.Recieve()
 		if err != nil || msg == nil {
+			if !prtone {
+				if err != nil {
+					fmt.Println(err.Error())
+				}
+			}
+			prtone = true
 			time.Sleep(1 * time.Millisecond)
 			continue
 		}
-
-		bounce, ok := msg.(*messages.Bounce)
+		time.Sleep(1 * time.Millisecond)
 
 		if old[msg.GetHash().Fixed()] == nil {
-
+			prtone = false
 			old[msg.GetHash().Fixed()] = msg
-			if ok && len(bounce.Stamps) < 20 {
+			bounce, ok := msg.(*messages.Bounce)
+			if ok && len(bounce.Stamps) < 100 {
 				bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 				p2pProxy.Send(msg)
+				fmt.Println(msg.String())
 			}
 			bounces++
 		} else {
 			oldcnt++
 		}
-
-		fmt.Println(msg.String())
-
 	}
 }
 
@@ -106,12 +108,11 @@ func main() {
 	go listen()
 
 	for {
-		if msgcnt < 1000 {
+		if msgcnt < 10 {
 			bounce := new(messages.Bounce)
 			bounce.Number = int32(msgcnt)
 			bounce.Name = name
 			bounce.Timestamp = primitives.NewTimestampNow()
-			bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 			p2pProxy.Send(bounce)
 			msgcnt++
 		}
@@ -119,7 +120,7 @@ func main() {
 			p2p.Reads, p2p.ReadsErr,
 			p2p.Writes, p2p.WritesErr,
 			msgcnt, bounces)
-		time.Sleep(10 * time.Second)
+		time.Sleep(20 * time.Second)
 	}
 
 }

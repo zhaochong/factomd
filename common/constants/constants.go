@@ -39,7 +39,8 @@ const (
 	REMOVESERVER_MSG     // 24
 	NEGOTIATION_MSG      // 25
 
-	BOUNCE_MSG // 26	test message
+	BOUNCE_MSG      // 26	test message
+	BOUNCEREPLY_MSG // 26	test message
 )
 
 const (
