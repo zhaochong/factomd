@@ -5,7 +5,6 @@
 package p2p
 
 import (
-	"encoding/gob"
 	"fmt"
 	"hash/crc32"
 	"io"
@@ -18,12 +17,10 @@ import (
 // via two channels, send and recieve.  These channels take structs of type ConnectionCommand or ConnectionParcel
 // (defined below).
 type Connection struct {
-	conn           net.Conn
 	SendChannel    chan interface{} // Send means "towards the network" Channel sends Parcels and ConnectionCommands
 	ReceiveChannel chan interface{} // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
 	// and as "address" for sending messages to specific nodes.
-	encoder         *gob.Encoder      // Wire format is gobs in this version, may switch to binary
-	decoder         *gob.Decoder      // Wire format is gobs in this version, may switch to binary
+	wire            *Wire							// Handles encoding and decoding messages and sending them over the wire.
 	peer            Peer              // the datastructure representing the peer we are talking to. defined in peer.go
 	attempts        int               // reconnection attempts
 	timeLastAttempt time.Time         // time of last attempt to connect via dial
@@ -110,7 +107,7 @@ const (
 
 // InitWithConn is called from our accept loop when a peer dials into us and we already have a network conn
 func (c *Connection) InitWithConn(conn net.Conn, peer Peer) *Connection {
-	c.conn = conn
+	c.wire = NewWire(conn)
 	c.isOutGoing = false // InitWithConn is called by controller's accept() loop
 	c.commonInit(peer)
 	c.isPersistent = false
@@ -122,7 +119,7 @@ func (c *Connection) InitWithConn(conn net.Conn, peer Peer) *Connection {
 
 // Init is called when we have peer info and need to dial into the peer
 func (c *Connection) Init(peer Peer, persistent bool) *Connection {
-	c.conn = nil
+	c.wire = nil
 	c.isOutGoing = true
 	c.commonInit(peer)
 	c.isPersistent = persistent
@@ -291,7 +288,7 @@ func (c *Connection) dial() bool {
 		c.setNotes(fmt.Sprintf("Connection.dial(%s) got error: %+v", address, err))
 		return false
 	}
-	c.conn = conn
+	c.wire = NewWire(conn)
 	c.setNotes(fmt.Sprintf("Connection.dial(%s) was successful.", address))
 	return true
 }
@@ -301,8 +298,7 @@ func (c *Connection) goOnline() {
 	debug(c.peer.PeerIdent(), "Connection.goOnline() called.")
 	c.state = ConnectionOnline
 	now := time.Now()
-	c.encoder = gob.NewEncoder(c.conn)
-	c.decoder = gob.NewDecoder(c.conn)
+	c.wire.Init()
 	c.attempts = 0
 	c.timeLastPing = now
 	c.timeLastAttempt = now
@@ -326,11 +322,9 @@ func (c *Connection) goOffline() {
 func (c *Connection) goShutdown() {
 	c.goOffline()
 	c.updatePeer()
-	if nil != c.conn {
-		defer c.conn.Close()
+	if c.wire != nil {
+		defer c.wire.Close()
 	}
-	c.decoder = nil
-	c.encoder = nil
 	c.state = ConnectionShuttingDown
 }
 
@@ -385,13 +379,12 @@ func (c *Connection) handleCommand(command ConnectionCommand) {
 func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
-	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.SetWriteDeadline(time.Now().Add(NetworkDeadline))
+	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s , Parcel: %s", c.ConnectionState(), parcel.MessageType())
 	parcel.Trace("Connection.sendParcel().encoder.Encode(parcel)", "f")
-	err := c.encoder.Encode(parcel)
+	err := c.wire.Send(parcel)
 	switch {
 	case nil == err:
-		c.metrics.BytesSent += parcel.Header.Length
+		c.metrics.BytesSent += uint32(len(parcel.Payload))
 		c.metrics.MessagesSent += 1
 	default:
 		c.handleNetErrors(err)
@@ -405,18 +398,16 @@ func (c *Connection) sendParcel(parcel Parcel) {
 // -- we run out of data to recieve (which gives an io.EOF which is handled by handleNetErrors)
 func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
-		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		c.conn.SetReadDeadline(time.Now().Add(NetworkDeadline))
-		err := c.decoder.Decode(&message)
+		message, err := c.wire.Receive()
 		message.Trace("Connection.processReceives().c.decoder.Decode(&message)", "G")
 		switch {
 		case nil == err:
 			note(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
-			c.metrics.BytesReceived += message.Header.Length
+			c.metrics.BytesReceived += uint32(len(message.Payload))
 			c.metrics.MessagesReceived += 1
 			message.Header.PeerAddress = c.peer.Address
-			c.handleParcel(message)
+			c.handleParcel(*message)
 		default:
 			c.handleNetErrors(err)
 			return
@@ -508,10 +499,6 @@ func (c *Connection) parcelValidity(parcel Parcel) uint8 {
 		parcel.Trace("Connection.isValidParcel()-version", "H")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to wrong version: %+v", parcel.Header)
 		return InvalidDisconnectPeer
-	case parcel.Header.Length != uint32(len(parcel.Payload)):
-		parcel.Trace("Connection.isValidParcel()-length", "H")
-		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to wrong length: %+v", parcel.Header)
-		return InvalidPeerDemerit
 	case parcel.Header.Crc32 != crc:
 		parcel.Trace("Connection.isValidParcel()-checksum", "H")
 		significant(c.peer.PeerIdent(), "Connection.isValidParcel(), failed due to bad checksum: %+v", parcel.Header)

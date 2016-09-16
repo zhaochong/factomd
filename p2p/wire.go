@@ -13,7 +13,7 @@ import (
 
 var _ = fmt.Print
 
-type middle struct {
+type Wire struct {
 	conn    net.Conn
 	encoder *gob.Encoder // Wire format is gobs in this version, may switch to binary
 	decoder *gob.Decoder // Wire format is gobs in this version, may switch to binary
@@ -32,18 +32,27 @@ type ParcelPack struct {
 	Payload []byte
 }
 
-func (m *middle) Init() {
+func NewWire(conn net.Conn) *Wire {
+	w := new(Wire)
+	w.conn = conn
+	return w
+}
+
+
+func (m *Wire) Init() {
 	m.encoder = gob.NewEncoder(m)
 	m.decoder = gob.NewDecoder(m)
 }
 
-func (m *middle) Close() {
-	m.conn.Close()
+func (m *Wire) Close() {
+	if m.conn != nil {
+		m.conn.Close()
+	}
 	m.decoder = nil
 	m.encoder = nil
 }
 
-func (m *middle) Send(p Parcel) (err error) {
+func (m *Wire) Send(p Parcel) (err error) {
 	if m.encoder != nil {
 		m.conn.SetWriteDeadline(time.Now().Add(Deadline))
 		pack := new(ParcelPack)
@@ -57,7 +66,7 @@ func (m *middle) Send(p Parcel) (err error) {
 	return err
 }
 
-func (m *middle) Receive() (p *Parcel, err error) {
+func (m *Wire) Receive() (p *Parcel, err error) {
 	var pack ParcelPack
 	p = new(Parcel)
 	m.conn.SetReadDeadline(time.Now().Add(Deadline))
@@ -72,7 +81,7 @@ func (m *middle) Receive() (p *Parcel, err error) {
 	return nil, err
 }
 
-func (m *middle) Write(b []byte) (int, error) {
+func (m *Wire) Write(b []byte) (int, error) {
 
 	i, e := m.conn.Write(b)
 
@@ -89,7 +98,7 @@ func (m *middle) Write(b []byte) (int, error) {
 	return i, e
 }
 
-func (m *middle) Read(b []byte) (int, error) {
+func (m *Wire) Read(b []byte) (int, error) {
 
 	i, e := m.conn.Read(b)
 
