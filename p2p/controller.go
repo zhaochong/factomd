@@ -245,6 +245,14 @@ func (c *Controller) acceptLoop(listener net.Listener) {
 			panic("error, nodelay didn't take")
 
 		}
+		if err := conn.(*net.TCPConn).SetReadBuffer(1024000); err != nil {
+			panic("error, SetReadBuffer didn't take")
+
+		}
+		if err := conn.(*net.TCPConn).SetWriteBuffer(1024000); err != nil {
+			panic("error, SetWriteBuffer didn't take")
+
+		}
 		switch err {
 		case nil:
 			switch {

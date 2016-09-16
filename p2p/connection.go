@@ -295,6 +295,14 @@ func (c *Connection) dial() bool {
 		return false
 	}
 
+	if err := conn.(*net.TCPConn).SetReadBuffer(1024000); err != nil {
+		return false
+	}
+	
+	if err := conn.(*net.TCPConn).SetWriteBuffer(1024000); err != nil {
+		return false
+	}
+	
 	m := new(middle)
 	c.conn = m
 	m.conn = conn
