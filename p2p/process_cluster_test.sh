@@ -2,7 +2,6 @@
 echo "run this from factomproject/factomd eg:"
 echo "$ ./p2p/process_cluster_test.sh"
 echo
-CWD=`pwd`
 echo "changing directory to factomd"
 cd "$GOPATH/src/github.com/FactomProject/factomd"
 rm "$GOPATH/bin/factomd"
@@ -12,8 +11,8 @@ if [ $? -eq 0 ]; then
      echo "was binary updated? Current:`date`"
     ls -G -lh "$GOPATH/bin/factomd"
 
-    echo "changing directory to back to where we were ( $CWD )"
-    cd $CWD
+    echo "changing directory to factomd/p2p"
+    cd "$GOPATH/src/github.com/FactomProject/factomd/p2p"
     pkill factomd
  
     echo "Running..."
@@ -25,8 +24,7 @@ if [ $? -eq 0 ]; then
     # sleep 6
     # factomd -network="TEST" -prefix="test4-" -port=9123 -networkPort=8121  -peers="127.0.0.1:8120" -netdebug=1 -db=MAP  & node3=$!
 
-    tail -f testing/node1.out testing/node2.out  | grep -B 2 -A 15 "Network Controller Status Report"  & ncsp=$!
-    tail -f testing/node1.out testing/node2.out  | grep -B 3 -A 11 "InMsgQueue"  & imq=$!
+    tail -f testing/node1.out testing/node2.out  | grep -B 3 -A 15 -e "Network Controller Status Report"  -e "InMsgQueue" & ncsp=$!
     echo
     echo
     sleep 120
@@ -36,7 +34,6 @@ if [ $? -eq 0 ]; then
     echo
     # kill -2 $node0 $node1 $node2 $node3
     kill -2 $node1 # Kill this first to see how node0 handles it.
-    sleep 25
     kill -2 $node0 $node2 $node3
-    kill -2 $imq $ncsp
+    kill  $ncsp
 fi

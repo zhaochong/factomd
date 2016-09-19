@@ -385,13 +385,16 @@ func (c *Connection) handleCommand(command ConnectionCommand) {
 func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
-	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
 	c.conn.SetWriteDeadline(time.Now().Add(NetworkDeadline))
 	parcel.Trace("Connection.sendParcel().encoder.Encode(parcel)", "f")
-	// Deadline free strategy- go the sends, ignore errors, the reads will discover if the connection is down.
-	c.metrics.BytesSent += parcel.Header.Length
-	c.metrics.MessagesSent += 1
-	c.encoder.Encode(parcel)
+	err := c.encoder.Encode(parcel)
+	switch {
+	case nil == err:
+		c.metrics.BytesSent += parcel.Header.Length
+		c.metrics.MessagesSent += 1
+	default:
+		c.handleNetErrors(err)
+	}
 }
 
 // processReceives is called as part of runloop. This is essentially an infinite loop that exits

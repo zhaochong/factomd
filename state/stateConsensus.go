@@ -672,18 +672,20 @@ func (s *State) FollowerExecuteDataResponse(m interfaces.IMsg) {
 func (s *State) FollowerExecuteMissingMsg(msg interfaces.IMsg) {
 	m := msg.(*messages.MissingMsg)
 
-	missingmsg, ackMsg, err := s.LoadSpecificMsgAndAck(m.DBHeight, m.VMIndex, m.ProcessListHeight)
+	for _, h := range m.ProcessListHeight {
+		missingmsg, ackMsg, err := s.LoadSpecificMsgAndAck(m.DBHeight, m.VMIndex, h)
 
-	if missingmsg != nil && ackMsg != nil && err == nil { // If I don't have this message, ignore.
-		msgResponse := messages.NewMissingMsgResponse(s, missingmsg, ackMsg)
-		msgResponse.SetOrigin(m.GetOrigin())
-		msgResponse.SetNetworkOrigin(m.GetNetworkOrigin())
-		s.NetworkOutMsgQueue() <- msgResponse
-		s.IncMissingMsgReply()
-	} else {
-		s.MissingIgnoreCnt++
+		if missingmsg != nil && ackMsg != nil && err == nil {
+			// If I don't have this message, ignore.
+			msgResponse := messages.NewMissingMsgResponse(s, missingmsg, ackMsg)
+			msgResponse.SetOrigin(m.GetOrigin())
+			msgResponse.SetNetworkOrigin(m.GetNetworkOrigin())
+			s.NetworkOutMsgQueue() <- msgResponse
+			s.MissingAnsCnt++
+		} else {
+			s.MissingIgnoreCnt++
+		}
 	}
-
 	return
 }
 
@@ -703,6 +705,8 @@ func (s *State) FollowerExecuteRevealEntry(m interfaces.IMsg) {
 		if s.Acks[m.GetMsgHash().Fixed()] == nil {
 			msg := m.(*messages.RevealEntryMsg)
 			s.NextCommit(msg.Entry.GetHash())
+			// Okay the Reveal has been recorded.  Record this as an entry that cannot be duplicated.
+			s.Replay.IsTSValid_(constants.REVEAL_REPLAY, msg.Entry.GetHash().Fixed(), msg.Timestamp, s.GetTimestamp())
 		}
 
 	}
@@ -781,6 +785,11 @@ func (s *State) LeaderExecuteRevealEntry(m interfaces.IMsg) {
 	case -1:
 		return
 	}
+	now := s.GetTimestamp()
+	// If we have already recorded a Reveal Entry with this hash in this period, just ignore.
+	if _, v := s.Replay.Valid(constants.REVEAL_REPLAY, eh.Fixed(), m.GetTimestamp(), now); !v {
+		return
+	}
 
 	ack := s.NewAck(m).(*messages.Ack)
 
@@ -794,6 +803,9 @@ func (s *State) LeaderExecuteRevealEntry(m interfaces.IMsg) {
 	if s.Acks[m.GetMsgHash().Fixed()] != nil {
 		m.FollowerExecute(s)
 		s.PutCommit(eh, commit)
+	} else {
+		// Okay the Reveal has been recorded.  Record this as an entry that cannot be duplicated.
+		s.Replay.IsTSValid_(constants.REVEAL_REPLAY, eh.Fixed(), m.GetTimestamp(), now)
 	}
 }
 
@@ -1265,6 +1277,30 @@ func (s *State) ProcessDBSig(dbheight uint32, msg interfaces.IMsg) bool {
 			fmt.Printf("Error in adding DB sig to admin block, %s\n", err.Error())
 		}
 	*/
+}
+
+func (s *State) UpdateECs(ec interfaces.IEntryCreditBlock) {
+	now := s.GetTimestamp()
+	for _, entry := range ec.GetEntries() {
+		cc, ok := entry.(*entryCreditBlock.CommitChain)
+		if ok && s.Replay.IsTSValid_(constants.INTERNAL_REPLAY, cc.GetHash().Fixed(), cc.GetTimestamp(), now) {
+			if s.NoEntryYet(cc.EntryHash, cc.GetTimestamp()) {
+				cmsg := new(messages.CommitChainMsg)
+				cmsg.CommitChain = cc
+				s.PutCommit(cc.EntryHash, cmsg)
+			}
+			continue
+		}
+		ce, ok := entry.(*entryCreditBlock.CommitEntry)
+		if ok && s.Replay.IsTSValid_(constants.INTERNAL_REPLAY, ce.GetHash().Fixed(), ce.GetTimestamp(), now) {
+			if s.NoEntryYet(ce.EntryHash, ce.GetTimestamp()) {
+				emsg := new(messages.CommitEntryMsg)
+				emsg.CommitEntry = ce
+				s.PutCommit(ce.EntryHash, emsg)
+			}
+			continue
+		}
+	}
 }
 
 func (s *State) ConsiderSaved(dbheight uint32) {
