@@ -78,20 +78,20 @@ func listen() {
 		if err != nil || msg == nil {
 			if !prtone {
 				if err != nil {
-					time.Sleep(1 * time.Millisecond)
-				} else {
-					fmt.Println("Msg is nil")
+					fmt.Println(err.Error())
 				}
 			}
 			prtone = true
+			time.Sleep(1 * time.Millisecond)
 			continue
 		}
+		time.Sleep(1 * time.Millisecond)
 
 		if old[msg.GetHash().Fixed()] == nil {
 			prtone = false
 			old[msg.GetHash().Fixed()] = msg
 			bounce, ok := msg.(*messages.Bounce)
-			if ok {
+			if ok && len(bounce.Stamps) < 100 {
 				bounce.Stamps = append(bounce.Stamps, primitives.NewTimestampNow())
 				p2pProxy.Send(msg)
 				fmt.Println(msg.String())
@@ -109,8 +109,9 @@ func main() {
 	go listen()
 
 	for {
-		if msgcnt < 100 {
+		if msgcnt < 10 {
 			bounce := new(messages.Bounce)
+			bounce.Number = int32(msgcnt)
 			bounce.Name = name
 			bounce.Timestamp = primitives.NewTimestampNow()
 			p2pProxy.Send(bounce)

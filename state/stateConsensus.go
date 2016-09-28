@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"hash"
 
+	"time"
+
+	"errors"
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/entryCreditBlock"
@@ -26,6 +29,47 @@ var _ = (*hash.Hash32)(nil)
 // Returns true if some message was processed.
 //***************************************************************
 
+func (s *State) executeMsg(vm *VM, msg interfaces.IMsg) (ret bool) {
+	_, ok := s.Replay.Valid(constants.INTERNAL_REPLAY, msg.GetRepeatHash().Fixed(), msg.GetTimestamp(), s.GetTimestamp())
+	if !ok {
+		return
+	}
+	s.SetString()
+	msg.ComputeVMIndex(s)
+
+	switch msg.Validate(s) {
+	case 1:
+		if s.RunLeader &&
+			s.Leader &&
+			!s.Saving &&
+			vm != nil && int(vm.Height) == len(vm.List) &&
+			(!s.Syncing || !vm.Synced) &&
+			(msg.IsLocal() || msg.GetVMIndex() == s.LeaderVMIndex) &&
+			s.LeaderPL.DBHeight+1 >= s.GetHighestKnownBlock() {
+			if len(vm.List) == 0 {
+				s.SendDBSig(s.LLeaderHeight, s.LeaderVMIndex)
+				s.XReview = append(s.XReview, msg)
+			} else {
+				msg.LeaderExecute(s)
+			}
+		} else {
+			msg.FollowerExecute(s)
+		}
+		ret = true
+	case 0:
+		s.Holding[msg.GetMsgHash().Fixed()] = msg
+	default:
+		s.Holding[msg.GetMsgHash().Fixed()] = msg
+		if !msg.SentInvlaid() {
+			msg.MarkSentInvalid(true)
+			s.networkInvalidMsgQueue <- msg
+		}
+	}
+
+	return
+
+}
+
 func (s *State) Process() (progress bool) {
 
 	if !s.RunLeader {
@@ -42,67 +86,47 @@ func (s *State) Process() (progress bool) {
 		vm = s.LeaderPL.VMs[s.LeaderVMIndex]
 	}
 
-	// Executing a message means looking if it is valid, checking if we are a leader.
-	executeMsg := func(msg interfaces.IMsg) (ret bool) {
-		_, ok := s.Replay.Valid(constants.INTERNAL_REPLAY, msg.GetRepeatHash().Fixed(), msg.GetTimestamp(), s.GetTimestamp())
-		if !ok {
-			return
-		}
-		s.SetString()
-		msg.ComputeVMIndex(s)
-
-		switch msg.Validate(s) {
-		case 1:
-			if s.RunLeader &&
-				s.Leader &&
-				!s.Saving &&
-				int(vm.Height) == len(vm.List) &&
-				(!s.Syncing || !vm.Synced) &&
-				(msg.IsLocal() || msg.GetVMIndex() == s.LeaderVMIndex) {
-				if len(vm.List) == 0 {
-					s.SendDBSig(s.LLeaderHeight, s.LeaderVMIndex)
-					s.XReview = append(s.XReview, msg)
-				} else {
-					msg.LeaderExecute(s)
-				}
-			} else {
-				msg.FollowerExecute(s)
-			}
-			ret = true
-		case 0:
-			s.Holding[msg.GetMsgHash().Fixed()] = msg
-		default:
-			s.Holding[msg.GetMsgHash().Fixed()] = msg
-			if !msg.SentInvlaid() {
-				msg.MarkSentInvalid(true)
-				s.networkInvalidMsgQueue <- msg
-			}
-		}
-
-		return
-	}
-
 	s.ReviewHolding()
 
-	// Reprocess any stalled Acknowledgements
-	for i := 0; i < 5 && len(s.XReview) > 0; i++ {
-		msg := s.XReview[0]
-		progress = executeMsg(msg)
-		s.XReview = s.XReview[1:]
+	more := false
+	// Process acknowledgements if we have some.
+ackLoop:
+	for i := 0; i < 55; i++ {
+		select {
+		case ack := <-s.ackQueue:
+			a := ack.(*messages.Ack)
+			if a.DBHeight >= s.LLeaderHeight && ack.Validate(s) == 1 {
+				ack.FollowerExecute(s)
+			}
+			progress = true
+		default:
+			more = true
+			break ackLoop
+		}
 	}
 
-	select {
-	case ack := <-s.ackQueue:
-		a := ack.(*messages.Ack)
-		if a.DBHeight >= s.LLeaderHeight && ack.Validate(s) == 1 {
-			ack.FollowerExecute(s)
+	// Process inbound messages
+emptyLoop:
+	for i := 0; i < 55; i++ {
+		select {
+		case msg := <-s.msgQueue:
+			if s.executeMsg(vm, msg) && !msg.IsPeer2Peer() {
+				msg.SendOut(s, msg)
+			}
+		default:
+			more = true
+			break emptyLoop
 		}
-		progress = true
-	case msg := <-s.msgQueue:
-		if executeMsg(msg) && !msg.IsPeer2Peer() {
-			msg.SendOut(s, msg)
-		}
-	default:
+	}
+
+	// Reprocess any stalled messages, but not so much compared inbound messages
+	for i := 0; i < 2 && len(s.XReview) > 0; i++ {
+		msg := s.XReview[0]
+		progress = s.executeMsg(vm, msg)
+		s.XReview = s.XReview[1:]
+	}
+	if !more {
+		time.Sleep(10 * time.Millisecond)
 	}
 
 	return
@@ -256,6 +280,9 @@ func (s *State) FollowerExecuteAck(msg interfaces.IMsg) {
 	ack := msg.(*messages.Ack)
 
 	pl := s.ProcessLists.Get(ack.DBHeight)
+	if pl == nil {
+		return
+	}
 	list := pl.VMs[ack.VMIndex].List
 	if len(list) > int(ack.Height) && list[ack.Height] != nil {
 		return
@@ -273,25 +300,21 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 
 	dbheight := dbstatemsg.DirectoryBlock.GetHeader().GetDBHeight()
 
-	if s.GetHighestRecordedBlock() > dbheight {
+	if s.GetHighestCompletedBlock() > dbheight {
 		return
 	}
+	pdbstate := s.DBStates.Get(int(dbheight - 1))
 
-	if dbheight > 1 {
-		pdbstate := s.DBStates.Get(int(dbheight - 1))
-		if pdbstate == nil {
-			// Must be out of order.  so keep around until we can process.
-			k := fmt.Sprint(dbheight - 1)
-			key := primitives.NewHash([]byte(k))
-			s.Holding[key.Fixed()] = msg
-			return
-		}
-		pkeymr := pdbstate.DirectoryBlock.GetKeyMR()
-		ppkeymr := dbstatemsg.DirectoryBlock.GetHeader().GetPrevKeyMR()
-		if !pkeymr.IsSameAs(ppkeymr) {
-			s.DBStateFailsCnt++
-			s.networkInvalidMsgQueue <- msg
-		}
+	switch pdbstate.ValidNext(s, dbstatemsg.DirectoryBlock) {
+	case 0:
+		k := fmt.Sprint("dbstate", dbheight-1)
+		key := primitives.NewHash([]byte(k))
+		s.Holding[key.Fixed()] = msg
+		return
+	case -1:
+		s.DBStateFailsCnt++
+		s.networkInvalidMsgQueue <- msg
+		return
 	}
 
 	s.DBStates.LastTime = s.GetTimestamp()
@@ -454,6 +477,8 @@ func (s *State) FollowerExecuteSFault(m interfaces.IMsg) {
 								listOfSigs = append(listOfSigs, sig)
 							}
 							fullFault := messages.NewFullServerFault(sf, listOfSigs)
+							absf := fullFault.ToAdminBlockEntry()
+							s.LeaderPL.AdminBlock.AddServerFault(absf)
 							if fullFault != nil {
 								fullFault.Sign(s.serverPrivKey)
 								s.NetworkOutMsgQueue() <- fullFault
@@ -521,6 +546,7 @@ func (s *State) FollowerExecuteFullFault(m interfaces.IMsg) {
 		for listIdx, fedServ := range relevantPL.FedServers {
 			if fedServ.GetChainID().IsSameAs(fullFault.ServerID) {
 				relevantPL.FedServers[listIdx] = theAuditReplacement
+				relevantPL.FedServers[listIdx].SetOnline(true)
 				relevantPL.AddAuditServer(fedServ.GetChainID())
 				s.RemoveAuditServer(fullFault.DBHeight, theAuditReplacement.GetChainID())
 				if foundVM, vmindex := relevantPL.GetVirtualServers(s.CurrentMinute, theAuditReplacement.GetChainID()); foundVM {
@@ -556,9 +582,18 @@ func (s *State) FollowerExecuteFullFault(m interfaces.IMsg) {
 func (s *State) FollowerExecuteMMR(m interfaces.IMsg) {
 	mmr, _ := m.(*messages.MissingMsgResponse)
 	ack := mmr.AckResponse.(*messages.Ack)
+	ack.Response = true
 	msg := mmr.MsgResponse
+	pl := s.ProcessLists.Get(ack.DBHeight)
 	_, okr := s.Replay.Valid(constants.INTERNAL_REPLAY, ack.GetRepeatHash().Fixed(), ack.GetTimestamp(), s.GetTimestamp())
 	_, okm := s.Replay.Valid(constants.INTERNAL_REPLAY, msg.GetRepeatHash().Fixed(), msg.GetTimestamp(), s.GetTimestamp())
+
+	if pl == nil {
+		return
+	}
+
+	s.Acks[ack.GetHash().Fixed()] = ack
+
 	if okr {
 		ack.FollowerExecute(s)
 	}
@@ -566,10 +601,13 @@ func (s *State) FollowerExecuteMMR(m interfaces.IMsg) {
 		msg.FollowerExecute(s)
 	}
 	if !okr && !okm {
-		pl := s.ProcessLists.Get(ack.DBHeight)
 		pl.AddToProcessList(ack, msg)
 	}
-	s.MissingAnsCnt++
+
+	if s.Acks[ack.GetHash().Fixed()] == nil {
+		s.MissingResponseAppliedCnt++
+	}
+
 }
 
 func (s *State) FollowerExecuteDataResponse(m interfaces.IMsg) {
@@ -667,18 +705,20 @@ func (s *State) FollowerExecuteDataResponse(m interfaces.IMsg) {
 func (s *State) FollowerExecuteMissingMsg(msg interfaces.IMsg) {
 	m := msg.(*messages.MissingMsg)
 
-	missingmsg, ackMsg, err := s.LoadSpecificMsgAndAck(m.DBHeight, m.VMIndex, m.ProcessListHeight)
+	for _, h := range m.ProcessListHeight {
+		missingmsg, ackMsg, err := s.LoadSpecificMsgAndAck(m.DBHeight, m.VMIndex, h)
 
-	if missingmsg != nil && ackMsg != nil && err == nil { // If I don't have this message, ignore.
-		msgResponse := messages.NewMissingMsgResponse(s, missingmsg, ackMsg)
-		msgResponse.SetOrigin(m.GetOrigin())
-		msgResponse.SetNetworkOrigin(m.GetNetworkOrigin())
-		s.NetworkOutMsgQueue() <- msgResponse
-		s.IncMissingMsgReply()
-	} else {
-		s.MissingIgnoreCnt++
+		if missingmsg != nil && ackMsg != nil && err == nil {
+			// If I don't have this message, ignore.
+			msgResponse := messages.NewMissingMsgResponse(s, missingmsg, ackMsg)
+			msgResponse.SetOrigin(m.GetOrigin())
+			msgResponse.SetNetworkOrigin(m.GetNetworkOrigin())
+			s.NetworkOutMsgQueue() <- msgResponse
+			s.MissingRequestReplyCnt++
+		} else {
+			s.MissingRequestIgnoreCnt++
+		}
 	}
-
 	return
 }
 
@@ -697,7 +737,9 @@ func (s *State) FollowerExecuteRevealEntry(m interfaces.IMsg) {
 		// If we added the ack, then it will be cleared from the ack map.
 		if s.Acks[m.GetMsgHash().Fixed()] == nil {
 			msg := m.(*messages.RevealEntryMsg)
-			s.NextCommit(msg.Entry.GetHash())
+			delete(s.Commits, msg.Entry.GetHash().Fixed())
+			// Okay the Reveal has been recorded.  Record this as an entry that cannot be duplicated.
+			s.Replay.IsTSValid_(constants.REVEAL_REPLAY, msg.Entry.GetHash().Fixed(), msg.Timestamp, s.GetTimestamp())
 		}
 
 	}
@@ -776,6 +818,11 @@ func (s *State) LeaderExecuteRevealEntry(m interfaces.IMsg) {
 	case -1:
 		return
 	}
+	now := s.GetTimestamp()
+	// If we have already recorded a Reveal Entry with this hash in this period, just ignore.
+	if _, v := s.Replay.Valid(constants.REVEAL_REPLAY, eh.Fixed(), m.GetTimestamp(), now); !v {
+		return
+	}
 
 	ack := s.NewAck(m).(*messages.Ack)
 
@@ -789,6 +836,10 @@ func (s *State) LeaderExecuteRevealEntry(m interfaces.IMsg) {
 	if s.Acks[m.GetMsgHash().Fixed()] != nil {
 		m.FollowerExecute(s)
 		s.PutCommit(eh, commit)
+	} else {
+		// Okay the Reveal has been recorded.  Record this as an entry that cannot be duplicated.
+		s.Replay.IsTSValid_(constants.REVEAL_REPLAY, eh.Fixed(), m.GetTimestamp(), now)
+		delete(s.Commits, eh.Fixed())
 	}
 }
 
@@ -864,12 +915,15 @@ func (s *State) ProcessCommitChain(dbheight uint32, commitChain interfaces.IMsg)
 
 	pl := s.ProcessLists.Get(dbheight)
 	pl.EntryCreditBlock.GetBody().AddEntry(c.CommitChain)
-	s.GetFactoidState().UpdateECTransaction(true, c.CommitChain)
+	if e := s.GetFactoidState().UpdateECTransaction(true, c.CommitChain); e == nil {
+		// save the Commit to match agains the Reveal later
+		s.PutCommit(c.CommitChain.EntryHash, c)
+		return true
+	} else {
+		fmt.Println(e)
+	}
 
-	// save the Commit to match agains the Reveal later
-	s.PutCommit(c.CommitChain.EntryHash, c)
-
-	return true
+	return false
 }
 
 func (s *State) ProcessCommitEntry(dbheight uint32, commitEntry interfaces.IMsg) bool {
@@ -877,12 +931,14 @@ func (s *State) ProcessCommitEntry(dbheight uint32, commitEntry interfaces.IMsg)
 
 	pl := s.ProcessLists.Get(dbheight)
 	pl.EntryCreditBlock.GetBody().AddEntry(c.CommitEntry)
-	s.GetFactoidState().UpdateECTransaction(true, c.CommitEntry)
-
-	// save the Commit to match agains the Reveal later
-	s.PutCommit(c.CommitEntry.EntryHash, c)
-
-	return true
+	if e := s.GetFactoidState().UpdateECTransaction(true, c.CommitEntry); e == nil {
+		// save the Commit to match agains the Reveal later
+		s.PutCommit(c.CommitEntry.EntryHash, c)
+		return true
+	} else {
+		fmt.Println(e)
+	}
+	return false
 }
 
 func (s *State) ProcessRevealEntry(dbheight uint32, m interfaces.IMsg) bool {
@@ -952,7 +1008,7 @@ func (s *State) ProcessRevealEntry(dbheight uint32, m interfaces.IMsg) bool {
 // that is missing the DBSig.  If the DBSig isn't our responsiblity, then
 // this call will do nothing.  Assumes the state for the leader is set properly
 func (s *State) SendDBSig(dbheight uint32, vmIndex int) {
-	ht := s.GetHighestRecordedBlock()
+	ht := s.GetHighestCompletedBlock()
 	if dbheight <= ht || s.EOM {
 		return
 	}
@@ -1040,6 +1096,9 @@ func (s *State) ProcessEOM(dbheight uint32, msg interfaces.IMsg) bool {
 		s.EOMProcessed++
 		e.Processed = true
 		vm.Synced = true
+
+		s.SendHeartBeat()
+
 		return false
 	}
 
@@ -1108,43 +1167,33 @@ func (s *State) ProcessEOM(dbheight uint32, msg interfaces.IMsg) bool {
 
 				dbs.LeaderExecute(s)
 
-			} else {
-				for _, auditServer := range s.GetAuditServers(s.LLeaderHeight) {
-					if auditServer.GetChainID().IsSameAs(s.IdentityChainID) {
-						hb := new(messages.Heartbeat)
-						hb.Timestamp = primitives.NewTimestampNow()
-						hb.DBlockHash = dbstate.DBHash
-						hb.IdentityChainID = s.IdentityChainID
-						hb.Sign(s.GetServerPrivateKey())
-						s.NetworkOutMsgQueue() <- hb
-					}
-				}
 			}
+
 			s.Saving = true
 		}
-	}
 
-	for k := range s.Commits {
-		vs := s.Commits[k]
-		if len(vs) == 0 {
-			delete(s.Commits, k)
-			continue
-		}
-		v, ok := vs[0].(interfaces.IMsg)
-		if ok {
-			_, ok := s.Replay.Valid(constants.TIME_TEST, v.GetRepeatHash().Fixed(), v.GetTimestamp(), s.GetTimestamp())
-			if !ok {
-				copy(vs, vs[1:])
-				vs[len(vs)-1] = nil
-				s.Commits[k] = vs[:len(vs)-1]
+		for k := range s.Commits {
+			vs := s.Commits[k]
+			if len(vs) == 0 {
+				delete(s.Commits, k)
+				continue
+			}
+			v, ok := vs[0].(interfaces.IMsg)
+			if ok {
+				_, ok := s.Replay.Valid(constants.TIME_TEST, v.GetRepeatHash().Fixed(), v.GetTimestamp(), s.GetTimestamp())
+				if !ok {
+					copy(vs, vs[1:])
+					vs[len(vs)-1] = nil
+					s.Commits[k] = vs[:len(vs)-1]
+				}
 			}
 		}
-	}
 
-	for k := range s.Acks {
-		v := s.Acks[k].(*messages.Ack)
-		if v.DBHeight < s.LLeaderHeight {
-			delete(s.Acks, k)
+		for k := range s.Acks {
+			v := s.Acks[k].(*messages.Ack)
+			if v.DBHeight < s.LLeaderHeight {
+				delete(s.Acks, k)
+			}
 		}
 	}
 
@@ -1262,6 +1311,60 @@ func (s *State) ProcessDBSig(dbheight uint32, msg interfaces.IMsg) bool {
 	*/
 }
 
+func (s *State) GetMsg(vmIndex int, dbheight int, height int) (interfaces.IMsg, error) {
+	vms := s.ProcessLists.Get(uint32(dbheight)).VMs
+	if len(vms) <= vmIndex {
+		return nil, errors.New("Bad VM Index")
+	}
+	vm := vms[vmIndex]
+	if vm.Height > height {
+		return vm.List[height], nil
+	}
+	return nil, nil
+}
+
+func (s *State) SendHeartBeat() {
+	dbstate := s.DBStates.Get(int(s.LLeaderHeight - 1))
+	if dbstate == nil {
+		return
+	}
+	for _, auditServer := range s.GetAuditServers(s.LLeaderHeight) {
+		if auditServer.GetChainID().IsSameAs(s.IdentityChainID) {
+			hb := new(messages.Heartbeat)
+			hb.Timestamp = primitives.NewTimestampNow()
+			hb.SecretNumber = s.GetSecretNumber(hb.Timestamp)
+			hb.DBlockHash = dbstate.DBHash
+			hb.IdentityChainID = s.IdentityChainID
+			hb.Sign(s.GetServerPrivateKey())
+			hb.SendOut(s, hb)
+		}
+	}
+}
+
+func (s *State) UpdateECs(ec interfaces.IEntryCreditBlock) {
+	now := s.GetTimestamp()
+	for _, entry := range ec.GetEntries() {
+		cc, ok := entry.(*entryCreditBlock.CommitChain)
+		if ok && s.Replay.IsTSValid_(constants.INTERNAL_REPLAY, cc.GetHash().Fixed(), cc.GetTimestamp(), now) {
+			if s.NoEntryYet(cc.EntryHash, cc.GetTimestamp()) {
+				cmsg := new(messages.CommitChainMsg)
+				cmsg.CommitChain = cc
+				s.PutCommit(cc.EntryHash, cmsg)
+			}
+			continue
+		}
+		ce, ok := entry.(*entryCreditBlock.CommitEntry)
+		if ok && s.Replay.IsTSValid_(constants.INTERNAL_REPLAY, ce.GetHash().Fixed(), ce.GetTimestamp(), now) {
+			if s.NoEntryYet(ce.EntryHash, ce.GetTimestamp()) {
+				emsg := new(messages.CommitEntryMsg)
+				emsg.CommitEntry = ce
+				s.PutCommit(ce.EntryHash, emsg)
+			}
+			continue
+		}
+	}
+}
+
 func (s *State) ConsiderSaved(dbheight uint32) {
 	for _, dbs := range s.DBStates.DBStates {
 		if dbs.DirectoryBlock.GetDatabaseHeight() == dbheight {
@@ -1317,9 +1420,14 @@ func (s *State) PutCommit(hash interfaces.IHash, msg interfaces.IMsg) {
 	s.Commits[hash.Fixed()] = append(cs, msg)
 }
 
+// This is the highest block signed off, but not necessarily validted.
+func (s *State) GetHighestCompletedBlock() uint32 {
+	return s.DBStates.GetHighestCompletedBlock()
+}
+
 // This is the highest block signed off and recorded in the Database.
-func (s *State) GetHighestRecordedBlock() uint32 {
-	return s.DBStates.GetHighestRecordedBlock()
+func (s *State) GetHighestSavedBlock() uint32 {
+	return s.DBStates.GetHighestSavedBlock()
 }
 
 // This is lowest block currently under construction under the "leader".
@@ -1344,7 +1452,7 @@ func (s *State) GetHighestKnownBlock() uint32 {
 func (s *State) GetF(rt bool, adr [32]byte) (v int64) {
 	var ok bool
 	if rt {
-		pl := s.ProcessLists.Get(s.GetHighestRecordedBlock() + 1)
+		pl := s.ProcessLists.Get(s.GetHighestCompletedBlock() + 1)
 		if pl != nil {
 			pl.FactoidBalancesTMutex.Lock()
 			defer pl.FactoidBalancesTMutex.Unlock()
@@ -1364,7 +1472,7 @@ func (s *State) GetF(rt bool, adr [32]byte) (v int64) {
 // If rt == true, update the Temp balances.  Otherwise update the Permenent balances.
 func (s *State) PutF(rt bool, adr [32]byte, v int64) {
 	if rt {
-		pl := s.ProcessLists.Get(s.GetHighestRecordedBlock() + 1)
+		pl := s.ProcessLists.Get(s.GetHighestCompletedBlock() + 1)
 		if pl != nil {
 			pl.FactoidBalancesTMutex.Lock()
 			defer pl.FactoidBalancesTMutex.Unlock()
@@ -1381,7 +1489,7 @@ func (s *State) PutF(rt bool, adr [32]byte, v int64) {
 func (s *State) GetE(rt bool, adr [32]byte) (v int64) {
 	var ok bool
 	if rt {
-		pl := s.ProcessLists.Get(s.GetHighestRecordedBlock() + 1)
+		pl := s.ProcessLists.Get(s.GetHighestCompletedBlock() + 1)
 		if pl != nil {
 			pl.ECBalancesTMutex.Lock()
 			defer pl.ECBalancesTMutex.Unlock()
@@ -1400,7 +1508,7 @@ func (s *State) GetE(rt bool, adr [32]byte) (v int64) {
 // If rt == true, update the Temp balances.  Otherwise update the Permenent balances.
 func (s *State) PutE(rt bool, adr [32]byte, v int64) {
 	if rt {
-		pl := s.ProcessLists.Get(s.GetHighestRecordedBlock() + 1)
+		pl := s.ProcessLists.Get(s.GetHighestCompletedBlock() + 1)
 		if pl != nil {
 			pl.ECBalancesTMutex.Lock()
 			defer pl.ECBalancesTMutex.Unlock()
@@ -1455,6 +1563,7 @@ func (s *State) NewAck(msg interfaces.IMsg) interfaces.IMsg {
 	ack.VMIndex = vmIndex
 	ack.Minute = byte(s.ProcessLists.Get(s.LLeaderHeight).VMs[vmIndex].LeaderMinute)
 	ack.Timestamp = s.GetTimestamp()
+	ack.SaltNumber = s.GetSecretNumber(ack.Timestamp)
 	ack.MessageHash = msg.GetMsgHash()
 	ack.LeaderChainID = s.IdentityChainID
 

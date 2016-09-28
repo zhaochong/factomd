@@ -49,6 +49,30 @@ type DBStateList struct {
 	DBStates            []*DBState
 }
 
+// Validate this directory block is a possible part of a valid Next DBState.  Doesn't check
+// signatures, as those are in the next block. Does check that this DBState holds
+// a previous KeyMR that matches the previous DBState KeyMR.
+func (d *DBState) ValidNext(state *State, dirblk interfaces.IDirectoryBlock) int {
+	dbheight := dirblk.GetHeader().GetDBHeight()
+	if dbheight == 0 {
+		// The genesis block is valid by definition.
+		return 1
+	}
+	if d == nil || !d.Saved {
+		// Must be out of order.  Can't make the call if valid or not yet.
+		return 0
+	}
+	// Get the keymr of the Previous DBState
+	pkeymr := d.DirectoryBlock.GetKeyMR()
+	// Get the Previous KeyMR pointer in the possible new Directory Block
+	prevkeymr := dirblk.GetHeader().GetPrevKeyMR()
+	if !pkeymr.IsSameAs(prevkeymr) {
+		// If not the same, this is a bad new Directory Block
+		return -1
+	}
+	return 1
+}
+
 func (list *DBStateList) String() string {
 	str := "\n========DBStates Start=======\nddddd DBStates\n"
 	str = fmt.Sprintf("dddd %s  Base      = %d\n", str, list.Base)
@@ -114,10 +138,24 @@ func (ds *DBState) String() string {
 	return str
 }
 
-func (list *DBStateList) GetHighestRecordedBlock() uint32 {
+func (list *DBStateList) GetHighestSavedBlock() uint32 {
 	ht := list.Base
 	for i, dbstate := range list.DBStates {
 		if dbstate != nil && dbstate.Locked {
+			ht = list.Base + uint32(i)
+		} else {
+			if dbstate == nil {
+				return ht
+			}
+		}
+	}
+	return ht
+}
+
+func (list *DBStateList) GetHighestCompletedBlock() uint32 {
+	ht := list.Base
+	for i, dbstate := range list.DBStates {
+		if dbstate != nil && dbstate.Saved {
 			ht = list.Base + uint32(i)
 		} else {
 			if dbstate == nil {
@@ -133,7 +171,7 @@ func (list *DBStateList) Catchup() {
 
 	now := list.State.GetTimestamp()
 
-	dbsHeight := list.GetHighestRecordedBlock()
+	dbsHeight := list.GetHighestCompletedBlock()
 
 	// We only check if we need updates once every so often.
 
@@ -177,6 +215,8 @@ func (list *DBStateList) Catchup() {
 			}
 		}
 	}
+
+	end++ // ask for one more, just in case.
 
 	list.Lastreq = begin
 
@@ -367,11 +407,14 @@ func (list *DBStateList) ProcessBlocks(d *DBState) (progress bool) {
 	}
 	// Any updates required to the state as established by the AdminBlock are applied here.
 	d.AdminBlock.UpdateState(list.State)
+	d.EntryCreditBlock.UpdateState(list.State)
 
 	// Process the Factoid End of Block
 	fs := list.State.GetFactoidState()
 	fs.AddTransactionBlock(d.FactoidBlock)
 	fs.AddECBlock(d.EntryCreditBlock)
+	// Make the current exchange rate whatever we had in the previous block.
+	list.State.FactoshisPerEC = d.FactoidBlock.GetExchRate()
 	fs.ProcessEndOfBlock(list.State)
 
 	// Promote the currently scheduled next FER
@@ -390,9 +433,31 @@ func (list *DBStateList) ProcessBlocks(d *DBState) (progress bool) {
 
 	s := list.State
 	// Time out commits every now and again.
+	now := s.GetTimestamp()
 	for k := range s.Commits {
 		var keep []interfaces.IMsg
-		for _, v := range s.Commits[k] {
+		commits := s.Commits[k]
+
+		// Check to see if an entry Reveal has negated any pending commits.  All commits to the same EntryReveal
+		// are discarded after we have recorded said Entry Reveal
+		if len(commits) == 0 {
+			delete(s.Commits, k)
+		} else {
+			{
+				c, ok := s.Commits[k][0].(*messages.CommitChainMsg)
+				if ok && !s.NoEntryYet(c.CommitChain.EntryHash, now) {
+					delete(s.Commits, k)
+					continue
+				}
+			}
+			c, ok := s.Commits[k][0].(*messages.CommitEntryMsg)
+			if ok && !s.NoEntryYet(c.CommitEntry.EntryHash, now) {
+				delete(s.Commits, k)
+				continue
+			}
+		}
+
+		for _, v := range commits {
 			_, ok := s.Replay.Valid(constants.TIME_TEST, v.GetRepeatHash().Fixed(), v.GetTimestamp(), s.GetTimestamp())
 			if ok {
 				keep = append(keep, v)
