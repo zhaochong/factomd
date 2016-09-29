@@ -171,9 +171,9 @@ func (c *Connection) Start() {
 // runLoop operates the state machine and routes messages out to network (messages from network are routed in processReceives)
 func (c *Connection) runLoop() {
 	for ConnectionClosed != c.state { // loop exits when we hit shutdown state
-		// time.Sleep(time.Second * 1) // This can be a tight loop, don't want to starve the application
 		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
 		c.updateStats()                   // Update controller with metrics
+		c.updatePeer(false)               // every PeerSaveInterval * 0.90 we send an update peer to the controller.
 		c.connectionStatusReport()
 		// if 2 == rand.Intn(100) {
 		note(c.peer.PeerFixedIdent(), "Connection.runloop() STATE IS: %s", connectionStateStrings[c.state])
@@ -182,7 +182,6 @@ func (c *Connection) runLoop() {
 		case ConnectionInitialized:
 			if MinumumQualityScore > c.peer.QualityScore && !c.isPersistent {
 				c.setNotes("Connection.runloop(%s) ConnectionInitialized quality score too low: %d", c.peer.PeerIdent(), c.peer.QualityScore)
-				c.updatePeer() // every PeerSaveInterval * 0.90 we send an update peer to the controller.
 				c.goShutdown()
 			} else {
 				c.setNotes("Connection.runLoop() ConnectionInitialized, going dialLoop(). %+v", c.peer.PeerIdent())
@@ -193,14 +192,9 @@ func (c *Connection) runLoop() {
 			c.processReceives() // We may get messages that change state (Eg: loopback error)
 			if ConnectionOnline == c.state {
 				c.pingPeer() // sends a ping periodically if things have been quiet
-				if PeerSaveInterval < time.Since(c.timeLastUpdate) {
-					note(c.peer.PeerIdent(), "runLoop() PeerSaveInterval interval %s is less than duration since last update: %s ", PeerSaveInterval.String(), time.Since(c.timeLastUpdate).String())
-					c.updatePeer() // every PeerSaveInterval * 0.90 we send an update peer to the controller.
-				}
 			}
 			if MinumumQualityScore > c.peer.QualityScore && !c.isPersistent {
 				note(c.peer.PeerIdent(), "Connection.runloop(%s) ConnectionOnline quality score too low: %d", c.peer.PeerIdent(), c.peer.QualityScore)
-				c.updatePeer() // every PeerSaveInterval * 0.90 we send an update peer to the controller.
 				c.goShutdown()
 			}
 		case ConnectionOffline:
@@ -212,6 +206,7 @@ func (c *Connection) runLoop() {
 				c.goShutdown()
 			}
 		case ConnectionShuttingDown:
+			c.updatePeer(true) // every PeerSaveInterval * 0.90 we send an update peer to the controller.
 			note(c.peer.PeerIdent(), "runLoop() in ConnectionShuttingDown state. The runloop() is sending ConnectionCommand{command: ConnectionIsClosed} Notes: %s", c.notes)
 			c.state = ConnectionClosed
 			BlockFreeChannelSend(c.ReceiveChannel, ConnectionCommand{command: ConnectionIsClosed})
@@ -239,6 +234,7 @@ func (c *Connection) dialLoop() {
 	}
 	for {
 		elapsed := time.Since(c.timeLastAttempt)
+		c.updateStats() // Update controller with metrics
 		debug(c.peer.PeerIdent(), "Connection.dialLoop() elapsed: %s Attempts: %d", elapsed.String(), c.attempts)
 		if TimeBetweenRedials < elapsed {
 			c.timeLastAttempt = time.Now()
@@ -325,7 +321,7 @@ func (c *Connection) goOffline() {
 
 func (c *Connection) goShutdown() {
 	c.goOffline()
-	c.updatePeer()
+	c.updatePeer(true)
 	if nil != c.conn {
 		defer c.conn.Close()
 	}
@@ -371,7 +367,7 @@ func (c *Connection) handleCommand(command ConnectionCommand) {
 		c.peer.QualityScore = c.peer.QualityScore + delta
 		if MinumumQualityScore > c.peer.QualityScore {
 			debug(c.peer.PeerIdent(), "handleCommand() disconnecting peer: %s for quality score: %d", c.peer.PeerIdent(), c.peer.QualityScore)
-			c.updatePeer()
+			c.updatePeer(true)
 			c.goShutdown()
 		}
 	case ConnectionGoOffline:
@@ -586,10 +582,13 @@ func (c *Connection) pingPeer() {
 	}
 }
 
-func (c *Connection) updatePeer() {
-	verbose(c.peer.PeerIdent(), "updatePeer() SENDING ConnectionUpdatingPeer - Connection State: %s", c.ConnectionState())
-	c.timeLastUpdate = time.Now()
-	BlockFreeChannelSend(c.ReceiveChannel, ConnectionCommand{command: ConnectionUpdatingPeer, peer: c.peer})
+func (c *Connection) updatePeer(forceUpdate bool) {
+	if PeerSaveInterval < time.Since(c.timeLastUpdate) || forceUpdate {
+		note(c.peer.PeerIdent(), "runLoop() PeerSaveInterval interval %s is less than duration since last update: %s ", PeerSaveInterval.String(), time.Since(c.timeLastUpdate).String())
+		verbose(c.peer.PeerIdent(), "updatePeer() SENDING ConnectionUpdatingPeer - Connection State: %s", c.ConnectionState())
+		c.timeLastUpdate = time.Now()
+		BlockFreeChannelSend(c.ReceiveChannel, ConnectionCommand{command: ConnectionUpdatingPeer, peer: c.peer})
+	}
 }
 
 func (c *Connection) updateStats() {
