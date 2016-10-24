@@ -6,8 +6,8 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 
 	"github.com/FactomProject/factomd/database/boltdb"
+	"github.com/FactomProject/factomd/database/cacheDB"
 	"github.com/FactomProject/factomd/database/leveldb"
-	"github.com/FactomProject/factomd/database/mapdb"
 )
 
 type HybridDB struct {
@@ -28,9 +28,7 @@ func (db *HybridDB) Trim() {
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
-	m := new(mapdb.MapDB)
-	m.Init(nil)
-	db.temporaryStorage = m
+	db.temporaryStorage.Trim()
 }
 
 func (db *HybridDB) Close() error {
@@ -48,8 +46,8 @@ func (db *HybridDB) Close() error {
 func NewLevelMapHybridDB(filename string, create bool) (*HybridDB, error) {
 	answer := new(HybridDB)
 
-	m := new(mapdb.MapDB)
-	m.Init(nil)
+	m := new(cacheDB.CacheDB)
+	m.Init()
 	answer.temporaryStorage = m
 
 	b, err := leveldb.NewLevelDB(filename, create)
@@ -64,8 +62,8 @@ func NewLevelMapHybridDB(filename string, create bool) (*HybridDB, error) {
 func NewBoltMapHybridDB(bucketList [][]byte, filename string) *HybridDB {
 	answer := new(HybridDB)
 
-	m := new(mapdb.MapDB)
-	m.Init(bucketList)
+	m := new(cacheDB.CacheDB)
+	m.Init()
 	answer.temporaryStorage = m
 
 	b := new(boltdb.BoltDB)
