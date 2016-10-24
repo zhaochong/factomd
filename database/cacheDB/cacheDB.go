@@ -34,7 +34,7 @@ func (db *CacheDB) Trim() {
 
 func (db *CacheDB) Init() {
 	if db.Cache == nil {
-		db.Cache = cache.New(time.Minute, time.Minute)
+		db.Cache = cache.New(30*time.Second, 10*time.Second)
 	}
 }
 
@@ -52,6 +52,11 @@ func (db *CacheDB) rawPut(bucket, key []byte, data interfaces.BinaryMarshallable
 	db.Init()
 
 	k := CombineBucketAndKey(bucket, key)
+
+	if data == nil {
+		db.Cache.Delete(k)
+		return nil
+	}
 
 	var hex []byte
 	var err error
@@ -121,7 +126,7 @@ func (db *CacheDB) Clear(bucket []byte) error {
 func CombineBucketAndKey(bucket []byte, key []byte) string {
 	ldbKey := ExtendBucket(bucket)
 	ldbKey = append(ldbKey, key...)
-	return fmt.Sprintf("%x", key)
+	return fmt.Sprintf("%x", ldbKey)
 }
 
 func ExtendBucket(bucket []byte) []byte {
