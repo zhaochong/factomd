@@ -71,3 +71,6 @@ import:
 - package: github.com/btcsuitereleases/btcrpcclient
 - package: gopkg.in/gcfg.v1
   version: ~1.2.0
+- package: github.com/prometheus/client_golang/prometheus
+  version: master
+- package: golang.org/x/net

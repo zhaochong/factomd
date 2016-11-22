@@ -86,6 +86,7 @@ type CommandAdjustPeerQuality struct {
 	Adjustment int32
 }
 
+
 func (e *CommandAdjustPeerQuality) JSONByte() ([]byte, error) {
 	return primitives.EncodeJSON(e)
 }
@@ -179,6 +180,8 @@ func (e *CommandChangeLogging) String() string {
 //////////////////////////////////////////////////////////////////////
 
 func (c *Controller) Init(ci ControllerInit) *Controller {
+
+
 	note("ctrlr", "\n\n\n\n\nController.Init(%s) %#x", ci.Port, ci.Network)
 	note("ctrlr", "\n\n\n\n\nController.Init(%s) ci: %+v\n\n", ci.Port, ci)
 	RandomGenerator = rand.New(rand.NewSource(time.Now().UnixNano()))

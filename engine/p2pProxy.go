@@ -20,7 +20,6 @@ import (
 
 var _ = fmt.Print
 
-var ()
 
 type P2PProxy struct {
 	// A connection to this node:

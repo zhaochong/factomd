@@ -1,6 +1,10 @@
-hash: df12408e546dfca4a8e4bfc466ffa97bda4e3e7799378ded8082a3d28295784a
-updated: 2016-11-20T11:30:04.688196493-05:00
+hash: 25208c8ffcbfdcb1a093edf47b9b1f71407a808f78b2fb96453dd68a6e623475
+updated: 2016-11-21T18:49:32.415888446-05:00
 imports:
+- name: github.com/beorn7/perks
+  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
+  subpackages:
+  - quantile
 - name: github.com/btcsuitereleases/btcd
   version: e005ff2cdaac3b3a0b60c8d03978221b784ad50a
   subpackages:
@@ -59,12 +63,12 @@ imports:
   - state/stateinit
   - wallet
 - name: github.com/FactomProject/factom
-  version: 9d7c46cfdb3a48f58bc24fc5e1daf21c640e83a2
+  version: 922fc33dea9c4fb7fd50fcc084ddc1c85fbb818a
   subpackages:
   - wallet
   - wallet/wsapi
 - name: github.com/FactomProject/factom-walletd
-  version: 9ab184b598db21692a247e7a0207ac1daa93b25c
+  version: f3b3402ce7849e0105c33777211660cc6d54e7ce
 - name: github.com/FactomProject/FactomCode
   version: fa03af8ca695eb98cef90a71fd0f506cf54ddbe8
   subpackages:
@@ -76,7 +80,7 @@ imports:
 - name: github.com/FactomProject/go-bip32
   version: 58394f75c1d04ee30972d810015f491b9c7bee02
 - name: github.com/FactomProject/go-bip39
-  version: f0f3797c79f21408db076e5ca64f06848c040e04
+  version: 013ef263dadc6f772e2fff99ca19530f1db33a78
 - name: github.com/FactomProject/go-bip44
   version: 37e59441c3e6ca3f61ba530d04330938386f0d57
 - name: github.com/FactomProject/go-simplejson
@@ -114,9 +118,33 @@ imports:
   subpackages:
   - snappy
 - name: github.com/FactomProject/web
-  version: 78d1a14af38a43842072da2286033da3cc0f5c76
+  version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
+- name: github.com/golang/protobuf
+  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
+  subpackages:
+  - proto
+- name: github.com/matttproud/golang_protobuf_extensions
+  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
+  subpackages:
+  - pbutil
+- name: github.com/prometheus/client_golang
+  version: 573acbcb7f88b0ceb1cd5a61e23985f8a4846536
+  subpackages:
+  - prometheus
+- name: github.com/prometheus/client_model
+  version: fa8ad6fec33561be4280a8f0514318c79d7f6cb6
+  subpackages:
+  - go
+- name: github.com/prometheus/common
+  version: 0d5de9d6d8629cb8bee6d4674da4127cd8b615a3
+  subpackages:
+  - expfmt
+  - internal/bitbucket.org/ww/goautoneg
+  - model
+- name: github.com/prometheus/procfs
+  version: abf152e5f3e97f2fafac028d2cc06c1feb87ffa5
 - name: golang.org/x/crypto
-  version: 5f31782cfb2b6373211f8f9fbf31283fa234b570
+  version: 9477e0b78b9ac3d0b03822fd95422e2fe07627cd
   subpackages:
   - pbkdf2
   - ripemd160

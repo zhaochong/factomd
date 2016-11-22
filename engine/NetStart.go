@@ -23,9 +23,13 @@ import (
 	"github.com/FactomProject/factomd/state"
 	"github.com/FactomProject/factomd/util"
 	"github.com/FactomProject/factomd/wsapi"
+	"net/http"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var _ = fmt.Print
+
+
 
 type FactomNode struct {
 	Index int
@@ -462,6 +466,9 @@ func NetStart(s *state.State) {
 
 	// Start the webserver
 	go wsapi.Start(fnodes[0].State)
+
+	http.Handle("/metrics", prometheus.Handler())
+    	go http.ListenAndServe(":9876", nil)
 
 	go controlPanel.ServeControlPanel(fnodes[0].State.ControlPanelChannel, fnodes[0].State, connectionMetricsChannel, p2pNetwork, Build)
 	// Listen for commands:

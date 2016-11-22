@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+    	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/FactomProject/factomd/common/primitives"
 )
 
@@ -65,6 +67,30 @@ var connectionStateStrings = map[uint8]string{
 	ConnectionShuttingDown: "Shutting Down",
 	ConnectionClosed:       "Closed",
 }
+
+// Prometheus
+var (
+	messagesSent = prometheus.NewCounter(prometheus.CounterOpts{
+    		Name: "factomd_messages_sent_total",
+    		Help: "Count of messages sent",
+	})
+	messagesReceived = prometheus.NewCounter(prometheus.CounterOpts{
+    		Name: "factomd_messages_received_total",
+    		Help: "Count of messages received",
+	})
+	bytesSent = prometheus.NewCounter(prometheus.CounterOpts{
+    		Name: "factomd_messages_sent_bytes_total",
+    		Help: "Bytes of messages sent",
+	})
+	bytesReceived = prometheus.NewCounter(prometheus.CounterOpts{
+    		Name: "factomd_messages_received_bytes_total",
+    		Help: "Bytes of messages received",
+	})
+	activeConnections = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "factomd_connections_total",
+		Help: "Count of connections that are online",
+	})
+)
 
 // ConnectionParcel is sent to convey an appication message destined for the network.
 type ConnectionParcel struct {
@@ -193,6 +219,7 @@ func (c *Connection) Notes() string {
 //////////////////////////////
 
 func (c *Connection) commonInit(peer Peer) {
+
 	c.state = ConnectionInitialized
 	c.peer = peer
 	c.setNotes("commonInit()")
@@ -205,6 +232,13 @@ func (c *Connection) commonInit(peer Peer) {
 }
 
 func (c *Connection) Start() {
+	// Prometheus
+	_ = prometheus.Register(messagesSent)
+	_ = prometheus.Register(messagesReceived)
+	_ = prometheus.Register(bytesSent)
+	_ = prometheus.Register(bytesReceived)
+	_ = prometheus.Register(activeConnections)
+
 	go c.runLoop()
 }
 
@@ -349,6 +383,8 @@ func (c *Connection) goOnline() {
 	c.timeLastAttempt = now
 	c.timeLastUpdate = now
 	c.peer.LastContact = now
+	// Prometheus
+	activeConnections.Inc()
 	// Probably shouldn't reset metrics when we go online. (Eg: say after a temp network problem)
 	// c.metrics = ConnectionMetrics{MomentConnected: now} // Reset metrics
 	// Now ask the other side for the peers they know about.
@@ -361,6 +397,8 @@ func (c *Connection) goOffline() {
 	debug(c.peer.PeerIdent(), "Connection.goOffline()")
 	c.state = ConnectionOffline
 	c.attempts = 0
+	// Prometheus
+	activeConnections.Dec()
 	c.peer.demerit()
 }
 
@@ -434,6 +472,9 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	case nil == err:
 		c.metrics.BytesSent += parcel.Header.Length
 		c.metrics.MessagesSent += 1
+		// Prometheus
+		messagesSent.Inc()
+		bytesSent.Add(float64(parcel.Header.Length))
 	default:
 		c.handleNetErrors(err)
 	}
@@ -456,6 +497,10 @@ func (c *Connection) processReceives() {
 			debug(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
 			c.metrics.BytesReceived += message.Header.Length
 			c.metrics.MessagesReceived += 1
+			// Prometheus
+			messagesReceived.Inc()
+			bytesReceived.Add(float64(message.Header.Length))
+
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(message)
 		default:
