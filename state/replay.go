@@ -116,6 +116,12 @@ func (r *Replay) Valid(mask int, hash [32]byte, timestamp interfaces.Timestamp, 
 // this code remembers hashes tested in the past, and rejects the
 // second submission of the same hash.
 func (r *Replay) IsTSValid(mask int, hash interfaces.IHash, timestamp interfaces.Timestamp) bool {
+	fmt.Printf("SOF-309 panic. IsTSValid_: mask %v\n", mask)
+	fmt.Printf("SOF-309 panic. IsTSValid_: hash: v%\n", hash)
+	fmt.Printf("SOF-309 panic. IsTSValid_: hash.Fixed(): v%\n", hash.Fixed())
+	fmt.Printf("SOF-309 panic. IsTSValid_: timestamp: %v, \n", timestamp)
+	fmt.Printf("SOF-309 panic. IsTSValid_: primitives.NewTimestampNow(): %v\n", primitives.NewTimestampNow())
+
 	return r.IsTSValid_(mask, hash.Fixed(), timestamp, primitives.NewTimestampNow())
 }
 
