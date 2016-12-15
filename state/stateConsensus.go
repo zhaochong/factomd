@@ -416,13 +416,15 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 		if dbstatemsg.IsInDB {
 			s.AddStatus(fmt.Sprintf("FollowerExecuteDBState(): dbstate added from local db at ht %d", dbheight))
 			dbstate.Saved = true
-			dbstate.isNew = false
 		} else {
 			s.AddStatus(fmt.Sprintf("FollowerExecuteDBState(): dbstate added from network at ht %d", dbheight))
 			dbstate.ReadyToSave = true
 		}
+		dbstate.isNew = false
 		dbstate.Locked = false
-		dbstate.Locked2 = false
+		s.DBStates.ProcessBlocks(dbstate)
+		dbstate.Locked2 = true
+		s.DBStates.SaveDBStateToDB(dbstate)
 	}
 }
 

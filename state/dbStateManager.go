@@ -75,13 +75,21 @@ func (d *DBState) ValidNext(state *State, next *messages.DBStateMsg) int {
 		// The genesis block is valid by definition.
 		return 1
 	}
-	if d == nil || !d.Saved {
-		state.AddStatus(fmt.Sprintf("DBState.ValidNext: rtn 0 dbstate is nil or not saved dbht: %d", dbheight))
+	if dbheight > 2 && (d == nil || !d.Saved) {
+		dbnil := ""
+		dsave := ""
+		if d == nil {
+			dbnil = "dbstate == nil"
+		} else {
+			dsave = fmt.Sprintf("d.Saved == %v", d.Saved)
+		}
+		state.AddStatus(fmt.Sprintf("DBState.ValidNext: rtn 0 -- %s -- %s dbht: %d", dbnil, dsave, dbheight))
 		// Must be out of order.  Can't make the call if valid or not yet.
 		return 0
 	}
 
-	if int(state.EntryBlockDBHeightComplete) < int(dbheight-1) {
+	edb := int(state.EntryDBHeightComplete)
+	if dbheight > 1 && edb < int(dbheight-2) {
 		state.AddStatus(fmt.Sprintf("DBState.ValidNext: rtn 0s Don't have all the Entries we want dbht: %d", dbheight))
 		return 0
 	}
