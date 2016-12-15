@@ -572,7 +572,7 @@ func (s *State) LoadConfig(filename string, networkFlag string) {
 		s.BoltDBPath = "database/bolt"
 		s.LogLevel = "none"
 		s.ConsoleLogLevel = "standard"
-		s.NodeMode = "SERVER"
+		s.NodeMode = "FULL"
 		s.DBType = "Map"
 		s.ExportData = false
 		s.ExportDataSubpath = "data/export"
