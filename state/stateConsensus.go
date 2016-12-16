@@ -87,11 +87,7 @@ func (s *State) Process() (progress bool) {
 		if now-s.StartDelay > s.StartDelayLimit {
 			if s.DBFinished == true {
 				s.RunLeader = true
-				if !s.IgnoreDone {
-					s.StartDelay = now // Reset StartDelay for Ignore Missing
-					s.IgnoreMissing = true
-					s.IgnoreDone = true
-				}
+				s.StartDelay = now // Reset StartDelay for Ignore Missing Messages
 			}
 		}
 		s.LeaderPL = s.ProcessLists.Get(s.LLeaderHeight)

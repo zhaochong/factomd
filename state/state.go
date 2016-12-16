@@ -158,7 +158,6 @@ type State struct {
 
 	// Ignore missing messages for a period to allow rebooting a network where your
 	// own messages from the previously executing network can confuse you.
-	IgnoreDone    bool
 	IgnoreMissing bool
 
 	LLeaderHeight   uint32
@@ -667,6 +666,7 @@ func (s *State) Init() {
 
 	s.StartDelay = s.GetTimestamp().GetTimeMilli() // We cant start as a leader until we know we are upto date
 	s.RunLeader = false
+	s.IgnoreMissing = true
 
 	wsapi.InitLogs(s.LogPath+s.FactomNodeName+".log", s.LogLevel)
 
