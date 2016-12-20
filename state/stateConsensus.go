@@ -417,7 +417,7 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 	{
 		dbstate := s.DBStates.Get(int(dbheight))
 
-		if dbstate != nil && now.GetTimeSeconds()-dbstate.Added.GetTimeSeconds() < 5 {
+		if dbstate != nil && dbstate.Added != nil && now.GetTimeSeconds()-dbstate.Added.GetTimeSeconds() < 5 {
 			return
 		}
 	}
