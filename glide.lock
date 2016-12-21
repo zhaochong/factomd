@@ -1,6 +1,11 @@
+<<<<<<< 393510561d4826f317f290ab0f4b0639fbce43f0
 <<<<<<< 458bf17653ed87199719c861e7b56aa1b23dcd48
 hash: 0ae845529f65fa5a6b957f3617734f6e5ec1592109468c4bff7af11b28abccc7
 updated: 2016-12-22T17:07:34.548550387-06:00
+=======
+hash: 242fbedfc43b10bc955d0d3d60feecafa39971814e761a129733f12aca1a24c8
+updated: 2016-12-21T11:18:07.849013643-08:00
+>>>>>>> glide config for SOF-474
 =======
 hash: 242fbedfc43b10bc955d0d3d60feecafa39971814e761a129733f12aca1a24c8
 updated: 2016-12-21T11:18:07.849013643-08:00
@@ -41,8 +46,12 @@ imports:
 - name: github.com/FactomProject/factoid
   version: 3ee9763f86849036723d1b059216e08a6d34b184
 - name: github.com/FactomProject/factom
+<<<<<<< 393510561d4826f317f290ab0f4b0639fbce43f0
 <<<<<<< 458bf17653ed87199719c861e7b56aa1b23dcd48
   version: f641223f2d5e74d1bfaa6473dd920564646bbbc1
+=======
+  version: b5a57f6c5414764f2ac6438807ad2a70ef701f81
+>>>>>>> glide config for SOF-474
 =======
   version: b5a57f6c5414764f2ac6438807ad2a70ef701f81
 >>>>>>> glide config for SOF-474
