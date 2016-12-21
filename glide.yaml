@@ -26,7 +26,7 @@ import:
 - package: github.com/FactomProject/factoid
   version: master
 - package: github.com/FactomProject/factom
-  version: develop
+  version: SOF-474
   subpackages:
   - wallet
   - wallet/wsapi
