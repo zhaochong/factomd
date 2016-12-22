@@ -1,18 +1,5 @@
-<<<<<<< 9d06653dd6dc93416c5a38e4944dd32d3f4fe4ee
-<<<<<<< 529aebc99f1027a3a719a397c09397eec7e75aa2
 hash: 0ae845529f65fa5a6b957f3617734f6e5ec1592109468c4bff7af11b28abccc7
-updated: 2016-12-22T05:03:07.542414978-08:00
-<<<<<<< HEAD
-=======
-hash: 242fbedfc43b10bc955d0d3d60feecafa39971814e761a129733f12aca1a24c8
-updated: 2016-12-21T11:18:07.849013643-08:00
->>>>>>> glide config for SOF-474
-=======
-hash: 0ae845529f65fa5a6b957f3617734f6e5ec1592109468c4bff7af11b28abccc7
-updated: 2016-12-22T05:03:07.542414978-08:00
->>>>>>> check if glide is correct
-=======
->>>>>>> 16166188282e9bf235216ba3ed19b7ba98128e96
+updated: 2016-12-22T08:50:36.755163521-08:00
 imports:
 - name: github.com/btcsuitereleases/btcd
   version: e005ff2cdaac3b3a0b60c8d03978221b784ad50a
