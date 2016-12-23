@@ -7,6 +7,7 @@
 <<<<<<< 393510561d4826f317f290ab0f4b0639fbce43f0
 <<<<<<< 458bf17653ed87199719c861e7b56aa1b23dcd48
 hash: 0ae845529f65fa5a6b957f3617734f6e5ec1592109468c4bff7af11b28abccc7
+<<<<<<< HEAD
 updated: 2016-12-22T17:07:34.548550387-06:00
 =======
 hash: 242fbedfc43b10bc955d0d3d60feecafa39971814e761a129733f12aca1a24c8
@@ -51,6 +52,9 @@ updated: 2016-12-22T05:03:07.542414978-08:00
 hash: 0ae845529f65fa5a6b957f3617734f6e5ec1592109468c4bff7af11b28abccc7
 updated: 2016-12-22T08:50:36.755163521-08:00
 >>>>>>> glide + develop merging
+=======
+updated: 2016-12-22T08:50:36.755163521-08:00
+>>>>>>> c8ff3bfa6c7494677f867d58ff068facbe8e7c77
 imports:
 - name: github.com/btcsuitereleases/btcd
   version: e005ff2cdaac3b3a0b60c8d03978221b784ad50a
