@@ -26,10 +26,12 @@ import:
 - package: github.com/FactomProject/factoid
   version: 3ee9763f86849036723d1b059216e08a6d34b184
 - package: github.com/FactomProject/factom
-  version: 77e5c961ae757c663ed3de50b8d53cea66b41823
+  version: f641223f2d5e74d1bfaa6473dd920564646bbbc1
   subpackages:
   - wallet
   - wallet/wsapi
+- package: github.com/FactomProject/factom-cli
+  version: 2c912e1c66701bcb0a2f8f60dc76a70089cd77cc
 - package: github.com/FactomProject/factom-walletd
   version: 8d94b321b13c140be2d29347a025d73f3fc21689
 - package: github.com/FactomProject/fctwallet
@@ -43,7 +45,7 @@ import:
 - package: github.com/FactomProject/go-simplejson
   version: aabad6e819789e569bd6aabf444c935aa9ba1e44
 - package: github.com/FactomProject/go-spew
-  version: 2df174808ee097f90d259e432cc04442cf60be21
+  version: ddfaec9b42f58fc8172b0cbb03b21c6668dd0a46
   subpackages:
   - spew
 - package: github.com/FactomProject/gocoding
@@ -61,7 +63,7 @@ import:
 - package: github.com/FactomProject/snappy-go
   version: fff4c573c694b1e2d5c7a9b2b72dbe947b6a4c8e
 - package: github.com/FactomProject/web
-  version: 78d1a14af38a43842072da2286033da3cc0f5c76
+  version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
 - package: github.com/btcsuitereleases/btcd
   subpackages:
   - btcjson
