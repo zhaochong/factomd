@@ -285,15 +285,10 @@ func (s *State) ReviewHolding() {
 
 		// Pointless to review a Reveal Entry;  it will be pulled into play when its commit
 		// comes around.
-		if re, ok := v.(*messages.RevealEntryMsg); ok {
-			if s.Commits[re.Entry.GetHash().Fixed()] != nil {
-				s.XReview = append(s.XReview, v)
-				delete(s.Holding, k)
-			}
-		} else {
-			s.XReview = append(s.XReview, v)
-			delete(s.Holding, k)
-		}
+
+		s.XReview = append(s.XReview, v)
+		delete(s.Holding, k)
+
 	}
 }
 
@@ -363,7 +358,6 @@ func (s *State) AddDBState(isNew bool,
 // Returns true if it finds a match, puts the message in holding, or invalidates the message
 func (s *State) FollowerExecuteMsg(m interfaces.IMsg) {
 
-	s.Holding[m.GetMsgHash().Fixed()] = m
 	ack, _ := s.Acks[m.GetMsgHash().Fixed()].(*messages.Ack)
 
 	if ack != nil {
@@ -372,6 +366,8 @@ func (s *State) FollowerExecuteMsg(m interfaces.IMsg) {
 
 		pl := s.ProcessLists.Get(ack.DBHeight)
 		pl.AddToProcessList(ack, m)
+	} else {
+		s.Holding[m.GetMsgHash().Fixed()] = m
 	}
 }
 
@@ -385,12 +381,12 @@ func (s *State) FollowerExecuteEOM(m interfaces.IMsg) {
 		return // This is an internal EOM message.  We are not a leader so ignore.
 	}
 
-	s.Holding[m.GetMsgHash().Fixed()] = m
-
 	ack, _ := s.Acks[m.GetMsgHash().Fixed()].(*messages.Ack)
 	if ack != nil {
 		pl := s.ProcessLists.Get(ack.DBHeight)
 		pl.AddToProcessList(ack, m)
+	} else {
+		s.Holding[m.GetMsgHash().Fixed()] = m
 	}
 }
 
@@ -414,7 +410,7 @@ func (s *State) FollowerExecuteAck(msg interfaces.IMsg) {
 	}
 
 	s.Acks[ack.GetHash().Fixed()] = ack
-	m, _ := s.Holding[ack.GetHash().Fixed()]
+	m := s.FindInHolding(ack.GetHash())
 	if m != nil {
 		m.FollowerExecute(s)
 	}
@@ -688,7 +684,7 @@ func (s *State) FollowerExecuteMissingMsg(msg interfaces.IMsg) {
 func (s *State) FollowerExecuteCommitChain(m interfaces.IMsg) {
 	s.FollowerExecuteMsg(m)
 	cc := m.(*messages.CommitChainMsg)
-	re := s.Holding[cc.CommitChain.EntryHash.Fixed()]
+	re := s.FindInHolding(cc.CommitChain.EntryHash)
 	if re != nil {
 		s.XReview = append(s.XReview, re)
 		re.SendOut(s, re)
@@ -698,7 +694,7 @@ func (s *State) FollowerExecuteCommitChain(m interfaces.IMsg) {
 func (s *State) FollowerExecuteCommitEntry(m interfaces.IMsg) {
 	s.FollowerExecuteMsg(m)
 	ce := m.(*messages.CommitEntryMsg)
-	re := s.Holding[ce.CommitEntry.EntryHash.Fixed()]
+	re := s.FindInHolding(ce.CommitEntry.EntryHash)
 	if re != nil {
 		s.XReview = append(s.XReview, re)
 		re.SendOut(s, re)

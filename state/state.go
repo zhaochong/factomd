@@ -1618,6 +1618,29 @@ func (s *State) catchupEBlocks() {
 
 }
 
+// Look up in holding, but also look in the XReview slice.
+func (s *State) FindInHolding(hash interfaces.IHash) (msg interfaces.IMsg) {
+	msg = s.Holding[hash.Fixed()]
+	if msg != nil {
+		return
+	}
+	for i, v := range s.XReview {
+		// If I find the hash in s.XReview, I want to move the value to Holding.
+		one := v.GetRepeatHash().Fixed() == hash.Fixed()
+		if one || v.GetHash().Fixed() == hash.Fixed() {
+			msg = v
+			s.XReview = append(s.XReview[:i], s.XReview[i+1:]...)
+			if one {
+				s.Holding[v.GetRepeatHash().Fixed()] = v
+			} else {
+				s.Holding[v.GetHash().Fixed()] = v
+			}
+			return
+		}
+	}
+	return
+}
+
 func (s *State) AddDBSig(dbheight uint32, chainID interfaces.IHash, sig interfaces.IFullSignature) {
 	s.ProcessLists.Get(dbheight).AddDBSig(chainID, sig)
 }
