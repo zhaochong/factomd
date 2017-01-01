@@ -5,6 +5,7 @@
 package p2p
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/gob"
 	"fmt"
@@ -25,8 +26,9 @@ type Connection struct {
 	SendChannel    chan interface{} // Send means "towards the network" Channel sends Parcels and ConnectionCommands
 	ReceiveChannel chan interface{} // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
 	// and as "address" for sending messages to specific nodes.
-	encoder         *gob.Encoder      // Wire format is gobs in this version, may switch to binary
-	decoder         *gob.Decoder      // Wire format is gobs in this version, may switch to binary
+	encoder         *gob.Encoder // Wire format is gobs in this version, may switch to binary
+	decoder         *gob.Decoder // Wire format is gobs in this version, may switch to binary
+	reader          *bufio.Reader
 	peer            Peer              // the datastructure representing the peer we are talking to. defined in peer.go
 	attempts        int               // reconnection attempts
 	timeLastAttempt time.Time         // time of last attempt to connect via dial
@@ -344,8 +346,9 @@ func (c *Connection) goOnline() {
 	debug(c.peer.PeerIdent(), "Connection.goOnline() called.")
 	c.state = ConnectionOnline
 	now := time.Now()
+	c.reader = bufio.NewReader(c.conn)
 	c.encoder = gob.NewEncoder(c.conn)
-	c.decoder = gob.NewDecoder(c.conn)
+	c.decoder = gob.NewDecoder(c.reader)
 	c.attempts = 0
 	c.timeLastPing = now
 	c.timeLastAttempt = now
@@ -372,6 +375,7 @@ func (c *Connection) goShutdown() {
 	if nil != c.conn {
 		defer c.conn.Close()
 	}
+	c.reader = nil
 	c.decoder = nil
 	c.encoder = nil
 	c.state = ConnectionShuttingDown
@@ -459,6 +463,8 @@ func (c *Connection) sendParcel(parcel Parcel) {
 func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
 		var message Parcel
+		b, _ := c.reader.Peek(10240)
+		significant(c.peer.PeerIdent(), "conn contents before timeout: %x", b)
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
 		c.conn.SetReadDeadline(time.Now().Add(NetworkDeadline))
 		err := c.decoder.Decode(&message)
