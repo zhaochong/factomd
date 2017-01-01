@@ -447,7 +447,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 		c.metrics.BytesSent += parcel.Header.Length
 		c.metrics.MessagesSent += 1
 	default:
-		c.handleNetErrors(err)
+		c.handleNetErrors(err, "write")
 	}
 }
 
@@ -471,19 +471,19 @@ func (c *Connection) processReceives() {
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(message)
 		default:
-			c.handleNetErrors(err)
+			c.handleNetErrors(err, "read")
 			return
 		}
 	}
 }
 
 //handleNetErrors Reacts to errors we get from encoder or decoder
-func (c *Connection) handleNetErrors(err error) {
+func (c *Connection) handleNetErrors(err error, caller string) {
 	nerr, isNetError := err.(net.Error)
 	verbose(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got error: %+v", c.ConnectionState(), err)
 	switch {
 	case isNetError && nerr.Timeout(): /// buffer empty
-		return
+		significant(c.peer.PeerIdent(), "%s timeout occured: %s", caller, time.Now())
 	case isNetError && nerr.Temporary(): /// Temporary error, try to reconnect.
 		c.setNotes(fmt.Sprintf("handleNetErrors() Temporary error: %+v", nerr))
 		c.goOffline()
