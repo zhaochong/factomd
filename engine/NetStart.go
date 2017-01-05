@@ -42,6 +42,7 @@ var logPort string
 
 func NetStart(s *state.State) {
 	enablenetPtr := flag.Bool("enablenet", true, "Enable or disable networking")
+	trimPtr := flag.Int("trim", 0, "Trim the Database to the given Directory Block Height.  Zero is no trim.")
 	listenToPtr := flag.Int("node", 0, "Node Number the simulator will set as the focus")
 	cntPtr := flag.Int("count", 1, "The number of nodes to generate")
 	netPtr := flag.String("net", "tree", "The default algorithm to build the network connections")
@@ -112,6 +113,7 @@ func NetStart(s *state.State) {
 	rpcPassword := *rpcPasswordflag
 	factomdTLS := *factomdTLSflag
 	factomdLocations := *factomdLocationsflag
+	trim := *trimPtr
 
 	// Must add the prefix before loading the configuration.
 	s.AddPrefix(prefix)
@@ -136,6 +138,7 @@ func NetStart(s *state.State) {
 		blkTime = s.DirectoryBlockInSeconds
 	}
 
+	s.TrimHeight = uint32(trim)
 	s.FaultTimeout = faultTimeout
 
 	if follower {
@@ -241,6 +244,7 @@ func NetStart(s *state.State) {
 
 	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "Build", Build))
 	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "FNode 0 Salt", s.Salt.String()[:16]))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "trim", s.TrimHeight))
 	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "enablenet", enableNet))
 	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "node", listenTo))
 	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "prefix", prefix))

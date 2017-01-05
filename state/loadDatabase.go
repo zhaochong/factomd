@@ -38,7 +38,40 @@ func LoadDatabase(s *State) {
 
 	t := time.Now()
 
-	//msg, err := s.LoadDBState(blkCnt)
+	if s.TrimHeight > 0 && blkCnt > s.TrimHeight {
+		blkCnt = s.TrimHeight
+		head, err := s.DB.FetchDBlockByHeight(blkCnt)
+		if err != nil || head == nil {
+			panic("Cannot load Directory Block Head: " + err.Error())
+		}
+		s.DB.SaveDirectoryBlockHead(head)
+
+		admin, err := s.DB.FetchABlockByHeight(blkCnt)
+		if err != nil || head == nil {
+			panic("Cannot load Admin Block Head: " + err.Error())
+		}
+		s.DB.SaveABlockHead(admin)
+
+		ecblk, err := s.DB.FetchECBlockByHeight(blkCnt)
+		if err != nil || head == nil {
+			panic("Cannot load Entry Credit Block Head: " + err.Error())
+		}
+		s.DB.SaveECBlockHead(ecblk, false)
+
+		fblk, err := s.DB.FetchFBlockByHeight(blkCnt)
+		if err != nil || head == nil {
+			panic("Cannot load Factoid Block Head: " + err.Error())
+		}
+		s.DB.SaveFactoidBlockHead(fblk)
+	}else{
+		s.TrimHeight=blkCnt
+	}
+
+	// NEED TO TRIM ENTRY BLOCKS HERE!
+	// REMOVE ENTRY BLOCKS AND CHAINS ADDED in s.TrimHeight and above
+	// CUT ENTRY BLOCK HEADS back updated in s.TrimHeight and above
+	// My intention is look from blkCnt back to s.TrimHeight and deal with
+	// all entry blocks defined at each level.
 
 	for i := 0; true; i++ {
 		if i > 0 && i%1000 == 0 {
@@ -47,6 +80,10 @@ func LoadDatabase(s *State) {
 			bps := float64(i) / ss
 			os.Stderr.WriteString(fmt.Sprintf("%20s Loading Block %7d / %v. Blocks per second %8.2f\n", s.FactomNodeName, i, blkCnt, bps))
 		}
+		if s.TrimHeight > 1 && i+1 > int(s.TrimHeight) {
+			break
+		}
+
 		msg, err := s.LoadDBState(uint32(i))
 		if err != nil {
 			s.Println(err.Error())

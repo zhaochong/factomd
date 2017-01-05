@@ -60,7 +60,8 @@ type State struct {
 	PortNumber              int
 	Replay                  *Replay
 	DropRate                int
-	Delay                   int64 // Simulation delays sending messages this many milliseconds
+	Delay                   int64  // Simulation delays sending messages this many milliseconds
+	TrimHeight              uint32 // Height to trim the database down to, if needed.
 
 	ControlPanelPort        int
 	ControlPanelSetting     int
@@ -348,6 +349,7 @@ func (s *State) Clone(cloneNumber int) interfaces.IState {
 
 	newState.FactomNodeName = s.Prefix + "FNode" + number
 	newState.FactomdVersion = s.FactomdVersion
+	newState.TrimHeight = s.TrimHeight
 	newState.DropRate = s.DropRate
 	newState.LogPath = s.LogPath + "/Sim" + number
 	newState.LdbPath = s.LdbPath + "/Sim" + number
