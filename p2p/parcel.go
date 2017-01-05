@@ -67,7 +67,7 @@ var CommandStrings = map[ParcelCommandType]string{
 }
 
 // MaxPayloadSize is the maximum bytes a message can be at the networking level.
-const MaxPayloadSize = 10000
+const MaxPayloadSize = 1000
 
 func NewParcel(network NetworkID, payload []byte) *Parcel {
 	header := new(ParcelHeader).Init(network)
@@ -110,9 +110,12 @@ func ReassembleParcel(parcels []*Parcel) *Parcel {
 	}
 
 	network := parcels[0].Header.Network
-	result := NewParcel(network, payload.Bytes())
+	assembledParcel := NewParcel(network, payload.Bytes())
 
-	return result
+	// Get the NodeID from the sub-parcels, to prevent QualityScore issues
+	assembledParcel.Header.NodeID = parcels[0].Header.NodeID
+
+	return assembledParcel
 }
 
 func (p *ParcelHeader) Init(network NetworkID) *ParcelHeader {
