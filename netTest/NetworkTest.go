@@ -12,11 +12,11 @@ import (
 	"github.com/FactomProject/factomd/engine"
 	"github.com/FactomProject/factomd/p2p"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
-	"net/http"
 )
 
 var p2pProxy *engine.P2PProxy
@@ -42,11 +42,11 @@ var logPort string
 
 func InitNetwork() {
 
-	go http.ListenAndServe(fmt.Sprintf("localhost:%s", logPort),nil)
+	go http.ListenAndServe(fmt.Sprintf("localhost:%s", logPort), nil)
 
 	namePtr := flag.String("name", fmt.Sprintf("%d", rand.Int()), "Name for this node")
 	networkPortOverridePtr := flag.String("networkPort", "8108", "Address for p2p network to listen on.")
-	logportPtr := flag.String("logPort","6060","Port for the profiler")
+	logportPtr := flag.String("logPort", "6060", "Port for the profiler")
 	peersPtr := flag.String("peers", "", "Array of peer addresses. ")
 	netdebugPtr := flag.Int("netdebug", 0, "0-5: 0 = quiet, >0 = increasing levels of logging")
 	exclusivePtr := flag.Bool("exclusive", false, "If true, we only dial out to special/trusted peers.")
