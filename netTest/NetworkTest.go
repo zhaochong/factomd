@@ -121,11 +121,11 @@ func MsgIsNew(msg interfaces.IMsg) bool {
 	oldsync.Lock()
 	defer oldsync.Unlock()
 	for _, m := range old {
-		if m[msg.GetHash().Fixed()] == 0 {
-			return true
+		if m[msg.GetHash().Fixed()] != 0 {
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 var lastTime *time.Time
