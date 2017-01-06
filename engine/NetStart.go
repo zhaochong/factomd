@@ -53,11 +53,13 @@ func NetStart(s *state.State) {
 	leaderPtr := flag.Bool("leader", true, "If true, force node to be a leader.  Only used when replaying a journal.")
 	dbPtr := flag.String("db", "", "Override the Database in the Config file and use this Database implementation")
 	cloneDBPtr := flag.String("clonedb", "", "Override the main node and use this database for the clones in a Network.")
-	portOverridePtr := flag.Int("port", 0, "Address to serve WSAPI on")
 	networkNamePtr := flag.String("network", "", "Network to join: MAIN, TEST or LOCAL")
+
+	portOverridePtr := flag.Int("port", 0, "Address to serve WSAPI on")
 	networkPortOverridePtr := flag.Int("networkPort", 0, "Address for p2p network to listen on.")
 	ControlPanelPortOverridePtr := flag.Int("ControlPanelPort", 0, "Address for control panel webserver to listen on.")
 	logportPtr := flag.String("logPort", "6060", "Port for profile logging")
+
 	peersPtr := flag.String("peers", "", "Array of peer addresses. ")
 	blkTimePtr := flag.Int("blktime", 0, "Seconds per block.  Production is 600.")
 	faultTimeoutPtr := flag.Int("faulttimeout", 60, "Seconds before considering Federated servers at-fault. Default is 60.")
@@ -239,40 +241,6 @@ func NetStart(s *state.State) {
 
 	setupFirstAuthority(s)
 
-	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "Build", Build))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "FNode 0 Salt", s.Salt.String()[:16]))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "enablenet", enableNet))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "node", listenTo))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "prefix", prefix))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "node count", cnt))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "net spec", pnet))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "Msgs droped", droprate))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "journal", journal))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "database", db))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "database for clones", cloneDB))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%d\"\n", "port", s.PortNumber))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "peers", peers))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%d\"\n", "netdebug", netdebug))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%t\"\n", "exclusive", exclusive))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "block time", blkTime))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "faultTimeout", faultTimeout))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "runtimeLog", runtimeLog))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "rotate", rotate))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "timeOffset", timeOffset))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "keepMismatch", keepMismatch))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "startDelay", startDelay))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "Network", s.Network))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %x\n", "customnet", customNet))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "deadline (ms)", deadline))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "tls", s.FactomdTLSEnable))
-	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "selfaddr", s.FactomdLocations))
-	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "rpcuser", s.RpcUser))
-	if "" == s.RpcPass {
-		os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "rpcpass", "is blank"))
-	} else {
-		os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "rpcpass", "is set"))
-	}
-
 	//************************************************
 	// Actually setup the Network
 	//************************************************
@@ -361,6 +329,44 @@ func NetStart(s *state.State) {
 		// Command line peers lets us manually set special peers
 		p2pNetwork.DialSpecialPeersString(peers)
 		go networkHousekeeping() // This goroutine executes once a second to keep the proxy apprised of the network status.
+	}
+
+	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "Build", Build))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "FNode 0 Salt", s.Salt.String()[:16]))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %-6d %-s\n", "port", s.PortNumber, "WSAPI"))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %-6s %-s\n", "networkPort", networkPort, "P2P"))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %-6d %-s\n", "ControlPanelPort", s.ControlPanelPort, "Control Panel"))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %-6s %-s\n", "logPort", logPort, "PProf port"))
+
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "enablenet", enableNet))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "node", listenTo))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "prefix", prefix))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "node count", cnt))
+	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "net spec", pnet))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "Msgs droped", droprate))
+	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "journal", journal))
+	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "database", db))
+	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "database for clones", cloneDB))
+	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "peers", peers))
+	os.Stderr.WriteString(fmt.Sprintf("%20s \"%d\"\n", "netdebug", netdebug))
+	os.Stderr.WriteString(fmt.Sprintf("%20s \"%t\"\n", "exclusive", exclusive))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "block time", blkTime))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %d\n", "faultTimeout", faultTimeout))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "runtimeLog", runtimeLog))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "rotate", rotate))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "timeOffset", timeOffset))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "keepMismatch", keepMismatch))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "startDelay", startDelay))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "Network", s.Network))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %x\n", "customnet", customNet))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "deadline (ms)", deadline))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "tls", s.FactomdTLSEnable))
+	os.Stderr.WriteString(fmt.Sprintf("%20s %v\n", "selfaddr", s.FactomdLocations))
+	os.Stderr.WriteString(fmt.Sprintf("%20s \"%s\"\n", "rpcuser", s.RpcUser))
+	if "" == s.RpcPass {
+		os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "rpcpass", "is blank"))
+	} else {
+		os.Stderr.WriteString(fmt.Sprintf("%20s %s\n", "rpcpass", "is set"))
 	}
 
 	switch net {

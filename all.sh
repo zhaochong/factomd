@@ -58,7 +58,7 @@ checkout() {
     current=`pwd`
     cd $1 $2 > /dev/null 2>&1
     if [ $? -eq 0 ]; then
-        echo $1 | awk "{printf(\"%15s\",\"$1\")}"
+        echo $1 | awk "{printf(\"%25s\",\"$1\")}"
         git fetch -q
         git checkout -q $2 > /dev/null 2>&1
     		if [ $? -eq 0 ]; then

@@ -15,7 +15,7 @@ sleep 5s
 addentries() {
 
     # create a random datafile
-	datalen=$(shuf -i 100-5000 -n 1)
+	datalen=$(shuf -i 5000-10000 -n 1)
 	datafile=$(mktemp)
 	base64 /dev/urandom | head -c $datalen > $datafile
 
