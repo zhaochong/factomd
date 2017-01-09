@@ -1,4 +1,4 @@
-// Copyright 2015 Factom Foundation
+// Copyright 2017 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -207,12 +207,12 @@ func (m *BounceReply) String() string {
 	mill = mill / 60
 	hrs := mill % 24
 	t2 := fmt.Sprintf("%2d:%2d:%2d.%03d", hrs, mins, secs, mills)
-	b := m.SizeOf()%1000
-	kb := (m.SizeOf()/1000)%1000
-	mb := (m.SizeOf()/1000/1000)
-	sz := fmt.Sprintf("%d,%03d",kb,b)
+	b := m.SizeOf() % 1000
+	kb := (m.SizeOf() / 1000) % 1000
+	mb := (m.SizeOf() / 1000 / 1000)
+	sz := fmt.Sprintf("%d,%03d", kb, b)
 	if mb > 0 {
-		sz = fmt.Sprintf("%d,%03d,%03d",mb,kb,b)
+		sz = fmt.Sprintf("%d,%03d,%03d", mb, kb, b)
 	}
 
 	str := fmt.Sprintf("Origin: %12s  %10s-%03d-%03d BounceReply Start: %12s Hops: %5d Size: [%12s] ",

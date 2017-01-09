@@ -1,4 +1,4 @@
-// Copyright 2015 Factom Foundation
+// Copyright 2017 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -12,6 +12,33 @@ import (
 	. "github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/testHelper"
 )
+
+func TestPrintHelp(test *testing.T) {
+	t := func(v int64, str string) {
+		s := AddCommas(v)
+		if s != str {
+			fmt.Println("For", v, "Expected", str, "and got", s)
+			test.Fail()
+		}
+	}
+	t(0, "0")
+	t(1, "1")
+	t(99, "99")
+	t(1000, "1,000")
+	t(1001, "1,001")
+	t(1100, "1,100")
+	t(300002100, "300,002,100")
+	t(4300002100, "4,300,002,100")
+	t(1001, "1,001")
+	t(1100, "1,100")
+	t(-1, "-1")
+	t(-99, "-99")
+	t(-1000, "-1,000")
+	t(-1001, "-1,001")
+	t(-1100, "-1,100")
+	t(-300002100, "-300,002,100")
+	t(-4300002100, "-4,300,002,100")
+}
 
 func TestConversions(test *testing.T) {
 	v, err := ConvertFixedPoint(".999")

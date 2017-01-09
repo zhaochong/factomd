@@ -1,4 +1,4 @@
-// Copyright 2015 Factom Foundation
+// Copyright 2017 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -227,12 +227,15 @@ func (s *State) FetchFactoidTransactionByHash(hash interfaces.IHash) (interfaces
 	pls := s.ProcessLists.Lists
 	for _, pl := range pls {
 		// ignore old process lists
-		if pl.DBHeight > currentHeightComplete {
-			cb := pl.State.FactoidState.GetCurrentBlock()
-			ct := cb.GetTransactions()
-			for _, tx := range ct {
-				if tx.GetHash().IsSameAs(hash) {
-					return tx, nil
+		// watch for nil while syncing blockchain
+		if pl != nil {
+			if pl.DBHeight > currentHeightComplete {
+				cb := pl.State.FactoidState.GetCurrentBlock()
+				ct := cb.GetTransactions()
+				for _, tx := range ct {
+					if tx.GetHash().IsSameAs(hash) {
+						return tx, nil
+					}
 				}
 			}
 		}

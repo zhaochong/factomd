@@ -1,4 +1,4 @@
-// Copyright 2015 Factom Foundation
+// Copyright 2017 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -16,6 +16,41 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/btcsuitereleases/btcutil/base58"
 )
+
+/*********************************
+ * Print helpers
+ ********************************/
+
+func AddCommas(v int64) (ret string) {
+
+	pos := true
+	if v < 0 {
+		pos = false
+		v = -v
+	}
+	finish := func() {
+		if pos {
+			return
+		}
+		ret = "-" + ret
+		return
+	}
+	defer finish()
+	for {
+		nxt := v / 1000
+		this := v % 1000
+		switch {
+		case nxt == 0:
+			ret = fmt.Sprintf("%d%s", this, ret)
+			return
+		default:
+			ret = fmt.Sprintf(",%03d%s", this, ret)
+			v = v / 1000
+		}
+	}
+
+	return
+}
 
 /*********************************
  * Marshalling helper functions
