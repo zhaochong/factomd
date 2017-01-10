@@ -199,9 +199,9 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	numParts := (len(data) / splitSize) + 2 // Add one for the header, and one to split the difference across the blocks
 	lumpSize := len(data) / (numParts - 1)  // Size of the parts we are breaking the data into
 
-	os.Stderr.WriteString(fmt.Sprintf("len(data) %d\n", len(data)))
-	os.Stderr.WriteString(fmt.Sprintf("numParts  %d\n", numParts))
-	os.Stderr.WriteString(fmt.Sprintf("lumpSize  %d\n", lumpSize))
+	//	os.Stderr.WriteString(fmt.Sprintf("len(data) %d\n", len(data)))
+	//	os.Stderr.WriteString(fmt.Sprintf("numParts  %d\n", numParts))
+	//	os.Stderr.WriteString(fmt.Sprintf("lumpSize  %d\n", lumpSize))
 
 	header, err := smsg.MarshalHeader()
 	if err != nil {
@@ -222,7 +222,7 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	for i := 1; i < numParts-1; i++ {
 		err = f.SendMsg(msg, smsg.GetDataHash().Fixed(), payload[(i-1)*lumpSize:i*lumpSize], numParts, i)
 		sum = sum + lumpSize
-		os.Stderr.WriteString(fmt.Sprintf("Sum  %d numParts %d partNum %d\n", sum, numParts, i))
+		//	os.Stderr.WriteString(fmt.Sprintf("Sum  %d numParts %d partNum %d\n", sum, numParts, i))
 
 		if err != nil {
 			return err
@@ -231,7 +231,7 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	}
 	err = f.SendMsg(msg, smsg.GetDataHash().Fixed(), payload[(numParts-2)*lumpSize:], numParts, numParts-1)
 	sum = sum + len(payload[(numParts-2)*lumpSize:])
-	os.Stderr.WriteString(fmt.Sprintf("Sum  %d numParts %d partNum %d\n", sum, numParts, numParts-1))
+	// os.Stderr.WriteString(fmt.Sprintf("Sum  %d numParts %d partNum %d\n", sum, numParts, numParts-1))
 	if err != nil {
 		return err
 	}
