@@ -23,8 +23,9 @@ var _ = fmt.Print
 var ()
 
 const MsgTimeSlot = 10
-const splitSize = 1024 * 1024
+const splitSize = 1024 * 500
 const partslimit = 1000
+const NumOfTimeSlots = 10
 
 type P2PProxy struct {
 	// A connection to this node:
@@ -77,8 +78,8 @@ func (f *P2PProxy) GetMP(hash [32]byte) (index int, mp *MP) {
 		var last []map[[32]byte]*MP
 		last = append(last, make(map[[32]byte]*MP))
 		f.MPs = append(last, f.MPs...)
-		if len(f.MPs) > 20 {
-			f.MPs = f.MPs[:20]
+		if len(f.MPs) > NumOfTimeSlots {
+			f.MPs = f.MPs[:NumOfTimeSlots]
 		}
 	}
 	for i, m := range f.MPs {

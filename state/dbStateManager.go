@@ -240,7 +240,7 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 				//		list.State.StartDelay = list.State.GetTimestamp().GetTimeMilli()
 				msg.SendOut(list.State, msg)
 				list.State.DBStateAskCnt++
-				list.TimeToAsk.SetTimeSeconds(now.GetTimeSeconds() + 3)
+				list.TimeToAsk.SetTimeSeconds(now.GetTimeSeconds() + 5)
 				list.LastBegin = begin
 				list.LastEnd = end
 			}
