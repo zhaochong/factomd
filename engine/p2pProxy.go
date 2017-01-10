@@ -22,6 +22,10 @@ var _ = fmt.Print
 
 var ()
 
+const MsgTimeSlot = 10
+const splitSize = 1024 * 1024
+const partslimit = 1000
+
 type P2PProxy struct {
 	// A connection to this node:
 	ToName   string
@@ -41,8 +45,9 @@ type P2PProxy struct {
 	bytesOut  int // bandwidth used by applicaiton without netowrk fan out
 	bytesIn   int // bandwidth recieved by application from network
 
-	MPs       []map[[32]byte]*MP
-	MsgIn     chan interfaces.IMsg
+	LastTime time.Time
+	MPs      []map[[32]byte]*MP
+	MsgIn    chan interfaces.IMsg
 }
 
 type factomMessage struct {
@@ -57,9 +62,73 @@ type factomMessage struct {
 
 // multipart message
 type MP struct {
-	Hash    	[32]byte
-	NumParts 	int
-	Parts     []*factomMessage
+	Hash     [32]byte
+	NumParts int
+	Parts    []*factomMessage
+}
+
+// Looks up the hash in our message stack.  Also walks our message stack
+// into oblivion over time.   Returns 0, nil if the hash is new.  Returns the index
+// and the value if the hash is not new.
+func (f *P2PProxy) GetMP(hash [32]byte) (index int, mp *MP) {
+	now := time.Now()
+	if now.After(f.LastTime) {
+		f.LastTime = now.Add(time.Duration(MsgTimeSlot) * time.Second)
+		var last []map[[32]byte]*MP
+		last = append(last, make(map[[32]byte]*MP))
+		f.MPs = append(last, f.MPs...)
+		if len(f.MPs) > 20 {
+			f.MPs = f.MPs[:20]
+		}
+	}
+	for i, m := range f.MPs {
+		if m[hash] != nil {
+			return i, m[hash]
+		}
+	}
+	return 0, nil
+}
+
+// Adds a bit of a multi-part message to its list.  If complete, then the IMSG is constructed
+// and returned.
+func (f *P2PProxy) SetMP(fmsg *factomMessage) interfaces.IMsg {
+	// Bad message. Ignore.
+	if fmsg.NumParts != fmsg.NumParts ||
+		fmsg.PartNum >= fmsg.NumParts ||
+		fmsg.NumParts > partslimit {
+		return nil
+	}
+
+	i, mp := f.GetMP(fmsg.Hash)
+
+	if mp == nil {
+		mp = new(MP)
+		mp.NumParts = fmsg.NumParts
+		mp.Hash = fmsg.Hash
+		mp.Parts = make([]*factomMessage, mp.NumParts)
+	}
+
+	mp.Parts[fmsg.PartNum] = fmsg
+	delete(f.MPs[i], fmsg.Hash)
+	f.MPs[0][fmsg.Hash] = mp
+
+	for _, v := range mp.Parts {
+		if v == nil {
+			return nil
+		}
+	}
+
+	var data []byte
+	for _, v := range mp.Parts {
+		data = append(data, v.Message...)
+	}
+
+	m, err := messages.UnmarshalMessage(data)
+	if err != nil {
+		delete(f.MPs[i], fmsg.Hash)
+		return nil
+	}
+	return m
 }
 
 // manageOutChannel takes messages from the f.broadcastOut channel and sends them to the network.
@@ -97,15 +166,14 @@ func (f *P2PProxy) ManageInChannel() {
 			parcel := data.(p2p.Parcel)
 
 			message := factomMessage{
-				Message: parcel.Payload,
+				Message:  parcel.Payload,
 				PeerHash: parcel.Header.TargetPeer,
-				AppHash: parcel.Header.AppHash,
-				AppType: parcel.Header.AppType,
-				PartNum: parcel.Header.PartNum,
+				AppHash:  parcel.Header.AppHash,
+				AppType:  parcel.Header.AppType,
+				PartNum:  parcel.Header.PartNum,
 				NumParts: parcel.Header.NumParts,
-				Hash: parcel.Header.Hash,
+				Hash:     parcel.Header.Hash,
 			}
-
 			p2p.BlockFreeChannelSend(f.BroadcastIn, message)
 
 		default:
@@ -116,17 +184,76 @@ func (f *P2PProxy) ManageInChannel() {
 
 func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	f.logMessage(msg, false) // NODE_TALK_FIX
+
 	data, err := msg.MarshalBinary()
 	if err != nil {
 		return err
 	}
+
+	smsg, ok := msg.(interfaces.ISplitable)
+
+	if !ok || len(data) <= splitSize {
+		return f.SendMsg(msg, msg.GetMsgHash().Fixed(), data, 1, 0)
+	}
+
+	numParts := (len(data) / splitSize) + 2 // Add one for the header, and one to split the difference across the blocks
+	lumpSize := len(data) / (numParts - 1)  // Size of the parts we are breaking the data into
+
+	os.Stderr.WriteString(fmt.Sprintf("len(data) %d\n", len(data)))
+	os.Stderr.WriteString(fmt.Sprintf("numParts  %d\n", numParts))
+	os.Stderr.WriteString(fmt.Sprintf("lumpSize  %d\n", lumpSize))
+
+	header, err := smsg.MarshalHeader()
+	if err != nil {
+		return err
+	}
+
+	payload, err := smsg.MarshalData()
+	if err != nil {
+		return err
+	}
+
+	err = f.SendMsg(msg, smsg.GetDataHash().Fixed(), header, numParts, 0)
+	if err != nil {
+		return err
+	}
+
+	sum := 0
+	for i := 1; i < numParts-1; i++ {
+		err = f.SendMsg(msg, smsg.GetDataHash().Fixed(), payload[(i-1)*lumpSize:i*lumpSize], numParts, i)
+		sum = sum + lumpSize
+		os.Stderr.WriteString(fmt.Sprintf("Sum  %d numParts %d partNum %d\n", sum, numParts, i))
+
+		if err != nil {
+			return err
+		}
+
+	}
+	err = f.SendMsg(msg, smsg.GetDataHash().Fixed(), payload[(numParts-2)*lumpSize:], numParts, numParts-1)
+	sum = sum + len(payload[(numParts-2)*lumpSize:])
+	os.Stderr.WriteString(fmt.Sprintf("Sum  %d numParts %d partNum %d\n", sum, numParts, numParts-1))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (f *P2PProxy) Reassemble(fmessage *factomMessage) {
+	msg := f.SetMP(fmessage)
+	if msg != nil {
+		f.MsgIn <- msg
+	}
+	return
+}
+
+func (f *P2PProxy) SendMsg(msg interfaces.IMsg, hash [32]byte, data []byte, numParts int, partNum int) error {
 	f.bytesOut += len(data)
-	hash := fmt.Sprintf("%x", msg.GetMsgHash().Bytes())
+	apphash := fmt.Sprintf("%x", msg.GetMsgHash().Bytes())
 	appType := fmt.Sprintf("%d", msg.Type())
 	message := factomMessage{
 		PeerHash: msg.GetNetworkOrigin(),
-		AppHash: hash,
-		AppType: appType,
+		AppHash:  apphash,
+		AppType:  appType,
 	}
 	switch {
 	case !msg.IsPeer2Peer():
@@ -137,9 +264,9 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 	}
 
 	message.Message = data
-	message.NumParts = 1
-	message.PartNum = 0
-	message.Hash = msg.GetRepeatHash().Fixed()
+	message.NumParts = numParts
+	message.PartNum = partNum
+	message.Hash = hash
 
 	p2p.BlockFreeChannelSend(f.BroadcastOut, message)
 
@@ -167,13 +294,18 @@ func (f *P2PProxy) update() {
 			switch data.(type) {
 			case factomMessage:
 				fmessage := data.(factomMessage)
-				//fmt.Printf("Hash: %x NumParts %5d PartNum %d\n",fmessage.Hash[:6],fmessage.NumParts, fmessage.PartNum)
-				f.trace(fmessage.AppHash, fmessage.AppType, "P2PProxy.Recieve()", "N")
-				msg, err := messages.UnmarshalMessage(fmessage.Message)
-				if nil == err && msg != nil {
-					msg.SetNetworkOrigin(fmessage.PeerHash)
-					f.MsgIn <- msg
+				if fmessage.NumParts == 1 {
+					//fmt.Printf("Hash: %x NumParts %5d PartNum %d\n",fmessage.Hash[:6],fmessage.NumParts, fmessage.PartNum)
+					f.trace(fmessage.AppHash, fmessage.AppType, "P2PProxy.Recieve()", "N")
+					msg, err := messages.UnmarshalMessage(fmessage.Message)
+					if nil == err && msg != nil {
+						msg.SetNetworkOrigin(fmessage.PeerHash)
+						f.MsgIn <- msg
+					}
+				} else {
+					f.Reassemble(&fmessage)
 				}
+
 				f.bytesIn += len(fmessage.Message)
 			default:
 				fmt.Printf("Garbage on f.BroadcastIn. %+v", data)
@@ -182,9 +314,6 @@ func (f *P2PProxy) update() {
 	default:
 	}
 }
-
-
-
 
 func (e *factomMessage) JSONByte() ([]byte, error) {
 	return primitives.EncodeJSON(e)
@@ -229,7 +358,7 @@ func (f *P2PProxy) Init(fromName, toName string) interfaces.IPeer {
 	f.BroadcastOut = make(chan interface{}, p2p.StandardChannelSize)
 	f.BroadcastIn = make(chan interface{}, p2p.StandardChannelSize)
 	f.logging = make(chan interface{}, p2p.StandardChannelSize)
-	f.MsgIn = make(chan interfaces.IMsg,p2p.StandardChannelSize)
+	f.MsgIn = make(chan interfaces.IMsg, p2p.StandardChannelSize)
 	return f
 }
 func (f *P2PProxy) SetDebugMode(netdebug int) {
@@ -243,7 +372,6 @@ func (f *P2PProxy) GetNameFrom() string {
 func (f *P2PProxy) GetNameTo() string {
 	return f.ToName
 }
-
 
 // Is this connection equal to parm connection
 func (f *P2PProxy) Equals(ff interfaces.IPeer) bool {
@@ -358,8 +486,6 @@ func (p *P2PProxy) ManageLogging() {
 	p.logWriter.Flush()
 	defer p.logFile.Close()
 }
-
-
 
 func (p *P2PProxy) trace(appHash string, appType string, location string, sequence string) {
 	if 10 < p.debugMode {

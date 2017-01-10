@@ -32,12 +32,12 @@ type ParcelHeader struct {
 	AppHash     string // Application specific message hash, for tracing
 	AppType     string // Application specific message type, for tracing
 
-	PartNo      uint16            // 2 bytes - in case of multipart parcels, indicates which part this corresponds to, otherwise should be 0
-	PartsTotal  uint16            // 2 bytes - in case of multipart parcels, indicates the total number of parts that the receiver should expect
+	PartNo     uint16 // 2 bytes - in case of multipart parcels, indicates which part this corresponds to, otherwise should be 0
+	PartsTotal uint16 // 2 bytes - in case of multipart parcels, indicates the total number of parts that the receiver should expect
 
-	PartNum     int
-	NumParts    int
-	Hash        [32]byte          // Let's me connect messages together
+	PartNum  int
+	NumParts int
+	Hash     [32]byte // Let's me connect messages together
 }
 
 type ParcelCommandType uint16
@@ -120,6 +120,9 @@ func ReassembleParcel(parcels []*Parcel) *Parcel {
 	assembledParcel.Header.TargetPeer = origHeader.TargetPeer
 	assembledParcel.Header.PeerAddress = origHeader.PeerAddress
 	assembledParcel.Header.PeerPort = origHeader.PeerPort
+	assembledParcel.Header.NumParts = origHeader.NumParts
+	assembledParcel.Header.PartNum = origHeader.PartNum
+	assembledParcel.Header.Hash = origHeader.Hash
 
 	return assembledParcel
 }

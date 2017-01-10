@@ -38,11 +38,13 @@ type DBStateMsg struct {
 	SignatureList SigList
 
 	//Not marshalled
-	Sent   interfaces.Timestamp
-	IsInDB bool
+	datahash interfaces.IHash
+	Sent     interfaces.Timestamp
+	IsInDB   bool
 }
 
 var _ interfaces.IMsg = (*DBStateMsg)(nil)
+var _ interfaces.ISplitable = (*DBStateMsg)(nil)
 
 func (a *DBStateMsg) IsSameAs(b *DBStateMsg) bool {
 	defer func() {
@@ -101,7 +103,7 @@ func (a *DBStateMsg) IsSameAs(b *DBStateMsg) bool {
 }
 
 func (m *DBStateMsg) GetRepeatHash() interfaces.IHash {
-	return m.DirectoryBlock.GetHash()
+	return m.GetMsgHash()
 }
 
 func (m *DBStateMsg) GetHash() interfaces.IHash {
@@ -336,7 +338,18 @@ func (m *DBStateMsg) UnmarshalBinary(data []byte) error {
 	return err
 }
 
-func (m *DBStateMsg) MarshalBinary() ([]byte, error) {
+func (m *DBStateMsg) GetDataHash() interfaces.IHash {
+	if m.datahash == nil {
+		data, err := m.MarshalData()
+		if err != nil {
+			return nil
+		}
+		m.datahash = primitives.Sha(data)
+	}
+	return m.datahash
+}
+
+func (m *DBStateMsg) MarshalHeader() ([]byte, error) {
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -348,7 +361,13 @@ func (m *DBStateMsg) MarshalBinary() ([]byte, error) {
 	}
 	buf.Write(data)
 
-	data, err = m.DirectoryBlock.MarshalBinary()
+	return buf.DeepCopyBytes(), nil
+}
+
+func (m *DBStateMsg) MarshalData() ([]byte, error) {
+	var buf primitives.Buffer
+
+	data, err := m.DirectoryBlock.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -401,6 +420,18 @@ func (m *DBStateMsg) MarshalBinary() ([]byte, error) {
 	}
 
 	return buf.DeepCopyBytes(), nil
+}
+
+func (m *DBStateMsg) MarshalBinary() ([]byte, error) {
+	data, err := m.MarshalHeader()
+	if err != nil {
+		return nil, err
+	}
+	data2, err := m.MarshalData()
+	if err != nil {
+		return nil, err
+	}
+	return append(data, data2...), nil
 }
 
 func (m *DBStateMsg) String() string {
