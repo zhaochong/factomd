@@ -214,7 +214,6 @@ func (c *Connection) Start() {
 func (c *Connection) runLoop() {
 	for ConnectionClosed != c.state { // loop exits when we hit shutdown state
 		// time.Sleep(time.Second * 1) // This can be a tight loop, don't want to starve the application
-		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
 		c.updateStats()                   // Update controller with metrics
 		c.connectionStatusReport()
 		// if 2 == rand.Intn(100) {

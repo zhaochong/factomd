@@ -26,9 +26,12 @@ type Bounce struct {
 	Stamps    []interfaces.Timestamp
 	Data      []byte
 	size      int
+
+	DataHash  interfaces.IHash
 }
 
-var _ interfaces.IMsg = (*Bounce)(nil)
+var _ interfaces.IMsg 			= (*Bounce)(nil)
+var _ interfaces.ISplitable = (*Bounce)(nil)
 
 func (m *Bounce) AddData(dataSize int) {
 	m.Data = make([]byte, dataSize)
@@ -52,7 +55,7 @@ func (m *Bounce) SizeOf() int {
 }
 
 func (m *Bounce) GetMsgHash() interfaces.IHash {
-	data, err := m.MarshalForSignature()
+	data, err := m.MarshalBinary()
 
 	m.size = len(data)
 
@@ -158,9 +161,10 @@ func (m *Bounce) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 
 	lenData, newData := binary.BigEndian.Uint32(newData[0:4]), newData[4:]
 
+	fmt.Println("==========",lenData, len(newData))
 	m.Data = make([]byte, lenData)
-	copy(m.Data, newData)
-	newData = newData[lenData:]
+	copy(m.Data, newData[:lenData])
+	newData = newData[len(m.Data):]
 
 	return
 }
@@ -168,6 +172,30 @@ func (m *Bounce) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 func (m *Bounce) UnmarshalBinary(data []byte) error {
 	_, err := m.UnmarshalBinaryData(data)
 	return err
+}
+
+func (m *Bounce) MarshalHeader() ([]byte, error) {
+	return m.MarshalForSignature()
+}
+
+func (m *Bounce) MarshalData() ([]byte, error) {
+	var buf primitives.Buffer
+
+	binary.Write(&buf, binary.BigEndian, uint32(len(m.Data)))
+	buf.Write(m.Data)
+
+	return buf.DeepCopyBytes(), nil
+}
+
+func (m *Bounce) GetDataHash() interfaces.IHash {
+	if m.DataHash == nil {
+		data, err := m.MarshalData()
+		if err != nil || data == nil {
+			return nil
+		}
+		m.DataHash = primitives.Sha(data)
+	}
+	return m.DataHash
 }
 
 func (m *Bounce) MarshalForSignature() ([]byte, error) {
@@ -198,15 +226,24 @@ func (m *Bounce) MarshalForSignature() ([]byte, error) {
 		}
 		buf.Write(data)
 	}
-
-	binary.Write(&buf, binary.BigEndian, int32(len(m.Data)))
-	buf.Write(m.Data)
-
 	return buf.DeepCopyBytes(), nil
 }
 
 func (m *Bounce) MarshalBinary() (data []byte, err error) {
-	return m.MarshalForSignature()
+	var buf primitives.Buffer
+	data, err = m.MarshalForSignature()
+	if err != nil {
+		return data, err
+	}
+	buf.Write(data)
+
+	data, err = m.MarshalData()
+	if err != nil {
+		return data, err
+	}
+	buf.Write(data)
+
+	return buf.DeepCopyBytes(), nil
 }
 
 func (m *Bounce) String() string {
@@ -223,13 +260,7 @@ func (m *Bounce) String() string {
 	hrs := mill % 24
 	t2 := fmt.Sprintf("%2d:%2d:%2d.%03d", hrs, mins, secs, mills)
 
-	b := m.SizeOf() % 1000
-	kb := (m.SizeOf() / 1000) % 1000
-	mb := (m.SizeOf() / 1000 / 1000)
-	sz := fmt.Sprintf("%d,%03d", kb, b)
-	if mb > 0 {
-		sz = fmt.Sprintf("%d,%03d,%03d", mb, kb, b)
-	}
+	sz := primitives.AddCommas(int64(m.SizeOf()))
 
 	str := fmt.Sprintf("Origin: %12s %30s-%04d Bounce Start: %12s Hops: %5d [Size: %12s] ",
 		t,
