@@ -185,7 +185,7 @@ func CreateTestBlockSetForFER(prev *BlockSet, db *databaseOverlay.Overlay, testE
 
 	dbEntries := []interfaces.IDBEntry{}
 	//ABlock
-	answer.ABlock = CreateTestAdminBlock(prev.ABlock)
+	answer.ABlock = CreateTestAdminBlock(prev.ABlock, prev.DBlock)
 
 	de := new(directoryBlock.DBEntry)
 	de.ChainID, err = primitives.NewShaHash(answer.ABlock.GetChainID().Bytes())

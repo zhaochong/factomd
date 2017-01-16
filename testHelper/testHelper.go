@@ -4,7 +4,6 @@ package testHelper
 
 import (
 	"github.com/FactomProject/factomd/common/adminBlock"
-	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/directoryBlock"
 	"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -29,6 +28,7 @@ func CreateEmptyTestState() *state.State {
 	s := new(state.State)
 	s.LoadConfig("", "")
 	s.Network = "LOCAL"
+	s.LocalServerPrivKey = NewPrivKeyString(0)
 	s.Init()
 	s.Network = "LOCAL"
 	state.LoadDatabase(s)
@@ -217,7 +217,7 @@ func CreateTestBlockSet(prev *BlockSet) *BlockSet {
 
 	dbEntries := []interfaces.IDBEntry{}
 	//ABlock
-	answer.ABlock = CreateTestAdminBlock(prev.ABlock)
+	answer.ABlock = CreateTestAdminBlock(prev.ABlock, prev.DBlock)
 
 	de := new(directoryBlock.DBEntry)
 	de.ChainID, err = primitives.NewShaHash(answer.ABlock.GetChainID().Bytes())
@@ -286,80 +286,4 @@ func CreateTestBlockSet(prev *BlockSet) *BlockSet {
 
 func CreateEmptyTestDatabaseOverlay() *databaseOverlay.Overlay {
 	return databaseOverlay.NewOverlay(new(mapdb.MapDB))
-}
-
-func CreateTestAdminBlock(prev *adminBlock.AdminBlock) *adminBlock.AdminBlock {
-	block := new(adminBlock.AdminBlock)
-	block.SetHeader(CreateTestAdminHeader(prev))
-	block.GetHeader().SetMessageCount(uint32(len(block.GetABEntries())))
-	return block
-}
-
-func CreateTestAdminHeader(prev *adminBlock.AdminBlock) *adminBlock.ABlockHeader {
-	header := new(adminBlock.ABlockHeader)
-
-	if prev == nil {
-		header.PrevBackRefHash = primitives.NewZeroHash()
-		header.DBHeight = 0
-	} else {
-		keyMR, err := prev.GetKeyMR()
-		if err != nil {
-			panic(err)
-		}
-		header.PrevBackRefHash = keyMR
-		header.DBHeight = prev.Header.GetDBHeight() + 1
-	}
-
-	header.HeaderExpansionSize = 5
-	header.HeaderExpansionArea = []byte{0x00, 0x01, 0x02, 0x03, 0x04}
-	header.MessageCount = 0
-	header.BodySize = 0
-
-	return header
-}
-
-func CreateTestDirectoryBlock(prevBlock *directoryBlock.DirectoryBlock) *directoryBlock.DirectoryBlock {
-	dblock := new(directoryBlock.DirectoryBlock)
-
-	dblock.SetHeader(CreateTestDirectoryBlockHeader(prevBlock))
-
-	de := new(directoryBlock.DBEntry)
-	de.ChainID = primitives.NewZeroHash()
-	de.KeyMR = primitives.NewZeroHash()
-
-	err := dblock.SetDBEntries(append(make([]interfaces.IDBEntry, 0, 5), de))
-	if err != nil {
-		panic(err)
-	}
-	//dblock.GetHeader().SetBlockCount(uint32(len(dblock.GetDBEntries())))
-
-	return dblock
-}
-
-func CreateTestDirectoryBlockHeader(prevBlock *directoryBlock.DirectoryBlock) *directoryBlock.DBlockHeader {
-	header := new(directoryBlock.DBlockHeader)
-
-	header.SetBodyMR(primitives.Sha(primitives.NewZeroHash().Bytes()))
-	header.SetBlockCount(0)
-	header.SetNetworkID(constants.LOCAL_NETWORK_ID)
-
-	if prevBlock == nil {
-		header.SetDBHeight(0)
-		header.SetPrevFullHash(primitives.NewZeroHash())
-		header.SetPrevKeyMR(primitives.NewZeroHash())
-		header.SetTimestamp(primitives.NewTimestampFromMinutes(1234))
-	} else {
-		header.SetDBHeight(prevBlock.Header.GetDBHeight() + 1)
-		header.SetPrevFullHash(prevBlock.GetHash())
-		keyMR, err := prevBlock.BuildKeyMerkleRoot()
-		if err != nil {
-			panic(err)
-		}
-		header.SetPrevKeyMR(keyMR)
-		header.SetTimestamp(primitives.NewTimestampFromMinutes(prevBlock.Header.GetTimestamp().GetTimeMinutesUInt32() + 1))
-	}
-
-	header.SetVersion(1)
-
-	return header
 }

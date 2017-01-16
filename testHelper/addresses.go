@@ -20,6 +20,11 @@ func NewPrivKeyString(n uint64) string {
 	return priv
 }
 
+func NewPublicKeyString(n uint64) string {
+	priv := NewPrimitivesPrivateKey(n)
+	return priv.Pub.String()
+}
+
 //Create 32 bit private key (without the public key part)
 func NewPrivKey(n uint64) []byte {
 	priv := NewPrivKeyString(n)
