@@ -23,7 +23,9 @@ import (
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
-	"github.com/FactomProject/factomd/database/hybridDB"
+	//"github.com/FactomProject/factomd/database/hybridDB"
+	"github.com/FactomProject/factomd/database/boltdb"
+	"github.com/FactomProject/factomd/database/leveldb"
 	"github.com/FactomProject/factomd/database/mapdb"
 	"github.com/FactomProject/factomd/log"
 	"github.com/FactomProject/factomd/logger"
@@ -1809,7 +1811,6 @@ func (s *State) GetMatryoshka(dbheight uint32) interfaces.IHash {
 }
 
 func (s *State) InitLevelDB() error {
-
 	if s.DB != nil {
 		return nil
 	}
@@ -1818,10 +1819,10 @@ func (s *State) InitLevelDB() error {
 
 	s.Println("Database:", path)
 
-	dbase, err := hybridDB.NewLevelMapHybridDB(path, false)
+	dbase, err := leveldb.NewLevelDB(path, false)
 
 	if err != nil || dbase == nil {
-		dbase, err = hybridDB.NewLevelMapHybridDB(path, true)
+		dbase, err = leveldb.NewLevelDB(path, true)
 		if err != nil {
 			return err
 		}
@@ -1840,7 +1841,9 @@ func (s *State) InitBoltDB() error {
 
 	s.Println("Database Path for", s.FactomNodeName, "is", path)
 	os.MkdirAll(path, 0777)
-	dbase := hybridDB.NewBoltMapHybridDB(nil, path+"FactomBolt.db")
+
+	dbase := new(boltdb.BoltDB)
+	dbase.Init(nil, path+"FactomBolt.db")
 	s.DB = databaseOverlay.NewOverlay(dbase)
 	return nil
 }
