@@ -111,7 +111,7 @@ func (lists *ProcessLists) String() string {
 
 	str := "Process Lists"
 	for i, pl := range lists.Lists {
-		if len(lists.Lists)-i > 3 {
+		if len(lists.Lists)-i > 3 || pl == nil {
 			continue
 		}
 		str = fmt.Sprintf("%s  DBBase: %d\n", str, lists.DBHeightBase)

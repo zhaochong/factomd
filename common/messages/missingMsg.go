@@ -249,7 +249,9 @@ func (e *MissingMsg) JSONBuffer(b *bytes.Buffer) error {
 
 // AddHeight: Add a Missing Message Height to the request
 func (e *MissingMsg) AddHeight(h uint32) {
-	e.ProcessListHeight = append(e.ProcessListHeight, h)
+	if len(e.ProcessListHeight) == 0 || e.ProcessListHeight[len(e.ProcessListHeight)-1] < h {
+		e.ProcessListHeight = append(e.ProcessListHeight, h)
+	}
 }
 
 // NewMissingMsg: Build a missing Message request, and add the first Height

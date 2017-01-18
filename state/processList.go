@@ -662,6 +662,9 @@ func (p *ProcessList) Ask(vmIndex int, height int, waitSeconds int64, tag int) i
 				missingMsgRequest.AddHeight(uint32(i))
 			}
 		}
+		for i := len(vm.List); i < len(vm.List)+100; i++ {
+			missingMsgRequest.AddHeight(uint32(i))
+		}
 		// Might as well as for the next message too.  Won't hurt.
 		missingMsgRequest.AddHeight(uint32(len(vm.List)))
 
@@ -767,7 +770,7 @@ func (p *ProcessList) Process(state *State) (progress bool) {
 
 		// If we haven't heard anything from a VM, ask for a message at the last-known height
 		if vm.Height == len(vm.List) {
-			p.Ask(i, vm.Height, 20, 2)
+			p.Ask(i, vm.Height, int64(p.State.DirectoryBlockInSeconds), 2)
 		}
 
 	VMListLoop:
@@ -788,7 +791,7 @@ func (p *ProcessList) Process(state *State) (progress bool) {
 				last := vm.ListAck[vm.Height-1]
 				expectedSerialHash, err = primitives.CreateHash(last.MessageHash, thisAck.MessageHash)
 				if err != nil {
-					p.Ask(i, j, 3, 4)
+					//p.Ask(i, j, 3, 4)
 					break VMListLoop
 				}
 

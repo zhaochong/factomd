@@ -212,18 +212,6 @@ func (list *DBStateList) GetHighestSavedBlk() uint32 {
 // Once a second at most, we check to see if we need to pull down some blocks to catch up.
 func (list *DBStateList) Catchup(justDoIt bool) {
 
-	// We only check if we need updates once every so often.
-
-	if len(list.State.inMsgQueue) > 1000 {
-		// If we are behind the curve in processing messages, dump all the dbstates from holding.
-		for k := range list.State.Holding {
-			if _, ok := list.State.Holding[k].(*messages.DBStateMsg); ok {
-				delete(list.State.Holding, k)
-			}
-		}
-		return
-	}
-
 	now := list.State.GetTimestamp()
 
 	hs := int(list.State.GetHighestSavedBlk())
@@ -263,8 +251,8 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 		}
 	}
 
-	if end-begin > 200 {
-		end = begin + 200
+	if end-begin > 1000 {
+		end = begin + 1000
 	}
 
 	if end+3 > begin && justDoIt {
@@ -672,6 +660,13 @@ func (list *DBStateList) SaveDBStateToDB(d *DBState) (progress bool) {
 				d.DirectoryBlock.GetKeyMR().Bytes()))
 		}
 		return
+	}
+
+	if dbheight > 0 {
+		prev := list.Get(dbheight-1)
+		if prev.DirectoryBlock.GetKeyMR().Fixed() != d.DirectoryBlock.GetHeader().GetPrevKeyMR().Fixed() {
+			prev.SaveStruct.TrimBack(list.State, prev)
+		}
 	}
 
 	// Only trim when we are really saving.

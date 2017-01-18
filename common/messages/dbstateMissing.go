@@ -136,7 +136,7 @@ func (m *DBStateMissing) send(dbheight uint32, state interfaces.IState) {
 }
 
 func (m *DBStateMissing) FollowerExecute(state interfaces.IState) {
-	if len(state.NetworkOutMsgQueue()) > 100 {
+	if len(state.NetworkOutMsgQueue()) > 2000 {
 		return
 	}
 
@@ -144,8 +144,8 @@ func (m *DBStateMissing) FollowerExecute(state interfaces.IState) {
 	// just give them what they ask for.
 	start := m.DBHeightStart
 	end := m.DBHeightEnd
-	if end-start > 200 {
-		end = start + 200
+	if end-start > 2000 {
+		end = start + 2000
 	}
 	for dbs := start; dbs <= end; dbs++ {
 		m.send(dbs, state)

@@ -881,13 +881,18 @@ func (s *State) UnlockDB() {
 
 // Checks ChainIDs to determine if we need their entries to process entries and transactions.
 func (s *State) Needed(eb interfaces.IEntryBlock) bool {
-	id := []byte{0x88, 0x88, 0x88}
-	fer := []byte{0x11, 0x11, 0x11}
-
 	if eb.GetDatabaseHeight() < 2 {
 		return true
 	}
-	cid := eb.GetChainID().Bytes()
+	return s.NeededChainID(eb.GetChainID())
+}
+
+// Checks ChainIDs to determine if we need their entries to process entries and transactions.
+func (s *State) NeededChainID(chainID interfaces.IHash) bool {
+	id := []byte{0x88, 0x88, 0x88}
+	fer := []byte{0x11, 0x11, 0x11}
+
+	cid := chainID.Bytes()
 	if bytes.Compare(id[:3], cid) == 0 {
 		return true
 	}
@@ -896,6 +901,7 @@ func (s *State) Needed(eb interfaces.IEntryBlock) bool {
 	}
 	return false
 }
+
 
 func (s *State) LoadDBState(dbheight uint32) (interfaces.IMsg, error) {
 	dblk, err := s.DB.FetchDBlockByHeight(dbheight)
