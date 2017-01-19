@@ -11,14 +11,21 @@ func CreateTestAdminBlock(prev *adminBlock.AdminBlock, prevDBlock *directoryBloc
 	block.SetHeader(CreateTestAdminHeader(prev))
 
 	if prevDBlock != nil {
-		priv := NewPrimitivesPrivateKey(0)
+		priv, err := primitives.NewPrivateKeyFromHex("cc1985cdfae4e32b5a454dfda8ce5e1361558482684f3367649c3ad852c8e31a")
+		if err != nil {
+			panic(err)
+		}
 		bin, err := prevDBlock.GetHeader().MarshalBinary()
 		if err != nil {
 			panic(err)
 		}
 		sig := priv.Sign(bin)
 
-		err = block.AddDBSig(NewRepeatingHash(0), sig)
+		identity, err := primitives.NewShaHashFromStr("38bab1455b7bd7e5efd15c53c777c79d0c988e9210f1da49a99d95b3a6417be9")
+		if err != nil {
+			panic(err)
+		}
+		err = block.AddDBSig(identity, sig)
 		if err != nil {
 			panic(err)
 		}
