@@ -7,6 +7,7 @@ package factoid
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 )
@@ -56,7 +57,6 @@ func (b SignatureBlock) String() string {
 }
 
 func (s *SignatureBlock) IsEqual(signatureBlock interfaces.IBlock) []interfaces.IBlock {
-
 	sb, ok := signatureBlock.(interfaces.ISignatureBlock)
 
 	if !ok {
@@ -109,7 +109,6 @@ func (a SignatureBlock) MarshalBinary() ([]byte, error) {
 	var out primitives.Buffer
 
 	for _, sig := range a.GetSignatures() {
-
 		data, err := sig.MarshalBinary()
 		if err != nil {
 			return nil, fmt.Errorf("Signature failed to Marshal in RCD_1")
@@ -125,7 +124,6 @@ func (s SignatureBlock) CustomMarshalText() ([]byte, error) {
 
 	out.WriteString("Signature Block: \n")
 	for _, sig := range s.Signatures {
-
 		out.WriteString(" signature: ")
 		txt, err := sig.CustomMarshalText()
 		if err != nil {

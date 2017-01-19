@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -105,6 +106,9 @@ func (s FactoidSignature) CustomMarshalText() ([]byte, error) {
 }
 
 func (s *FactoidSignature) UnmarshalBinaryData(data []byte) ([]byte, error) {
+	if data == nil || len(data) < constants.SIGNATURE_LENGTH {
+		return nil, fmt.Errorf("Not enough data to unmarshal")
+	}
 	copy(s.Signature[:], data[:constants.SIGNATURE_LENGTH])
 	return data[constants.SIGNATURE_LENGTH:], nil
 }

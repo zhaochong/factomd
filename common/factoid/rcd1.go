@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/FactomProject/ed25519"
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -125,7 +126,9 @@ func (a1 *RCD_1) IsEqual(addr interfaces.IBlock) []interfaces.IBlock {
 }
 
 func (t *RCD_1) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
-
+	if data == nil || len(data) < 1+constants.ADDRESS_LENGTH {
+		return nil, fmt.Errorf("Not enough data to unmarshal")
+	}
 	typ := int8(data[0])
 	data = data[1:]
 
