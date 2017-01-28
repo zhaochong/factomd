@@ -30,7 +30,7 @@ type AskHistory struct {
 
 // All the dbstates we have asked for to date.
 type AskHistories struct {
-	Base    uint32
+	Base    int
 	History []*AskHistory
 }
 
@@ -40,68 +40,79 @@ func (h *AskHistories) Trim(HighestSaved uint32, HighestKnown uint32) {
 	for len(h.History) < int(HighestSaved)-int(h.Base) {
 		h.History = append(h.History, nil)
 	}
-	if h.Base < HighestSaved {
-		cnt := int(HighestSaved - h.Base)
+	if h.Base < int(HighestSaved) {
+		cnt := int(HighestSaved) - h.Base
 		if len(h.History) >= cnt {
 			h.History = append(make([]*AskHistory,0), h.History[cnt:]...)
-			h.Base = HighestSaved
+			h.Base = int(HighestSaved)
 		}
 	}
 }
 
-func (h *AskHistories) Get(DBHeight uint32) *AskHistory {
+func (h *AskHistories) Get(DBHeight int) *AskHistory {
 
-	index := int(DBHeight) - int(h.Base)
-	fmt.Println("index",index,"DBHEight", DBHeight,"base",h.Base)
+	index := DBHeight - h.Base
+
 	if index < 0 {
 		return nil
 	}
+
 	for index >= len(h.History) {
 		h.History = append(h.History, nil)
 	}
+
 	if h.History[index] == nil {
 		h.History[index] = new(AskHistory)
-		h.History[index].DBHeight = DBHeight
+		h.History[index].DBHeight = uint32(DBHeight)
 	}
 	return h.History[index]
 }
 
-func FindBegin(state *State, histories *AskHistories, start uint32) int {
+func FindBegin(state *State, histories *AskHistories, start int) int {
+
+	// No point asking for dbstates we have saved to disk
+	if start < int(state.HighestDisk) {
+		start = int(state.HighestDisk)
+	}
+
 	begin := start
 	now := state.GetTimestamp()
 	for {
-		fmt.Printf("Highest Known %5d Highest Saved %5d ",state.HighestKnown,state.HighestSaved)
-		fmt.Println("begin",begin)
 		h := histories.Get(begin)
-		ir := int(begin) - state.DBStatesReceivedBase
+		ir := begin - state.DBStatesReceivedBase
 		switch {
-		case begin > state.HighestKnown:
+		case begin > int(state.HighestKnown) :
 			return -1
 		case h == nil:
 		case len(state.DBStatesReceived) > int(ir) && state.DBStatesReceived[ir] != nil:
 		case h.LastRequest == nil:
 			h.LastRequest = now
-			return int(begin)
+			return begin
 		case now.GetTimeSeconds()-h.LastRequest.GetTimeSeconds() >= 3:
 			h.LastRequest = now
-			return int(begin)
+			return begin
 		}
 		begin++
 	}
 }
 
-func FindEnd(state *State, histories *AskHistories, begin uint32) uint32 {
+func FindEnd(state *State, histories *AskHistories, begin int) int {
+
+	// If no valid begin, there is no valid end
+	if begin < 0 {
+		return -1
+	}
+
 	now := state.GetTimestamp()
 	end := begin+1
 	for {
-		fmt.Println("end")
 		h := histories.Get(end)
 		ir := int(end) - state.DBStatesReceivedBase
 
 		switch {
 		case len(state.DBStatesReceived) > int(ir) && state.DBStatesReceived[ir] != nil:
 			return end-1
-		case end >= state.HighestKnown:
+		case end >= int(state.HighestKnown):
 			return end
 		case end-begin >= 200:
 			return end
@@ -140,13 +151,13 @@ func Step(state *State, histories *AskHistories) {
 
 	//histories.Trim(hs, hk)
 
-	begin := FindBegin(state, histories, hs+1)
+	begin := FindBegin(state, histories, int(hs+1))
 	if begin <= 0 || uint32(begin) > hs+1000 {
 		return
 	}
 
-	end := FindEnd(state, histories, uint32(begin))
-	Ask(state, uint32(begin), end)
+	end := FindEnd(state, histories, begin)
+	Ask(state, uint32(begin), uint32(end))
 
 }
 
