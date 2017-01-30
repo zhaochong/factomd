@@ -21,6 +21,8 @@ import (
 
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -37,6 +39,8 @@ var ServersMutex sync.Mutex
 
 func Start(state interfaces.IState) {
 	var server *web.Server
+
+	InitPrometheus()
 
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
@@ -107,6 +111,8 @@ func Start(state interfaces.IState) {
 			log.Print("Starting API server")
 			go server.Run(fmt.Sprintf(":%d", state.GetPort()))
 		}
+		http.Handle("/metrics", prometheus.Handler())
+		go http.ListenAndServe(":9877", nil)
 	}
 }
 
@@ -131,24 +137,14 @@ func Stop(state interfaces.IState) {
 }
 
 func handleV1Error(ctx *web.Context, err *primitives.JSONError) {
-	/*
-		if err.Data != nil {
-			data, ok := err.Data.(string)
-			if ok == true {
-		ctx.WriteHeader(httpBad)
-				returnMsg(ctx, "", false)
-				return
-			}
-		}
-		ctx.WriteHeader(httpBad)
-		returnMsg(ctx,"", false)
-		return
-	*/
+	v1Errors.Inc()
+
 	ctx.WriteHeader(httpBad)
 	return
 }
 
 func returnV1(ctx *web.Context, jsonResp *primitives.JSON2Response, jsonError *primitives.JSONError) {
+	v1Returned.Inc()
 	if jsonError != nil {
 		handleV1Error(ctx, jsonError)
 		return
@@ -157,6 +153,9 @@ func returnV1(ctx *web.Context, jsonResp *primitives.JSON2Response, jsonError *p
 }
 
 func HandleDBlockByHeight(ctx *web.Context, height string) {
+	callTime := time.Now().UnixNano()
+	defer v1DBlockByHeightSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -175,10 +174,15 @@ func HandleDBlockByHeight(ctx *web.Context, height string) {
 	req := primitives.NewJSON2Request("dblock-by-height", 1, param)
 
 	jsonResp, jsonError := HandleV2Request(state, req)
+
 	returnV1(ctx, jsonResp, jsonError)
 }
 
 func HandleECBlockByHeight(ctx *web.Context, height string) {
+	callTime := time.Now().UnixNano()
+	defer v1ECBlockByHeightSummary.Observe(float64(time.Now().UnixNano() - callTime))
+
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -197,10 +201,14 @@ func HandleECBlockByHeight(ctx *web.Context, height string) {
 	req := primitives.NewJSON2Request("ecblock-by-height", 1, param)
 
 	jsonResp, jsonError := HandleV2Request(state, req)
+
 	returnV1(ctx, jsonResp, jsonError)
 }
 
 func HandleFBlockByHeight(ctx *web.Context, height string) {
+	callTime := time.Now().UnixNano()
+	defer v1FBlockByHeightSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -219,10 +227,14 @@ func HandleFBlockByHeight(ctx *web.Context, height string) {
 	req := primitives.NewJSON2Request("fblock-by-height", 1, param)
 
 	jsonResp, jsonError := HandleV2Request(state, req)
+
 	returnV1(ctx, jsonResp, jsonError)
 }
 
 func HandleABlockByHeight(ctx *web.Context, height string) {
+	callTime := time.Now().UnixNano()
+	defer v1ABlockByHeightSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -245,6 +257,9 @@ func HandleABlockByHeight(ctx *web.Context, height string) {
 }
 
 func HandleCommitChain(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1CommitChainSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -284,9 +299,13 @@ func HandleCommitChain(ctx *web.Context) {
 
 func HandleRevealChain(ctx *web.Context) {
 	HandleRevealEntry(ctx)
+
 }
 
 func HandleCommitEntry(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1CommitEntrySummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -329,6 +348,9 @@ func HandleCommitEntry(ctx *web.Context) {
 }
 
 func HandleRevealEntry(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1RevealEntrySummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -367,6 +389,9 @@ func HandleRevealEntry(ctx *web.Context) {
 }
 
 func HandleDirectoryBlockHead(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1DirectoryBlockHeadSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -391,11 +416,13 @@ func HandleDirectoryBlockHead(ctx *web.Context) {
 	}
 
 	resp = strings.Replace(resp, "keymr", "KeyMR", -1)
-
 	returnV1Msg(ctx, resp, true)
 }
 
 func HandleGetRaw(ctx *web.Context, hashkey string) {
+	callTime := time.Now().UnixNano()
+	defer v1GetRawDataSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -413,6 +440,9 @@ func HandleGetRaw(ctx *web.Context, hashkey string) {
 }
 
 func HandleGetReceipt(ctx *web.Context, hashkey string) {
+	callTime := time.Now().UnixNano()
+	defer v1GetReceiptSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -430,6 +460,9 @@ func HandleGetReceipt(ctx *web.Context, hashkey string) {
 }
 
 func HandleDirectoryBlock(ctx *web.Context, hashkey string) {
+	callTime := time.Now().UnixNano()
+	defer v1DirectoryBlockByKeymrSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -476,6 +509,10 @@ func HandleDirectoryBlock(ctx *web.Context, hashkey string) {
 }
 
 func HandleDirectoryBlockHeight(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1DirectoryBlockByHeightSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -507,10 +544,14 @@ func HandleDirectoryBlockHeight(ctx *web.Context) {
 
 	// return just the DirectoryBlockHeight from the HeightsResponse
 	resp = fmt.Sprintf("{\"Height\":%d}", h.DirectoryBlockHeight)
+
 	returnV1Msg(ctx, resp, true)
 }
 
 func HandleEntryBlock(ctx *web.Context, hashkey string) {
+	callTime := time.Now().UnixNano()
+	defer v1EntryBlockByKeyMRSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -552,6 +593,9 @@ func HandleEntryBlock(ctx *web.Context, hashkey string) {
 }
 
 func HandleEntry(ctx *web.Context, hashkey string) {
+	callTime := time.Now().UnixNano()
+	defer v1EntryByHashSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -579,6 +623,9 @@ func HandleEntry(ctx *web.Context, hashkey string) {
 }
 
 func HandleChainHead(ctx *web.Context, chainid string) {
+	callTime := time.Now().UnixNano()
+	defer v1ChainHeadSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -605,10 +652,14 @@ func HandleChainHead(ctx *web.Context, chainid string) {
 
 	d := new(CHead)
 	d.ChainHead = jsonResp.Result.(*ChainHeadResponse).ChainHead
+
 	returnMsg(ctx, d, true)
 }
 
 func HandleEntryCreditBalance(ctx *web.Context, address string) {
+	callTime := time.Now().UnixNano()
+	defer v1EntryCreditBalanceSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	type x struct {
 		Response string
 		Success  bool
@@ -635,10 +686,14 @@ func HandleEntryCreditBalance(ctx *web.Context, address string) {
 	t := new(x)
 	t.Response = fmt.Sprint(jsonResp.Result.(*EntryCreditBalanceResponse).Balance)
 	t.Success = true
+
 	returnMsg(ctx, t, true)
 }
 
 func HandleGetFee(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1FactoidGetFeeSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -664,6 +719,10 @@ func HandleGetFee(ctx *web.Context) {
 }
 
 func HandleFactoidSubmit(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1FactoidSubmitSummary.Observe(float64(time.Now().UnixNano() - callTime))
+
+	v1Requests.Inc()
 	type x struct {
 		Response string
 		Success  bool
@@ -704,10 +763,14 @@ func HandleFactoidSubmit(ctx *web.Context) {
 	r := new(x)
 	r.Response = jsonResp.Result.(*FactoidSubmitResponse).Message
 	r.Success = true
+
 	returnMsg(ctx, r, true)
 }
 
 func HandleFactoidBalance(ctx *web.Context, address string) {
+	callTime := time.Now().UnixNano()
+	defer v1FactoidBalanceSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	type x struct {
 		Response string
 		Success  bool
@@ -734,11 +797,15 @@ func HandleFactoidBalance(ctx *web.Context, address string) {
 	r := new(x)
 	r.Response = fmt.Sprint(jsonResp.Result.(*FactoidBalanceResponse).Balance)
 	r.Success = true
+
 	returnMsg(ctx, r, true)
 
 }
 
 func HandleProperties(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1PropertiesSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -762,10 +829,14 @@ func HandleProperties(ctx *web.Context) {
 	d := new(x)
 	d.Factomd_Version = jsonResp.Result.(*PropertiesResponse).FactomdVersion
 	d.Protocol_Version = "0.0.0.0" // meaningless after v1
+
 	returnMsg(ctx, d, true)
 }
 
 func HandleHeights(ctx *web.Context) {
+	callTime := time.Now().UnixNano()
+	defer v1DirectoryBlockByHeightSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	v1Requests.Inc()
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -777,6 +848,7 @@ func HandleHeights(ctx *web.Context) {
 		returnV1(ctx, nil, jsonError)
 		return
 	}
+
 	returnMsg(ctx, jsonResp.Result, true)
 }
 
@@ -785,6 +857,7 @@ func HandleHeights(ctx *web.Context) {
  *********************************************************/
 
 func returnMsg(ctx *web.Context, msg interface{}, success bool) {
+	v1Returned.Inc()
 	type rtn struct {
 		Response interface{}
 		Success  bool
@@ -809,7 +882,7 @@ func returnMsg(ctx *web.Context, msg interface{}, success bool) {
 }
 
 func returnV1Msg(ctx *web.Context, msg string, success bool) {
-
+	v1Returned.Inc()
 	/* V1 requires call specific case changes that can't be handled with
 	interfaces for example.  Block Height needs to return  height as the json item name
 	in golang, lower case names are private so won't be returned.

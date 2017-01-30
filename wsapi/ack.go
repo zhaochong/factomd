@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	//"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/entryBlock"
@@ -19,6 +20,8 @@ import (
 )
 
 func HandleV2FactoidACK(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	callTime := time.Now().UnixNano()
+	defer v2FactoidAckSummary.Observe(float64(time.Now().UnixNano() - callTime))
 	ackReq := new(AckRequest)
 	err := MapToObject(params, ackReq)
 	if err != nil {
@@ -96,6 +99,8 @@ func HandleV2FactoidACK(state interfaces.IState, params interface{}) (interface{
 }
 
 func HandleV2EntryACK(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	callTime := time.Now().UnixNano()
+	defer v2EntryAckSummary.Observe(float64(time.Now().UnixNano() - callTime))
 	ackReq := new(AckRequest)
 
 	err := MapToObject(params, ackReq)
@@ -162,6 +167,9 @@ func HandleV2EntryACK(state interfaces.IState, params interface{}) (interface{},
 					var rm messages.RevealEntryMsg
 					enb, err := a.MarshalBinary()
 					if err != nil {
+
+						runTime := time.Now().UnixNano() - callTime
+						v2EntryAckSummary.Observe(float64(runTime))
 						return nil, NewInternalError()
 					}
 					err = rm.UnmarshalBinary(enb)
@@ -421,6 +429,8 @@ func HandleV2EntryACK(state interfaces.IState, params interface{}) (interface{},
 }
 
 func DecodeTransactionToHashes(fullTransaction string) (eTxID string, ecTxID string) {
+	callTime := time.Now().UnixNano()
+	defer AckDecodeTransactionToHashesSummary.Observe(float64(time.Now().UnixNano() - callTime))
 	//fmt.Printf("DecodeTransactionToHashes - %v\n", fullTransaction)
 	b, err := hex.DecodeString(fullTransaction)
 	if err != nil {
@@ -451,6 +461,7 @@ func DecodeTransactionToHashes(fullTransaction string) (eTxID string, ecTxID str
 
 	//fmt.Printf("eTxID - %v\n", eTxID)
 	//fmt.Printf("ecTxID - %v\n", ecTxID)
+
 	return
 }
 

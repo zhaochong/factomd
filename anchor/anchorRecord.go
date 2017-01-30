@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -60,37 +61,50 @@ func (e *AnchorRecord) JSONBuffer(b *bytes.Buffer) error {
 }
 
 func (e *AnchorRecord) String() string {
+	callTime := time.Now().UnixNano()
 	str, _ := e.JSONString()
+	runTime := time.Now().UnixNano() - callTime
+	AnchorStringCall.Observe(float64(runTime))
 	return str
 }
 
 func (ar *AnchorRecord) Marshal() ([]byte, error) {
+	callTime := time.Now().UnixNano()
 	data, err := json.Marshal(ar)
 	if err != nil {
 		return nil, err
 	}
+	runTime := time.Now().UnixNano() - callTime
+	AnchorStringCall.Observe(float64(runTime))
 	return data, nil
 }
 
 func (ar *AnchorRecord) MarshalAndSign(priv interfaces.Signer) ([]byte, error) {
+	callTime := time.Now().UnixNano()
 	data, err := ar.Marshal()
 	if err != nil {
 		return nil, err
 	}
 	sig := priv.Sign(data)
+	runTime := time.Now().UnixNano() - callTime
+	AnchorMarshalSign.Observe(float64(runTime))
 	return append(data, []byte(fmt.Sprintf("%x", sig.Bytes()))...), nil
 }
 
 func (ar *AnchorRecord) MarshalAndSignV2(priv interfaces.Signer) ([]byte, []byte, error) {
+	callTime := time.Now().UnixNano()
 	data, err := ar.Marshal()
 	if err != nil {
 		return nil, nil, err
 	}
 	sig := priv.Sign(data)
+	runTime := time.Now().UnixNano() - callTime
+	AnchorMarshalSignV2.Observe(float64(runTime))
 	return data, sig.Bytes(), nil
 }
 
 func (ar *AnchorRecord) Unmarshal(data []byte) error {
+	callTime := time.Now().UnixNano()
 	if len(data) == 0 {
 		return fmt.Errorf("Invalid data passed")
 	}
@@ -104,6 +118,8 @@ func (ar *AnchorRecord) Unmarshal(data []byte) error {
 	if err != nil {
 		return err
 	}
+	runTime := time.Now().UnixNano() - callTime
+	AnchorMarshalSignV2.Observe(float64(runTime))
 
 	return nil
 }

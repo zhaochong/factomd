@@ -5,6 +5,8 @@
 package wsapi
 
 import (
+	"time"
+
 	"github.com/FactomProject/factomd/logger"
 )
 
@@ -16,7 +18,12 @@ var (
 )
 
 func InitLogs(logPath, logLevel string) {
+	callTime := time.Now().UnixNano()
+
 	rpcLog = logger.NewLogFromConfig(logPath, logLevel, "RPC")
 	serverLog = logger.NewLogFromConfig(logPath, logLevel, "SERV")
 	wsLog = logger.NewLogFromConfig(logPath, logLevel, "WSAPI")
+
+	runTime := time.Now().UnixNano() - callTime
+	v2InitLogsSummary.Observe(float64(runTime))
 }
