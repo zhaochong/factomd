@@ -5,10 +5,10 @@
 package p2p
 
 import (
-	"net"
-	"time"
 	"encoding/binary"
 	"fmt"
+	"net"
+	"time"
 )
 
 type Middle struct {
@@ -39,12 +39,12 @@ var Deadline time.Duration = time.Duration(100)
 func (m *Middle) Send(p *Parcel) (err error) {
 	if len(m.Outgoing) > 9900 {
 		for len(m.Outgoing) > 9000 {
-			<- m.Outgoing
+			<-m.Outgoing
 		}
 	}
 	m.Outgoing <- p
 	fmt.Println("Outgoing messages", len(m.Outgoing))
-	fmt.Println("Incoming Messages",len(m.Incoming))
+	fmt.Println("Incoming Messages", len(m.Incoming))
 	return nil
 }
 
@@ -52,7 +52,7 @@ func (m *Middle) Receive() (p *Parcel, err error) {
 	select {
 	case p := <-m.Incoming:
 		fmt.Println("Outgoing messages", len(m.Outgoing))
-		fmt.Println("Incoming Messages",len(m.Incoming)+1)
+		fmt.Println("Incoming Messages", len(m.Incoming)+1)
 		return p, nil
 	default:
 		return nil, nil
@@ -89,7 +89,7 @@ func (m *Middle) FullRead(buff []byte) error {
 	for sum < len(buff) {
 		i, _ := m.Conn.Read(buff[sum:])
 		if i == 0 {
-			time.Sleep(100*time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 		sum += i
 	}
@@ -107,8 +107,8 @@ func (m *Middle) goRead() {
 		var lengthb [4]byte
 		err := m.FullRead(lengthb[:])
 		if err != nil {
-			fmt.Println("Read error ",err.Error())
-			time.Sleep(time.Millisecond*100)
+			fmt.Println("Read error ", err.Error())
+			time.Sleep(time.Millisecond * 100)
 			continue
 		}
 
@@ -132,7 +132,7 @@ var magic = []byte{0x7e, 0xa3, 0x9d, 0xA6}
 func (m *Middle) Sync() {
 	fmt.Println("Syncing")
 	var b = []byte{0}
-	loop:
+loop:
 	for {
 		for b[0] != magic[0] {
 			m.Conn.Read(b)
@@ -151,4 +151,3 @@ func (m *Middle) Sync() {
 	}
 	fmt.Print("Synced\n")
 }
-

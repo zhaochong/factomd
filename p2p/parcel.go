@@ -6,13 +6,13 @@ package p2p
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
+	"github.com/FactomProject/factomd/common/interfaces"
+	"github.com/FactomProject/factomd/common/primitives"
 	"hash/crc32"
 	"strconv"
 	"time"
-	"github.com/FactomProject/factomd/common/interfaces"
-	"encoding/binary"
-	"github.com/FactomProject/factomd/common/primitives"
 )
 
 // Parcel is the atomic level of communication for the p2p network.  It contains within it the necessary info for
@@ -23,7 +23,7 @@ type Parcel struct {
 	Payload []byte
 }
 
-func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error){
+func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block Header: %v", r)
@@ -37,7 +37,7 @@ func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error){
 		return nil, err
 	}
 	numb, newData := binary.BigEndian.Uint32(newData[0:4]), newData[4:]
-	p.Payload,newData = append(p.Payload[:0], newData[:numb]...), newData[numb:]
+	p.Payload, newData = append(p.Payload[:0], newData[:numb]...), newData[numb:]
 	return newData, err
 }
 
@@ -60,7 +60,6 @@ func (b *Parcel) UnmarshalBinary(data []byte) (err error) {
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
-
 
 type ParcelHeader struct {
 	interfaces.BinaryMarshallable
@@ -156,7 +155,6 @@ func (p *ParcelHeader) UnmarshalBinary(data []byte) (err error) {
 	return
 
 }
-
 
 type ParcelCommandType uint16
 
