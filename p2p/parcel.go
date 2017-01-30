@@ -10,19 +10,60 @@ import (
 	"hash/crc32"
 	"strconv"
 	"time"
+	"github.com/FactomProject/factomd/common/interfaces"
+	"encoding/binary"
+	"github.com/FactomProject/factomd/common/primitives"
 )
 
 // Parcel is the atomic level of communication for the p2p network.  It contains within it the necessary info for
 // the networking protocol, plus the message that the Application is sending.
 type Parcel struct {
+	interfaces.BinaryMarshallable
 	Header  ParcelHeader
 	Payload []byte
 }
 
-// ParcelHeaderSize is the number of bytes in a parcel header
-const ParcelHeaderSize = 32
+func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error){
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Error unmarshalling Directory Block Header: %v", r)
+			newData = data
+		}
+	}()
+
+	newData = data
+	newData, err = p.Header.UnmarshalBinaryData(newData)
+	if err != nil {
+		return nil, err
+	}
+	numb, newData := binary.BigEndian.Uint32(newData[0:4]), newData[4:]
+	p.Payload,newData = append(p.Payload[:0], newData[:numb]...), newData[numb:]
+	return newData, err
+}
+
+func (p *Parcel) MarshalBinary() (data []byte, err error) {
+	var buf primitives.Buffer
+
+	data, err = p.Header.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	buf.Write(data)
+
+	binary.Write(&buf, binary.BigEndian, uint32(len(p.Payload)))
+	buf.Write(p.Payload)
+
+	return buf.DeepCopyBytes(), err
+}
+
+func (b *Parcel) UnmarshalBinary(data []byte) (err error) {
+	_, err = b.UnmarshalBinaryData(data)
+	return
+}
+
 
 type ParcelHeader struct {
+	interfaces.BinaryMarshallable
 	Network     NetworkID         // 4 bytes - the network we are on (eg testnet, main net, etc.)
 	Version     uint16            // 2 bytes - the version of the protocol we are running.
 	Type        ParcelCommandType // 2 bytes - network level commands (eg: ping/pong)
@@ -37,6 +78,85 @@ type ParcelHeader struct {
 	AppHash     string // Application specific message hash, for tracing
 	AppType     string // Application specific message type, for tracing
 }
+
+func (p *ParcelHeader) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Error unmarshalling Directory Block Header: %v", r)
+			newData = data
+		}
+	}()
+
+	newData = data
+
+	p.Network, newData = NetworkID(binary.BigEndian.Uint32(newData[0:4])), newData[4:]
+	p.Version, newData = binary.BigEndian.Uint16(newData[0:2]), newData[2:]
+	p.Type, newData = ParcelCommandType(binary.BigEndian.Uint16(newData[0:2])), newData[2:]
+	p.Length, newData = binary.BigEndian.Uint32(newData[0:4]), newData[4:]
+
+	numb, newData := binary.BigEndian.Uint16(newData[0:2]), newData[2:]
+	p.TargetPeer, newData = string(newData[:numb]), newData[numb:]
+
+	p.Crc32, newData = binary.BigEndian.Uint32(newData[0:4]), newData[4:]
+	p.PartNo, newData = binary.BigEndian.Uint16(newData[0:2]), newData[2:]
+	p.PartsTotal, newData = binary.BigEndian.Uint16(newData[0:2]), newData[2:]
+
+	p.NodeID, newData = binary.BigEndian.Uint64(newData[0:8]), newData[8:]
+
+	numb, newData = binary.BigEndian.Uint16(newData[0:2]), newData[2:]
+	p.PeerAddress, newData = string(newData[:numb]), newData[numb:]
+
+	numb, newData = binary.BigEndian.Uint16(newData[0:2]), newData[2:]
+	p.PeerPort, newData = string(newData[:numb]), newData[numb:]
+
+	numb, newData = binary.BigEndian.Uint16(newData[0:2]), newData[2:]
+	p.AppHash, newData = string(newData[:numb]), newData[numb:]
+
+	numb, newData = binary.BigEndian.Uint16(newData[0:2]), newData[2:]
+	p.AppType, newData = string(newData[:numb]), newData[numb:]
+
+	return newData, nil
+}
+
+func (p *ParcelHeader) MarshalBinary() (data []byte, err error) {
+	var buf primitives.Buffer
+	binary.Write(&buf, binary.BigEndian, p.Network)
+	binary.Write(&buf, binary.BigEndian, p.Version)
+	binary.Write(&buf, binary.BigEndian, p.Type)
+	binary.Write(&buf, binary.BigEndian, p.Length)
+
+	binary.Write(&buf, binary.BigEndian, len([]byte(p.TargetPeer)))
+	buf.Write([]byte(p.TargetPeer))
+
+	binary.Write(&buf, binary.BigEndian, p.Crc32)
+	binary.Write(&buf, binary.BigEndian, p.PartNo)
+	binary.Write(&buf, binary.BigEndian, p.PartsTotal)
+	binary.Write(&buf, binary.BigEndian, p.NodeID)
+
+	binary.Write(&buf, binary.BigEndian, len([]byte(p.PeerAddress)))
+	buf.Write([]byte(p.PeerAddress))
+
+	binary.Write(&buf, binary.BigEndian, len([]byte(p.PeerPort)))
+	buf.Write([]byte(p.PeerPort))
+
+	binary.Write(&buf, binary.BigEndian, len([]byte(p.AppHash)))
+	buf.Write([]byte(p.AppHash))
+
+	binary.Write(&buf, binary.BigEndian, len([]byte(p.AppType)))
+	buf.Write([]byte(p.AppType))
+
+	return buf.DeepCopyBytes(), err
+
+}
+
+func (p *ParcelHeader) UnmarshalBinary(data []byte) (err error) {
+
+	_, err = p.UnmarshalBinaryData(data)
+	return
+
+}
+
 
 type ParcelCommandType uint16
 
