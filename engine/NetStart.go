@@ -23,6 +23,7 @@ import (
 	"github.com/FactomProject/factomd/state"
 	"github.com/FactomProject/factomd/util"
 	"github.com/FactomProject/factomd/wsapi"
+	"github.com/FactomProject/weavelink"
 )
 
 var _ = fmt.Print
@@ -55,6 +56,7 @@ func NetStart(s *state.State) {
 	cloneDBPtr := flag.String("clonedb", "", "Override the main node and use this database for the clones in a Network.")
 	portOverridePtr := flag.Int("port", 0, "Address to serve WSAPI on")
 	networkNamePtr := flag.String("network", "", "Network to join: MAIN, TEST or LOCAL")
+	weavelinkPtr := flag.Bool("weavelink", false, "If true, use weavelink to track current-block messages.")
 	networkPortOverridePtr := flag.Int("networkPort", 0, "Address for p2p network to listen on.")
 	ControlPanelPortOverridePtr := flag.Int("ControlPanelPort", 0, "Address for control panel webserver to listen on.")
 	logportPtr := flag.String("logPort", "6060", "Port for profile logging")
@@ -93,6 +95,7 @@ func NetStart(s *state.State) {
 	portOverride := *portOverridePtr
 	peers := *peersPtr
 	networkName := *networkNamePtr
+	useWeavelink := *weavelinkPtr
 	networkPortOverride := *networkPortOverridePtr
 	ControlPanelPortOverride := *ControlPanelPortOverridePtr
 	logPort = *logportPtr
@@ -360,6 +363,9 @@ func NetStart(s *state.State) {
 		// Command line peers lets us manually set special peers
 		p2pNetwork.DialSpecialPeersString(peers)
 		go networkHousekeeping() // This goroutine executes once a second to keep the proxy apprised of the network status.
+		if useWeavelink {
+			weavelink.Init()
+		}
 	}
 
 	switch net {

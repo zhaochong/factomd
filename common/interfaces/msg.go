@@ -105,4 +105,5 @@ type IMsg interface {
 	SetStall(bool)
 	Resend(IState) bool
 	Expire(IState) bool
+	Less(IMsg) bool
 }

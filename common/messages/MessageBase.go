@@ -201,3 +201,7 @@ func (m *MessageBase) GetMinute() byte {
 func (m *MessageBase) SetMinute(minute byte) {
 	m.Minute = minute
 }
+
+func (m *MessageBase) Less(other interfaces.IMsg) bool {
+	return m.GetFullMsgHash().String() < other.GetFullMsgHash().String()
+}
