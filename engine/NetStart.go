@@ -364,6 +364,7 @@ func NetStart(s *state.State) {
 		p2pNetwork.DialSpecialPeersString(peers)
 		go networkHousekeeping() // This goroutine executes once a second to keep the proxy apprised of the network status.
 		if useWeavelink {
+			s.UseWeavelink = true
 			weavelink.Init()
 		}
 	}

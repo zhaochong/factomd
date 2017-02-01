@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/log"
+	"github.com/FactomProject/weavelink"
 )
 
 var _ = log.Printf
@@ -135,6 +136,10 @@ func NetworkOutputs(fnode *FactomNode) {
 					msg.GetRepeatHash().Fixed(),
 					msg.GetTimestamp(),
 					fnode.State.GetTimestamp())
+
+				if fnode.State.UseWeavelink {
+					weavelink.SendIntoWeave(msg)
+				}
 
 				p := msg.GetOrigin() - 1
 

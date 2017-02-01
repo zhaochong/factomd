@@ -195,6 +195,10 @@ type State struct {
 	// when a majority of leaders disagree with the hash we have via DBSigs
 	KeepMismatch bool
 
+	// By default, this is false. If it is true, outbound messages will be
+	// sent out via weave/mesh (as well as sent out over the p2p network normally)
+	UseWeavelink bool
+
 	DBSigFails int // Keep track of how many blockhash mismatches we've had to correct
 
 	Saving  bool // True if we are in the process of saving to the database
