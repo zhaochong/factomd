@@ -7,9 +7,10 @@ package engine
 import (
 	"bytes"
 	"fmt"
+	"time"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
-	"time"
 )
 
 var _ = fmt.Print
