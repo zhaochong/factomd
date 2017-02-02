@@ -1,8 +1,8 @@
 package adminBlock
 
 import (
-	"bytes"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -19,9 +19,16 @@ type AddFederatedServerBitcoinAnchorKey struct {
 var _ interfaces.IABEntry = (*AddFederatedServerBitcoinAnchorKey)(nil)
 var _ interfaces.BinaryMarshallable = (*AddFederatedServerBitcoinAnchorKey)(nil)
 
+func (e *AddFederatedServerBitcoinAnchorKey) Init() {
+	if e.IdentityChainID == nil {
+		e.IdentityChainID = primitives.NewZeroHash()
+	}
+}
+
 func (e *AddFederatedServerBitcoinAnchorKey) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerBitcoinAnchorKeyString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8x %12s %8x %12s %8s",
 		"AddFederatedServerBitcoinAnchorKey",
@@ -35,6 +42,7 @@ func (e *AddFederatedServerBitcoinAnchorKey) String() string {
 func (c *AddFederatedServerBitcoinAnchorKey) UpdateState(state interfaces.IState) error {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerBitcoinAnchorKeyUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	state.UpdateAuthorityFromABEntry(c)
 	return nil
 }
@@ -60,6 +68,7 @@ func (e *AddFederatedServerBitcoinAnchorKey) Type() byte {
 func (e *AddFederatedServerBitcoinAnchorKey) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerBitcoinAnchorKeyMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -134,12 +143,6 @@ func (e *AddFederatedServerBitcoinAnchorKey) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerBitcoinAnchorKeyJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *AddFederatedServerBitcoinAnchorKey) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryAddFederatedServerBitcoinAnchorKeyJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) IsInterpretable() bool {

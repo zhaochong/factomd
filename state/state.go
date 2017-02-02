@@ -55,6 +55,8 @@ type State struct {
 	ExportDataSubpath string
 
 	DBStatesSent            []*interfaces.DBStateSent
+	DBStatesReceivedBase    int
+	DBStatesReceived        []*messages.DBStateMsg
 	LocalServerPrivKey      string
 	DirectoryBlockInSeconds int
 	PortNumber              int
@@ -324,7 +326,6 @@ type MissingEntry struct {
 var _ interfaces.IState = (*State)(nil)
 
 func (s *State) Clone(cloneNumber int) interfaces.IState {
-
 	newState := new(State)
 	number := fmt.Sprintf("%02d", cloneNumber)
 
@@ -877,6 +878,24 @@ func (s *State) GetAndLockDB() interfaces.DBOverlay {
 func (s *State) UnlockDB() {
 }
 
+// Checks ChainIDs to determine if we need their entries to process entries and transactions.
+func (s *State) Needed(eb interfaces.IEntryBlock) bool {
+	id := []byte{0x88, 0x88, 0x88}
+	fer := []byte{0x11, 0x11, 0x11}
+
+	if eb.GetDatabaseHeight() < 2 {
+		return true
+	}
+	cid := eb.GetChainID().Bytes()
+	if bytes.Compare(id[:3], cid) == 0 {
+		return true
+	}
+	if bytes.Compare(id[:3], fer) == 0 {
+		return true
+	}
+	return false
+}
+
 func (s *State) LoadDBState(dbheight uint32) (interfaces.IMsg, error) {
 	dblk, err := s.DB.FetchDBlockByHeight(dbheight)
 	if err != nil {
@@ -920,10 +939,12 @@ func (s *State) LoadDBState(dbheight uint32) (interfaces.IMsg, error) {
 			eBlock, err := s.DB.FetchEBlock(v.GetKeyMR())
 			if err == nil && eBlock != nil {
 				eBlocks = append(eBlocks, eBlock)
-				for _, e := range eBlock.GetEntryHashes() {
-					entry, err := s.DB.FetchEntry(e)
-					if err == nil && entry != nil {
-						entries = append(entries, entry)
+				if s.Needed(eBlock) {
+					for _, e := range eBlock.GetEntryHashes() {
+						entry, err := s.DB.FetchEntry(e)
+						if err == nil && entry != nil {
+							entries = append(entries, entry)
+						}
 					}
 				}
 			}
@@ -943,10 +964,14 @@ func (s *State) LoadDBState(dbheight uint32) (interfaces.IMsg, error) {
 	if err != nil || nextABlock == nil {
 		pl := s.ProcessLists.Get(dbheight)
 		if pl == nil {
-			return nil, fmt.Errorf("Do not have signatures at height %d to create DBStateMsg with", dbheight)
-		}
-		for _, dbsig := range pl.DBSignatures {
-			allSigs = append(allSigs, dbsig.Signature)
+			dbkl, err := s.DB.FetchDBlockByHeight(dbheight)
+			if err != nil || dbkl == nil {
+				return nil, fmt.Errorf("Do not have signatures at height %d to validate DBStateMsg", dbheight)
+			}
+		} else {
+			for _, dbsig := range pl.DBSignatures {
+				allSigs = append(allSigs, dbsig.Signature)
+			}
 		}
 	} else {
 		abEntries := nextABlock.GetABEntries()
@@ -998,13 +1023,11 @@ func (s *State) LoadDataByHash(requestedHash interfaces.IHash) (interfaces.Binar
 }
 
 func (s *State) LoadSpecificMsg(dbheight uint32, vm int, plistheight uint32) (interfaces.IMsg, error) {
-
 	msg, _, err := s.LoadSpecificMsgAndAck(dbheight, vm, plistheight)
 	return msg, err
 }
 
 func (s *State) LoadSpecificMsgAndAck(dbheight uint32, vmIndex int, plistheight uint32) (interfaces.IMsg, interfaces.IMsg, error) {
-
 	pl := s.ProcessLists.Get(dbheight)
 	if pl == nil {
 		return nil, nil, fmt.Errorf("%s", "Nil Process List")
@@ -1028,7 +1051,6 @@ func (s *State) LoadSpecificMsgAndAck(dbheight uint32, vmIndex int, plistheight 
 }
 
 func (s *State) LoadHoldingMap() map[[32]byte]interfaces.IMsg {
-
 	// request holding queue from state from outside state scope
 	s.HoldingMutex.Lock()
 	defer s.HoldingMutex.Unlock()
@@ -1055,7 +1077,6 @@ func (s *State) LoadHoldingMap() map[[32]byte]interfaces.IMsg {
 // this is executed in the state maintenance processes where the holding queue is in scope and can be queried
 //  This is what fills the HoldingMap requested in LoadHoldingMap
 func (s *State) fillHoldingMap() {
-
 	if s.HoldingFlag == true {
 		s.HoldingMap = make(map[[32]byte]interfaces.IMsg, len(s.Holding))
 		for i, msg := range s.Holding {
@@ -1067,7 +1088,6 @@ func (s *State) fillHoldingMap() {
 }
 
 func (s *State) LoadAcksMap() map[[32]byte]interfaces.IMsg {
-
 	// request Acks queue from state from outside state scope
 	s.AcksMutex.Lock()
 	defer s.AcksMutex.Unlock()
@@ -1094,7 +1114,6 @@ func (s *State) LoadAcksMap() map[[32]byte]interfaces.IMsg {
 // this is executed in the state maintenance processes where the Acks queue is in scope and can be queried
 //  This is what fills the AcksMap requested in LoadAcksMap
 func (s *State) fillAcksMap() {
-
 	if s.AcksFlag == true {
 		s.AcksMap = make(map[[32]byte]interfaces.IMsg, len(s.Acks))
 		for i, msg := range s.Acks {
@@ -1192,7 +1211,6 @@ func (s *State) GetPendingEntries(params interface{}) []interfaces.IPendingEntry
 	// check holding queue
 	q := s.LoadHoldingMap()
 	for _, h := range q {
-
 		if h.Type() == constants.REVEAL_ENTRY_MSG {
 			enb, err := h.MarshalBinary()
 			if err != nil {
@@ -1216,7 +1234,6 @@ func (s *State) GetPendingEntries(params interface{}) []interfaces.IPendingEntry
 }
 
 func (s *State) GetPendingTransactions(params interface{}) []interfaces.IPendingTransaction {
-
 	var flgFound bool
 
 	var currentHeightComplete = s.GetDBHeightComplete()
@@ -1310,7 +1327,6 @@ func (s *State) FetchEntryHashFromProcessListsByTxID(txID string) (interfaces.IH
 					// check chain commits
 					for _, plmsg := range v.List {
 						if plmsg != nil {
-
 							//	if plmsg.Type() != nil {
 							if plmsg.Type() == constants.COMMIT_CHAIN_MSG { //5 other types could be in this VM
 								enb, err := plmsg.MarshalBinary()
@@ -1809,7 +1825,6 @@ func (s *State) GetMatryoshka(dbheight uint32) interfaces.IHash {
 }
 
 func (s *State) InitLevelDB() error {
-
 	if s.DB != nil {
 		return nil
 	}
@@ -1846,7 +1861,6 @@ func (s *State) InitBoltDB() error {
 }
 
 func (s *State) InitMapDB() error {
-
 	if s.DB != nil {
 		return nil
 	}
@@ -1913,7 +1927,6 @@ func (s *State) SetStringConsensus() {
 }
 
 func (s *State) SetStringQueues() {
-
 	vmi := -1
 	if s.Leader && s.LeaderVMIndex >= 0 {
 		vmi = s.LeaderVMIndex
@@ -2195,7 +2208,6 @@ func (s *State) SetPendingSigningKey(p *primitives.PrivateKey) {
 }
 
 func (s *State) AddStatus(status string) {
-
 	// Don't add duplicates.
 	last := s.GetLastStatus()
 	if last == status {

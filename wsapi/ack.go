@@ -7,8 +7,6 @@ package wsapi
 import (
 	"encoding/hex"
 	"fmt"
-	//"fmt"
-	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/entryBlock"
@@ -162,7 +160,6 @@ func HandleV2EntryACK(state interfaces.IState, params interface{}) (interface{},
 			aQue := state.LoadAcksMap()
 
 			for _, a := range aQue {
-
 				if a.Type() == constants.REVEAL_ENTRY_MSG {
 					var rm messages.RevealEntryMsg
 					enb, err := a.MarshalBinary()
@@ -218,7 +215,6 @@ func HandleV2EntryACK(state interfaces.IState, params interface{}) (interface{},
 				hQue := state.LoadHoldingMap()
 
 				for _, h := range hQue {
-
 					if h.Type() == constants.REVEAL_ENTRY_MSG {
 						var rm messages.RevealEntryMsg
 						enb, err := h.MarshalBinary()
@@ -303,7 +299,6 @@ func HandleV2EntryACK(state interfaces.IState, params interface{}) (interface{},
 	}
 
 	if answer.CommitTxID == "" {
-
 		h, err := primitives.NewShaHashFromStr(answer.EntryHash)
 		if err != nil {
 			return nil, NewInvalidParamsError()

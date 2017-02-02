@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -89,18 +88,6 @@ func (m *MissingData) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingDataType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.MISSING_DATA
-}
-
-func (m *MissingData) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesMissingDataInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *MissingData) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesMissingDataBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
 }
 
 func (m *MissingData) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -224,16 +211,9 @@ func (e *MissingData) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *MissingData) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesMissingDataJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func NewMissingData(state interfaces.IState, requestHash interfaces.IHash) interfaces.IMsg {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingData.Observe(float64(time.Now().UnixNano() - callTime))
-
 	msg := new(MissingData)
 
 	msg.Peer2Peer = true // Always a peer2peer request.

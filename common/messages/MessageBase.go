@@ -46,7 +46,6 @@ func resend(state interfaces.IState, msg interfaces.IMsg, cnt int, delay int) {
 func (m *MessageBase) SendOut(state interfaces.IState, msg interfaces.IMsg) {
 	callTime := time.Now().UnixNano()
 	defer messagesMessageBaseSendOut.Observe(float64(time.Now().UnixNano() - callTime))
-
 	if m.NoResend {
 		return
 	}

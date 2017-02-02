@@ -60,18 +60,6 @@ func (m *AddServerMsg) Type() byte {
 	return constants.ADDSERVER_MSG
 }
 
-func (m *AddServerMsg) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesAddServerMsgInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *AddServerMsg) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesAddServerMsgBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
-}
-
 func (m *AddServerMsg) GetTimestamp() interfaces.Timestamp {
 	callTime := time.Now().UnixNano()
 	defer messagesAddServerMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
@@ -140,12 +128,6 @@ func (e *AddServerMsg) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *AddServerMsg) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesAddServerMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (m *AddServerMsg) Sign(key interfaces.Signer) error {
 	callTime := time.Now().UnixNano()
 	defer messagesAddServerMsgSign.Observe(float64(time.Now().UnixNano() - callTime))
@@ -173,7 +155,6 @@ func (m *AddServerMsg) UnmarshalBinaryData(data []byte) (newData []byte, err err
 	callTime := time.Now().UnixNano()
 	defer messagesAddServerMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
-		return
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Add Server Message: %v", r)
 		}

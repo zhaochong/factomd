@@ -5,9 +5,7 @@
 package messages
 
 import (
-	"bytes"
 	"fmt"
-	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/factoid"
@@ -169,14 +167,6 @@ func (m *FactoidTransaction) Process(dbheight uint32, state interfaces.IState) b
 
 }
 
-func (m *FactoidTransaction) Int() int {
-	return -1
-}
-
-func (m *FactoidTransaction) Bytes() []byte {
-	return nil
-}
-
 func (m *FactoidTransaction) UnmarshalTransData(datax []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer messagesFactoidTransactionUnmarshalTransData.Observe(float64(time.Now().UnixNano() - callTime))
@@ -256,10 +246,4 @@ func (e *FactoidTransaction) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesFactoidTransactionJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *FactoidTransaction) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesFactoidTransactionJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }

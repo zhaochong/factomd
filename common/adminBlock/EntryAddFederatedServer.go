@@ -1,7 +1,6 @@
 package adminBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 
@@ -19,9 +18,16 @@ type AddFederatedServer struct {
 var _ interfaces.IABEntry = (*AddFederatedServer)(nil)
 var _ interfaces.BinaryMarshallable = (*AddFederatedServer)(nil)
 
+func (e *AddFederatedServer) Init() {
+	if e.IdentityChainID == nil {
+		e.IdentityChainID = primitives.NewZeroHash()
+	}
+}
+
 func (e *AddFederatedServer) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8d",
 		"AddFedServer",
@@ -34,6 +40,7 @@ func (e *AddFederatedServer) String() string {
 func (c *AddFederatedServer) UpdateState(state interfaces.IState) error {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	state.AddFedServer(c.DBHeight, c.IdentityChainID)
 	authorityDeltaString := fmt.Sprintf("AdminBlock (AddFedMsg DBHt: %d) \n ^ %s", c.DBHeight, c.IdentityChainID.String()[5:10])
 	state.AddStatus(authorityDeltaString)
@@ -46,6 +53,9 @@ func (c *AddFederatedServer) UpdateState(state interfaces.IState) error {
 func NewAddFederatedServer(identityChainID interfaces.IHash, dbheight uint32) (e *AddFederatedServer) {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerNewAddFederatedServer.Observe(float64(time.Now().UnixNano() - callTime))	
+	if identityChainID == nil {
+		return nil
+	}
 	e = new(AddFederatedServer)
 	e.DBHeight = dbheight
 	e.IdentityChainID = primitives.NewHash(identityChainID.Bytes())
@@ -61,6 +71,7 @@ func (e *AddFederatedServer) Type() byte {
 func (e *AddFederatedServer) MarshalBinary() (data []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -86,6 +97,9 @@ func (e *AddFederatedServer) UnmarshalBinaryData(data []byte) (newData []byte, e
 	}()
 
 	newData = data
+	if newData[0] != e.Type() {
+		return nil, fmt.Errorf("Invalid Entry type")
+	}
 	newData = newData[1:]
 
 	e.IdentityChainID = new(primitives.Hash)
@@ -116,12 +130,6 @@ func (e *AddFederatedServer) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *AddFederatedServer) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryAddFederatedServerJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *AddFederatedServer) IsInterpretable() bool {

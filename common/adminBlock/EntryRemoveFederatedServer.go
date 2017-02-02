@@ -1,7 +1,6 @@
 package adminBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 
@@ -19,9 +18,16 @@ type RemoveFederatedServer struct {
 var _ interfaces.IABEntry = (*RemoveFederatedServer)(nil)
 var _ interfaces.BinaryMarshallable = (*RemoveFederatedServer)(nil)
 
+func (e *RemoveFederatedServer) Init() {
+	if e.IdentityChainID == nil {
+		e.IdentityChainID = primitives.NewZeroHash()
+	}
+}
+
 func (e *RemoveFederatedServer) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryRemoveFederatedServerString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8d",
 		"Remove Federated Server",
@@ -35,6 +41,7 @@ func (e *RemoveFederatedServer) String() string {
 func (c *RemoveFederatedServer) UpdateState(state interfaces.IState) error {
 	callTime := time.Now().UnixNano()
 	defer entryRemoveFederatedServerUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	if len(state.GetFedServers(c.DBHeight)) != 0 {
 		state.RemoveFedServer(c.DBHeight, c.IdentityChainID)
 	}
@@ -52,6 +59,9 @@ func (c *RemoveFederatedServer) UpdateState(state interfaces.IState) error {
 func NewRemoveFederatedServer(identityChainID interfaces.IHash, dbheight uint32) (e *RemoveFederatedServer) {
 	callTime := time.Now().UnixNano()
 	defer entryRemoveFederatedServerNewRemoveFederatedServer.Observe(float64(time.Now().UnixNano() - callTime))	
+	if identityChainID == nil {
+		return nil
+	}
 	e = new(RemoveFederatedServer)
 	e.IdentityChainID = primitives.NewHash(identityChainID.Bytes())
 	e.DBHeight = dbheight
@@ -67,6 +77,7 @@ func (e *RemoveFederatedServer) Type() byte {
 func (e *RemoveFederatedServer) MarshalBinary() (data []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer entryRemoveFederatedServerMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -123,12 +134,6 @@ func (e *RemoveFederatedServer) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryRemoveFederatedServerJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *RemoveFederatedServer) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryRemoveFederatedServerJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *RemoveFederatedServer) IsInterpretable() bool {

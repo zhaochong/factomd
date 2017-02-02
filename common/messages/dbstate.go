@@ -6,7 +6,6 @@ package messages
 
 import (
 	"bytes"
-	//	"encoding/binary"
 	"encoding/binary"
 	"fmt"
 
@@ -136,18 +135,6 @@ func (m *DBStateMsg) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesDBStateMsgType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.DBSTATE_MSG
-}
-
-func (m *DBStateMsg) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesDBStateMsgInt.Observe(float64(time.Now().UnixNano() - callTime))	
-	return -1
-}
-
-func (m *DBStateMsg) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesDBStateMsgBytes.Observe(float64(time.Now().UnixNano() - callTime))	
-	return nil
 }
 
 func (m *DBStateMsg) GetTimestamp() interfaces.Timestamp {
@@ -280,12 +267,6 @@ func (e *DBStateMsg) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesDBStateMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *DBStateMsg) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesDBStateMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *DBStateMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -467,7 +448,6 @@ func NewDBStateMsg(timestamp interfaces.Timestamp,
 	eBlocks []interfaces.IEntryBlock,
 	entries []interfaces.IEBEntry,
 	sigList []interfaces.IFullSignature) interfaces.IMsg {
-
 	msg := new(DBStateMsg)
 	msg.NoResend = true
 

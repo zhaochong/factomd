@@ -17,6 +17,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"sync"
@@ -498,7 +499,6 @@ func HandleDirectoryBlock(ctx *web.Context, hashkey string) {
 	// conflict if I use local structs.  using a string replace on the structs that would be pointer handled (*DirectoryBlockResponse)
 	bResp, err := json.Marshal(d)
 	if err != nil {
-
 		returnMsg(ctx, d, true)
 	}
 	resp := string(bResp)
@@ -938,7 +938,6 @@ func checkAuthHeader(state interfaces.IState, r *http.Request) error {
 }
 
 func checkHttpPasswordOkV1(state interfaces.IState, ctx *web.Context) bool {
-
 	if err := checkAuthHeader(state, ctx.Request); err != nil {
 		remoteIP := ""
 		remoteIP += strings.Split(ctx.Request.RemoteAddr, ":")[0]

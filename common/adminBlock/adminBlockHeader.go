@@ -5,7 +5,6 @@
 package adminBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -29,9 +28,16 @@ type ABlockHeader struct {
 var _ interfaces.Printable = (*ABlockHeader)(nil)
 var _ interfaces.BinaryMarshallable = (*ABlockHeader)(nil)
 
+func (e *ABlockHeader) Init() {
+	if e.PrevBackRefHash == nil {
+		e.PrevBackRefHash = primitives.NewZeroHash()
+	}
+}
+
 func (e *ABlockHeader) String() string {
 	callTime := time.Now().UnixNano()
 	defer adminBlockHeaderString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString("  Admin Block Header\n")
 	out.WriteString(fmt.Sprintf("    %20s: %10v\n", "PrevBackRefHash", e.PrevBackRefHash.String()))
@@ -94,6 +100,7 @@ func (b *ABlockHeader) GetHeaderExpansionSize() uint64 {
 func (b *ABlockHeader) GetPrevBackRefHash() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer adminBlockHeaderGetPrevBackRefHash.Observe(float64(time.Now().UnixNano() - callTime))	
+	b.Init()
 	return b.PrevBackRefHash
 }
 
@@ -119,6 +126,7 @@ func (b *ABlockHeader) SetPrevBackRefHash(BackRefHash interfaces.IHash) {
 func (b *ABlockHeader) MarshalBinary() (data []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer adminBlockHeaderMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	b.Init()
 	var buf primitives.Buffer
 
 	data, err = b.GetAdminChainID().MarshalBinary()
@@ -193,12 +201,6 @@ func (e *ABlockHeader) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer adminBlockHeaderJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *ABlockHeader) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer adminBlockHeaderJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 type ExpandedABlockHeader ABlockHeader

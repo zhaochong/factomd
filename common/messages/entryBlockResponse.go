@@ -5,9 +5,6 @@
 package messages
 
 import (
-	"bytes"
-	"time"
-	//	"encoding/binary"
 	"encoding/binary"
 	"fmt"
 
@@ -93,18 +90,6 @@ func (m *EntryBlockResponse) Type() byte {
 	return constants.ENTRY_BLOCK_RESPONSE
 }
 
-func (m *EntryBlockResponse) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesEntryBlockResponseInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *EntryBlockResponse) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesEntryBlockResponseBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
-}
-
 func (m *EntryBlockResponse) GetTimestamp() interfaces.Timestamp {
 	callTime := time.Now().UnixNano()
 	defer messagesEntryBlockResponseGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
@@ -129,7 +114,6 @@ func (m *EntryBlockResponse) Validate(state interfaces.IState) int {
 }
 
 func (m *EntryBlockResponse) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -174,12 +158,6 @@ func (e *EntryBlockResponse) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesEntryBlockResponseJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *EntryBlockResponse) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesEntryBlockResponseJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *EntryBlockResponse) UnmarshalBinaryData(data []byte) (newData []byte, err error) {

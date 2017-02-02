@@ -1,7 +1,6 @@
 package adminBlock
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/FactomProject/factomd/common/constants"
@@ -17,6 +16,15 @@ type RevealMatryoshkaHash struct {
 var _ interfaces.Printable = (*RevealMatryoshkaHash)(nil)
 var _ interfaces.BinaryMarshallable = (*RevealMatryoshkaHash)(nil)
 var _ interfaces.IABEntry = (*RevealMatryoshkaHash)(nil)
+
+func (e *RevealMatryoshkaHash) Init() {
+	if e.IdentityChainID == nil {
+		e.IdentityChainID = primitives.NewZeroHash()
+	}
+	if e.MHash == nil {
+		e.MHash = primitives.NewZeroHash()
+	}
+}
 
 func (m *RevealMatryoshkaHash) Type() byte {
 	callTime := time.Now().UnixNano()
@@ -34,13 +42,14 @@ func NewRevealMatryoshkaHash(identityChainID interfaces.IHash, mHash interfaces.
 }
 
 func (c *RevealMatryoshkaHash) UpdateState(state interfaces.IState) error {
-
+	c.Init()
 	return nil
 }
 
 func (e *RevealMatryoshkaHash) MarshalBinary() (data []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer entryRevealMatryoshkaHashMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -62,8 +71,8 @@ func (e *RevealMatryoshkaHash) UnmarshalBinaryData(data []byte) (newData []byte,
 	if newData[0] != e.Type() {
 		return nil, fmt.Errorf("Invalid Entry type")
 	}
-
 	newData = newData[1:]
+
 	e.IdentityChainID = new(primitives.Hash)
 	newData, err = e.IdentityChainID.UnmarshalBinaryData(newData)
 	if err != nil {
@@ -97,15 +106,10 @@ func (e *RevealMatryoshkaHash) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *RevealMatryoshkaHash) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryRevealMatryoshkaHashJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (e *RevealMatryoshkaHash) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryRevealMatryoshkaHashString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	str := fmt.Sprintf("    E: %35s -- %17s %8x %12s %x",
 		"RevealMatryoshkaHash",
 		"IdentityChainID", e.IdentityChainID.Bytes()[3:5],

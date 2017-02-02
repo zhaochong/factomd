@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -263,7 +262,6 @@ func (m *ServerFault) Sign(key interfaces.Signer) error {
 func (m *ServerFault) String() string {
 	callTime := time.Now().UnixNano()
 	defer messagesServerFault.Observe(float64(time.Now().UnixNano() - callTime))
-
 	var sig [3]byte
 
 	if m.Signature != nil {
@@ -310,7 +308,6 @@ func (m *ServerFault) Validate(state interfaces.IState) int {
 }
 
 func (m *ServerFault) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -336,12 +333,6 @@ func (e *ServerFault) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *ServerFault) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesServerFaultJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (a *ServerFault) IsSameAs(b *ServerFault) bool {

@@ -5,9 +5,9 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -193,12 +193,6 @@ func (e *RevealEntryMsg) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesRevealEntryMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *RevealEntryMsg) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesRevealEntryMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func NewRevealEntryMsg() *RevealEntryMsg {

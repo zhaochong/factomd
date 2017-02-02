@@ -1,7 +1,6 @@
 package adminBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 
@@ -19,9 +18,16 @@ type AddAuditServer struct {
 var _ interfaces.IABEntry = (*AddAuditServer)(nil)
 var _ interfaces.BinaryMarshallable = (*AddAuditServer)(nil)
 
+func (e *AddAuditServer) Init() {
+	if e.IdentityChainID == nil {
+		e.IdentityChainID = primitives.NewZeroHash()
+	}
+}
+
 func (e *AddAuditServer) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryAddAuditServerString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %20s -- %17s %8x %12s %8d",
 		"AddAuditServer",
@@ -33,6 +39,7 @@ func (e *AddAuditServer) String() string {
 func (c *AddAuditServer) UpdateState(state interfaces.IState) error {
 	callTime := time.Now().UnixNano()
 	defer entryAddAuditServerUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	state.AddAuditServer(c.DBHeight, c.IdentityChainID)
 	authorityDeltaString := fmt.Sprintf("AdminBlock (AddAudMsg DBHt: %d) \n v %s", c.DBHeight, c.IdentityChainID.String()[5:10])
 	state.AddStatus(authorityDeltaString)
@@ -45,6 +52,9 @@ func (c *AddAuditServer) UpdateState(state interfaces.IState) error {
 func NewAddAuditServer(identityChainID interfaces.IHash, dbheight uint32) (e *AddAuditServer) {
 	callTime := time.Now().UnixNano()
 	defer entryAddAuditServerNewAddAuditServer.Observe(float64(time.Now().UnixNano() - callTime))	
+	if identityChainID == nil {
+		return nil
+	}
 	e = new(AddAuditServer)
 	e.DBHeight = dbheight
 	e.IdentityChainID = primitives.NewHash(identityChainID.Bytes())
@@ -60,6 +70,7 @@ func (e *AddAuditServer) Type() byte {
 func (e *AddAuditServer) MarshalBinary() (data []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer entryAddAuditServerMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -85,6 +96,9 @@ func (e *AddAuditServer) UnmarshalBinaryData(data []byte) (newData []byte, err e
 	}()
 
 	newData = data
+	if newData[0] != e.Type() {
+		return nil, fmt.Errorf("Invalid Entry type")
+	}
 	newData = newData[1:]
 
 	e.IdentityChainID = new(primitives.Hash)
@@ -115,12 +129,6 @@ func (e *AddAuditServer) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryAddAuditServerJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *AddAuditServer) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryAddAuditServerJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *AddAuditServer) IsInterpretable() bool {

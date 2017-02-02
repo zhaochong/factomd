@@ -5,9 +5,7 @@
 package messages
 
 import (
-	"bytes"
 	"fmt"
-	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -111,18 +109,6 @@ func (m *EOMTimeout) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesEOMTimeoutType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.EOM_TIMEOUT_MSG
-}
-
-func (m *EOMTimeout) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesEOMTimeoutInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *EOMTimeout) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesEOMTimeoutBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
 }
 
 func (m *EOMTimeout) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -248,10 +234,4 @@ func (e *EOMTimeout) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesEOMTimeoutJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *EOMTimeout) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesEOMTimeoutJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }

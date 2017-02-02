@@ -5,9 +5,6 @@
 package messages
 
 import (
-	"bytes"
-	"time"
-	//	"encoding/binary"
 	"encoding/binary"
 	"fmt"
 
@@ -80,18 +77,6 @@ func (m *DBStateMissing) Type() byte {
 	return constants.DBSTATE_MISSING_MSG
 }
 
-func (m *DBStateMissing) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesDBStateMissingInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *DBStateMissing) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesDBStateMissingBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
-}
-
 func (m *DBStateMissing) GetTimestamp() interfaces.Timestamp {
 	callTime := time.Now().UnixNano()
 	defer messagesDBStateMissingGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
@@ -112,7 +97,6 @@ func (m *DBStateMissing) Validate(state interfaces.IState) int {
 }
 
 func (m *DBStateMissing) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -126,7 +110,6 @@ func (m *DBStateMissing) LeaderExecute(state interfaces.IState) {
 func (m *DBStateMissing) send(dbheight uint32, state interfaces.IState) {
 	callTime := time.Now().UnixNano()
 	defer messagesDBStateMissingsend.Observe(float64(time.Now().UnixNano() - callTime))
-
 	send := true
 
 	now := state.GetTimestamp()
@@ -134,7 +117,7 @@ func (m *DBStateMissing) send(dbheight uint32, state interfaces.IState) {
 	var keeps []*interfaces.DBStateSent
 
 	for _, v := range sents {
-		if now.GetTimeSeconds()-v.Sent.GetTimeSeconds() < 15 {
+		if now.GetTimeSeconds()-v.Sent.GetTimeSeconds() < 1 {
 			if v.DBHeight == dbheight {
 				send = false
 			}
@@ -194,12 +177,6 @@ func (e *DBStateMissing) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesDBStateMissingJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *DBStateMissing) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesDBStateMissingJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *DBStateMissing) UnmarshalBinaryData(data []byte) (newData []byte, err error) {

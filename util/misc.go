@@ -35,7 +35,6 @@ func Trace(params ...string) {
 
 // Calculate the entry credits needed for the entry
 func EntryCost(b []byte) (uint8, error) {
-
 	// caulculaate the length exluding the header size 35 for Milestone 1
 	l := len(b) - 35
 
@@ -63,7 +62,7 @@ func IsInPendingEntryList(list []interfaces.IPendingEntry, entry interfaces.IPen
 		return false
 	}
 	for _, ent := range list {
-		if ent.EntryHash != nil {
+		if entry.ChainID != nil && entry.EntryHash != nil {
 			if entry.EntryHash.IsSameAs(ent.EntryHash) {
 				if entry.ChainID.IsSameAs(ent.ChainID) {
 					return true

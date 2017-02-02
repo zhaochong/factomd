@@ -74,6 +74,12 @@ type DBStateList struct {
 func (d *DBState) ValidNext(state *State, next *messages.DBStateMsg) int {
 	dirblk := next.DirectoryBlock
 	dbheight := dirblk.GetHeader().GetDBHeight()
+
+	// If we don't have the previous blocks processed yet, then let's wait on this one.
+	if dbheight > state.GetHighestSavedBlk()+1 {
+		return 0
+	}
+
 	if dbheight == 0 {
 		state.AddStatus(fmt.Sprintf("DBState.ValidNext: rtn 1 genesis block is valid dbht: %d", dbheight))
 		// The genesis block is valid by definition.
@@ -90,8 +96,20 @@ func (d *DBState) ValidNext(state *State, next *messages.DBStateMsg) int {
 	// Get the Previous KeyMR pointer in the possible new Directory Block
 	prevkeymr := dirblk.GetHeader().GetPrevKeyMR()
 	if !pkeymr.IsSameAs(prevkeymr) {
-		state.AddStatus(fmt.Sprintf("DBState.ValidNext: rtn -1 hashes don't match. dbht: %d dbstate had prev %x but we expected %x ",
-			dbheight, prevkeymr.Bytes()[:3], pkeymr.Bytes()[:3]))
+
+		pdir, err := state.DB.FetchDBlockByHeight(dbheight - 1)
+		if err != nil {
+			return -1
+		}
+
+		if pkeymr.Fixed() == pdir.GetKeyMR().Fixed() {
+			state.AddStatus(fmt.Sprintf("DBState.ValidNext: rtn -1 hashes don't match at first. dbht: %d dbstate had prev %x but we expected %x But on disk %x",
+				dbheight, prevkeymr.Bytes()[:3], pkeymr.Bytes()[:3], pdir.GetKeyMR().Bytes()[:3]))
+			return 1
+		}
+
+		state.AddStatus(fmt.Sprintf("DBState.ValidNext: rtn -1 hashes don't match. dbht: %d dbstate had prev %x but we expected %x on disk %x",
+			dbheight, prevkeymr.Bytes()[:3], pkeymr.Bytes()[:3], pdir.GetKeyMR().Bytes()[:3]))
 		// If not the same, this is a bad new Directory Block
 		return -1
 	}
@@ -156,7 +174,6 @@ func (ds *DBState) String() string {
 	} else if ds.DirectoryBlock == nil {
 		str = "  Directory Block = <nil>\n"
 	} else {
-
 		str = fmt.Sprintf("%s      State: IsNew %5v ReadyToSave %5v Locked %5v Signed %5v Saved %5v\n", str, ds.IsNew, ds.ReadyToSave, ds.Locked, ds.Signed, ds.Saved)
 		str = fmt.Sprintf("%s      DBlk Height   = %v \n", str, ds.DirectoryBlock.GetHeader().GetDBHeight())
 		str = fmt.Sprintf("%s      DBlock        = %x \n", str, ds.DirectoryBlock.GetHash().Bytes()[:5])
@@ -211,7 +228,6 @@ func (list *DBStateList) GetHighestSavedBlk() uint32 {
 
 // Once a second at most, we check to see if we need to pull down some blocks to catch up.
 func (list *DBStateList) Catchup(justDoIt bool) {
-
 	// We only check if we need updates once every so often.
 
 	if len(list.State.inMsgQueue) > 1000 {
@@ -233,7 +249,23 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 
 	ask := func() {
 		if list.TimeToAsk != nil && hk-hs > 4 && now.GetTime().After(list.TimeToAsk.GetTime()) {
-			msg := messages.NewDBStateMissing(list.State, uint32(begin), uint32(end+10))
+
+			// Don't ask for more than we already have.
+			for i, v := range list.State.DBStatesReceived {
+				if i <= hs-list.State.DBStatesReceivedBase {
+					continue
+				}
+				ix := i + list.State.DBStatesReceivedBase
+				if v != nil && ix < end {
+					end = ix + 1
+					if begin > end {
+						return
+					}
+					break
+				}
+			}
+
+			msg := messages.NewDBStateMissing(list.State, uint32(begin), uint32(end+3))
 
 			if msg != nil {
 				//		list.State.RunLeader = false
@@ -242,13 +274,13 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 				list.State.DBStateAskCnt++
 				list.TimeToAsk.SetTimeSeconds(now.GetTimeSeconds() + 3)
 				list.LastBegin = begin
-				list.LastEnd = end
+				list.LastEnd = end + 3
 			}
 		}
 	}
 
-	if end-begin > 50 {
-		end = begin + 50
+	if end-begin > 200 {
+		end = begin + 200
 	}
 
 	if end+3 > begin && justDoIt {
@@ -257,7 +289,7 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 	}
 
 	// return if we are caught up, and clear our timer
-	if end-begin <= 3 {
+	if end-begin <= 1 {
 		list.TimeToAsk = nil
 		return
 	}
@@ -602,7 +634,6 @@ func (list *DBStateList) ProcessBlocks(d *DBState) (progress bool) {
 // We don't really do the signing here, but just check that we have all the signatures.
 // If we do, we count that as progress.
 func (list *DBStateList) SignDB(d *DBState) (process bool) {
-
 	dbheight := d.DirectoryBlock.GetHeader().GetDBHeight()
 
 	// If we have the next dbstate in the list, then all the signatures for this dbstate
@@ -733,12 +764,10 @@ func (list *DBStateList) SaveDBStateToDB(d *DBState) (progress bool) {
 }
 
 func (list *DBStateList) UpdateState() (progress bool) {
-
 	list.Catchup(false)
 
 	saved := 0
 	for i, d := range list.DBStates {
-
 		//fmt.Printf("dddd %20s %10s --- %10s %10v %10s %10v \n", "DBStateList Update", list.State.FactomNodeName, "Looking at", i, "DBHeight", list.Base+uint32(i))
 
 		// Must process blocks in sequence.  Missing a block says we must stop.
@@ -788,7 +817,6 @@ func (list *DBStateList) Highest() uint32 {
 
 // Return true if we actually added the dbstate to the list
 func (list *DBStateList) Put(dbState *DBState) bool {
-
 	dblk := dbState.DirectoryBlock
 	dbheight := dblk.GetHeader().GetDBHeight()
 
@@ -849,7 +877,6 @@ func (list *DBStateList) NewDBState(isNew bool,
 	entryCreditBlock interfaces.IEntryCreditBlock,
 	eBlocks []interfaces.IEntryBlock,
 	entries []interfaces.IEBEntry) *DBState {
-
 	dbState := new(DBState)
 
 	dbState.DBHash = directoryBlock.DatabasePrimaryIndex()

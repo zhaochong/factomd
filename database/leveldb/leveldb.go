@@ -54,7 +54,6 @@ func (db *LevelDB) ListAllBuckets() ([][]byte, error) {
 
 // Can't trim a real database
 func (db *LevelDB) Trim() {
-
 }
 
 func (db *LevelDB) Delete(bucket []byte, key []byte) error {
@@ -284,4 +283,9 @@ func addOneToByteArray(input []byte) (output []byte) {
 		}
 	}
 	return output
+}
+
+func (db *LevelDB) DoesKeyExist(bucket, key []byte) (bool, error) {
+	ldbKey := CombineBucketAndKey(bucket, key)
+	return db.lDB.Has(ldbKey, db.ro)
 }

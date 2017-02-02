@@ -5,9 +5,7 @@
 package messages
 
 import (
-	"bytes"
 	"fmt"
-	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -121,14 +119,6 @@ func (m *InvalidDirectoryBlock) Type() byte {
 	return constants.INVALID_DIRECTORY_BLOCK_MSG
 }
 
-func (m *InvalidDirectoryBlock) Int() int {
-	return -1
-}
-
-func (m *InvalidDirectoryBlock) Bytes() []byte {
-	return nil
-}
-
 func (m *InvalidDirectoryBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer messagesInvalidDirectoryBlock.UnmarshalBinaryDataObserve(float64(time.Now().UnixNano() - callTime))
@@ -235,7 +225,6 @@ func (m *InvalidDirectoryBlock) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *InvalidDirectoryBlock) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -255,10 +244,4 @@ func (e *InvalidDirectoryBlock) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesInvalidDirectoryBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *InvalidDirectoryBlock) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesInvalidDirectoryBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }

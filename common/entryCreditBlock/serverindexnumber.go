@@ -5,8 +5,8 @@
 package entryCreditBlock
 
 import (
-	"bytes"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 )
@@ -132,12 +132,6 @@ func (e *ServerIndexNumber) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockServerIndexNumberJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *ServerIndexNumber) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryCreditBlockServerIndexNumberJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *ServerIndexNumber) GetTimestamp() interfaces.Timestamp {

@@ -1,7 +1,6 @@
 package adminBlock
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/FactomProject/factomd/common/constants"
@@ -24,9 +23,6 @@ func (m *EndOfMinuteEntry) Type() byte {
 }
 
 func (c *EndOfMinuteEntry) UpdateState(state interfaces.IState) error {
-	callTime := time.Now().UnixNano()
-	defer entryEndOfMinuteUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
-
 	return nil
 }
 
@@ -61,8 +57,8 @@ func (e *EndOfMinuteEntry) UnmarshalBinaryData(data []byte) (newData []byte, err
 	if newData[0] != e.Type() {
 		return nil, fmt.Errorf("Invalid Entry type")
 	}
-
 	newData = newData[1:]
+
 	e.MinuteNumber, newData = newData[0], newData[1:]
 
 	return
@@ -85,12 +81,6 @@ func (e *EndOfMinuteEntry) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryEndOfMinuteJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *EndOfMinuteEntry) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryEndOfMinuteJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *EndOfMinuteEntry) String() string {

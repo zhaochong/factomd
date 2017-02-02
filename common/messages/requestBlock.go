@@ -5,9 +5,7 @@
 package messages
 
 import (
-	"bytes"
 	"fmt"
-	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -86,14 +84,6 @@ func (m *RequestBlock) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesRequestBlockType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.REQUEST_BLOCK_MSG
-}
-
-func (m *RequestBlock) Int() int {
-	return -1
-}
-
-func (m *RequestBlock) Bytes() []byte {
-	return nil
 }
 
 func (m *RequestBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -204,10 +194,4 @@ func (e *RequestBlock) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesRequestBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *RequestBlock) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesRequestBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }

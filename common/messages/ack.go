@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -69,18 +68,6 @@ func (m *Ack) Type() byte {
 	return constants.ACK_MSG
 }
 
-func (m *Ack) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesAckInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *Ack) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesAckBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return m.MessageHash.Bytes()
-}
-
 func (m *Ack) GetTimestamp() interfaces.Timestamp {
 	callTime := time.Now().UnixNano()
 	defer messagesAckGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
@@ -139,7 +126,6 @@ func (m *Ack) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *Ack) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -173,12 +159,6 @@ func (e *Ack) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesAckJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *Ack) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesAckJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *Ack) Sign(key interfaces.Signer) error {

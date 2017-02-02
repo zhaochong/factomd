@@ -33,6 +33,14 @@ var _ interfaces.IDirectoryBlock = (*DirectoryBlock)(nil)
 var _ interfaces.DatabaseBatchable = (*DirectoryBlock)(nil)
 var _ interfaces.DatabaseBlockWithEntries = (*DirectoryBlock)(nil)
 
+func (c *DirectoryBlock) Init() {
+	if c.Header == nil {
+		h := new(DBlockHeader)
+		h.Init()
+		c.Header = h
+	}
+}
+
 func (c *DirectoryBlock) SetEntryHash(hash, chainID interfaces.IHash, index int) {
 	callTime := time.Now().UnixNano()
 	defer directoryBlockSetEntryHash.Observe(float64(time.Now().UnixNano() - callTime))
@@ -158,6 +166,7 @@ func (c *DirectoryBlock) GetKeyMR() interfaces.IHash {
 func (c *DirectoryBlock) GetHeader() interfaces.IDirectoryBlockHeader {
 	callTime := time.Now().UnixNano()
 	defer directoryBlockGetHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	c.Init()
 	return c.Header
 }
 
@@ -192,6 +201,7 @@ func (c *DirectoryBlock) New() interfaces.BinaryMarshallableAndCopyable {
 func (c *DirectoryBlock) GetDatabaseHeight() uint32 {
 	callTime := time.Now().UnixNano()
 	defer directoryBlockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	c.Init()
 	return c.GetHeader().GetDBHeight()
 }
 
@@ -225,15 +235,10 @@ func (e *DirectoryBlock) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *DirectoryBlock) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer directoryBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (e *DirectoryBlock) String() string {
 	callTime := time.Now().UnixNano()
 	defer directoryBlockString.Observe(float64(time.Now().UnixNano() - callTime))
+	e.Init()
 	var out primitives.Buffer
 
 	kmr := e.GetKeyMR()
@@ -245,7 +250,7 @@ func (e *DirectoryBlock) String() string {
 	fh := e.GetFullHash()
 	out.WriteString(fmt.Sprintf("%20s %v\n", "FullHash:", fh.String()))
 
-	out.WriteString(e.Header.String())
+	out.WriteString(e.GetHeader().String())
 	out.WriteString("Entries: \n")
 	for i, entry := range e.DBEntries {
 		out.WriteString(fmt.Sprintf("%5d %s", i, entry.String()))
@@ -258,6 +263,7 @@ func (e *DirectoryBlock) String() string {
 func (b *DirectoryBlock) MarshalBinary() (data []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer directoryBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	b.Init()
 	var buf primitives.Buffer
 
 	b.Sort()
@@ -454,15 +460,15 @@ func NewDirectoryBlock(prev interfaces.IDirectoryBlock) interfaces.IDirectoryBlo
 	newdb := new(DirectoryBlock)
 
 	newdb.Header = new(DBlockHeader)
-	newdb.Header.SetVersion(constants.VERSION_0)
+	newdb.GetHeader().SetVersion(constants.VERSION_0)
 
 	if prev != nil {
 		newdb.GetHeader().SetPrevFullHash(prev.GetFullHash())
 		newdb.GetHeader().SetPrevKeyMR(prev.GetKeyMR())
 		newdb.GetHeader().SetDBHeight(prev.GetHeader().GetDBHeight() + 1)
 	} else {
-		newdb.Header.SetPrevFullHash(primitives.NewZeroHash())
-		newdb.Header.SetPrevKeyMR(primitives.NewZeroHash())
+		newdb.GetHeader().SetPrevFullHash(primitives.NewZeroHash())
+		newdb.GetHeader().SetPrevKeyMR(primitives.NewZeroHash())
 		newdb.GetHeader().SetDBHeight(0)
 	}
 

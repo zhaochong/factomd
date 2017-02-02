@@ -1,8 +1,8 @@
 package dbInfo
 
 import (
-	"bytes"
 	"encoding/gob"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 )
@@ -31,6 +31,21 @@ var _ interfaces.Printable = (*DirBlockInfo)(nil)
 var _ interfaces.BinaryMarshallableAndCopyable = (*DirBlockInfo)(nil)
 var _ interfaces.DatabaseBatchable = (*DirBlockInfo)(nil)
 var _ interfaces.IDirBlockInfo = (*DirBlockInfo)(nil)
+
+func (e *DirBlockInfo) Init() {
+	if e.DBHash == nil {
+		e.DBHash = primitives.NewZeroHash()
+	}
+	if e.BTCTxHash == nil {
+		e.BTCTxHash = primitives.NewZeroHash()
+	}
+	if e.BTCBlockHash == nil {
+		e.BTCBlockHash = primitives.NewZeroHash()
+	}
+	if e.DBMerkleRoot == nil {
+		e.DBMerkleRoot = primitives.NewZeroHash()
+	}
+}
 
 func NewDirBlockInfo() *DirBlockInfo {
 	callTime := time.Now().UnixNano()
@@ -61,12 +76,6 @@ func (e *DirBlockInfo) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer dbInfoJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *DirBlockInfo) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer dbInfoJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (c *DirBlockInfo) New() interfaces.BinaryMarshallableAndCopyable {
@@ -104,24 +113,28 @@ func (c *DirBlockInfo) GetChainID() interfaces.IHash {
 func (c *DirBlockInfo) DatabasePrimaryIndex() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer dbInfoDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	return c.DBMerkleRoot
 }
 
 func (c *DirBlockInfo) DatabaseSecondaryIndex() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer dbInfoDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	return c.DBHash
 }
 
 func (e *DirBlockInfo) GetDBMerkleRoot() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer dbInfoGetDBMerkleRoot.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	return e.DBMerkleRoot
 }
 
 func (e *DirBlockInfo) GetBTCTxHash() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer dbInfoGetBTCTxHash.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	return e.BTCTxHash
 }
 
@@ -140,6 +153,7 @@ func (e *DirBlockInfo) GetBTCBlockHeight() int32 {
 func (e *DirBlockInfo) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer dbInfoMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var data primitives.Buffer
 
 	enc := gob.NewEncoder(&data)

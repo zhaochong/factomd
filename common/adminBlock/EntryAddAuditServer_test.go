@@ -8,6 +8,56 @@ import (
 	"github.com/FactomProject/factomd/testHelper"
 )
 
+func TestAddAuditServerGetHash(t *testing.T) {
+	a := new(AddAuditServer)
+	h := a.Hash()
+	expected := "66ebadcc066975ff37a185310398477d898431014074d1c1f2c84b8076e98f02"
+	if h.String() != expected {
+		t.Errorf("Wrong hash returned - %v vs %v", h.String(), expected)
+	}
+}
+
+func TestAddAuditServerTypeIDCheck(t *testing.T) {
+	a := new(AddAuditServer)
+	b, err := a.MarshalBinary()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	if b[0] != a.Type() {
+		t.Errorf("Invalid byte marshalled")
+	}
+	a2 := new(AddAuditServer)
+	err = a2.UnmarshalBinary(b)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	b[0] = (b[0] + 1) % 255
+	err = a2.UnmarshalBinary(b)
+	if err == nil {
+		t.Errorf("No error caught")
+	}
+}
+
+func TestUnmarshalNilAddAuditServer(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Panic caught during the test - %v", r)
+		}
+	}()
+
+	a := new(AddAuditServer)
+	err := a.UnmarshalBinary(nil)
+	if err == nil {
+		t.Errorf("Error is nil when it shouldn't be")
+	}
+
+	err = a.UnmarshalBinary([]byte{})
+	if err == nil {
+		t.Errorf("Error is nil when it shouldn't be")
+	}
+}
+
 func TestAddAuditServerMarshalUnmarshal(t *testing.T) {
 	identity := testHelper.NewRepeatingHash(0xAB)
 	var dbHeight uint32 = 0xAABBCCDD

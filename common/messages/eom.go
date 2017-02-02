@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -117,19 +116,6 @@ func (m *EOM) GetTimestamp() interfaces.Timestamp {
 	return m.Timestamp
 }
 
-func (m *EOM) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesEOMInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return int(m.Minute)
-}
-
-func (m *EOM) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesEOMBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	var ret []byte
-	return append(ret, m.Minute)
-}
-
 func (m *EOM) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesEOMType.Observe(float64(time.Now().UnixNano() - callTime))
@@ -196,12 +182,6 @@ func (e *EOM) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesEOMJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *EOM) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesEOMJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *EOM) Sign(key interfaces.Signer) error {

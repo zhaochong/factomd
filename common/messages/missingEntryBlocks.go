@@ -5,9 +5,6 @@
 package messages
 
 import (
-	"bytes"
-	"time"
-	//	"encoding/binary"
 	"encoding/binary"
 	"fmt"
 
@@ -80,14 +77,6 @@ func (m *MissingEntryBlocks) Type() byte {
 	return constants.MISSING_ENTRY_BLOCKS
 }
 
-func (m *MissingEntryBlocks) Int() int {
-	return -1
-}
-
-func (m *MissingEntryBlocks) Bytes() []byte {
-	return nil
-}
-
 func (m *MissingEntryBlocks) GetTimestamp() interfaces.Timestamp {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingEntryBlocksGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
@@ -108,7 +97,6 @@ func (m *MissingEntryBlocks) Validate(state interfaces.IState) int {
 }
 
 func (m *MissingEntryBlocks) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -184,12 +172,6 @@ func (e *MissingEntryBlocks) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingEntryBlocksJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *MissingEntryBlocks) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesMissingEntryBlocksJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *MissingEntryBlocks) UnmarshalBinaryData(data []byte) (newData []byte, err error) {

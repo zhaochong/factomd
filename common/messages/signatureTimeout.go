@@ -5,9 +5,7 @@
 package messages
 
 import (
-	"bytes"
 	"fmt"
-	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -95,18 +93,6 @@ func (m *SignatureTimeout) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesSignatureTimeoutType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.SIGNATURE_TIMEOUT_MSG
-}
-
-func (m *SignatureTimeout) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesSignatureTimeoutInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *SignatureTimeout) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesSignatureTimeout.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
 }
 
 func (m *SignatureTimeout) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -251,10 +237,4 @@ func (e *SignatureTimeout) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesSignatureTimeoutJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *SignatureTimeout) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesSignatureTimeoutJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }

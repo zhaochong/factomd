@@ -5,8 +5,9 @@
 package entryBlock
 
 import (
-	"bytes"
+	"encoding/hex"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 )
@@ -50,12 +51,6 @@ func (e *EBlockBody) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *EBlockBody) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer eBlockBodyJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (e *EBlockBody) String() string {
 	callTime := time.Now().UnixNano()
 	defer eBlockBodyString.Observe(float64(time.Now().UnixNano() - callTime))	
@@ -70,4 +65,38 @@ func (e *EBlockBody) GetEBEntries() []interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer eBlockBodyGetEBEntries.Observe(float64(time.Now().UnixNano() - callTime))	
 	return e.EBEntries[:]
+}
+
+// AddEBEntry creates a new Entry Block Entry from the provided Factom Entry
+// and adds it to the Entry Block Body.
+func (e *EBlockBody) AddEBEntry(entry interfaces.IHash) {
+	e.EBEntries = append(e.EBEntries, entry)
+}
+
+// AddEndOfMinuteMarker adds the End of Minute to the Entry Block. The End of
+// Minut byte becomes the last byte in a 32 byte slice that is added to the
+// Entry Block Body as an Entry Block Entry.
+func (e *EBlockBody) AddEndOfMinuteMarker(m byte) {
+	// create a map of possible minute markers that may be found in the
+	// EBlock Body
+	mins := make(map[string]uint8)
+	for i := byte(1); i <= 10; i++ {
+		h := make([]byte, 32)
+		h[len(h)-1] = i
+		mins[hex.EncodeToString(h)] = i
+	}
+
+	// check if the previous entry is a minute marker and return without
+	// writing if it is
+	prevEntry := e.EBEntries[len(e.EBEntries)-1]
+	if _, exist := mins[prevEntry.String()]; exist {
+		return
+	}
+
+	h := make([]byte, 32)
+	h[len(h)-1] = m
+	hash := primitives.NewZeroHash()
+	hash.SetBytes(h)
+
+	e.AddEBEntry(hash)
 }

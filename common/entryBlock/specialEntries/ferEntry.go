@@ -1,7 +1,6 @@
 package specialEntries
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -124,12 +123,6 @@ func (e *FEREntry) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer specialEntriesJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *FEREntry) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer specialEntriesJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *FEREntry) String() string {

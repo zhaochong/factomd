@@ -714,7 +714,6 @@ func SimControl(listenTo int) {
 						stat := returnStatString(i.Status)
 						if show == 5 {
 							if c != amt {
-
 							} else {
 								os.Stderr.WriteString(fmt.Sprint("-----------------------------------Identity: ", amt, "---------------------------------------\n"))
 							}
@@ -807,7 +806,7 @@ func SimControl(listenTo int) {
 				}
 				index := 0
 				if len(b) == 65 {
-					hash, err := fnodes[listenTo].State.IdentityChainID.HexToHash(b[1:])
+					hash, err := primitives.HexToHash(b[1:])
 					if err != nil {
 						os.Stderr.WriteString(fmt.Sprintf("Error: %s\n", err.Error()))
 					} else {

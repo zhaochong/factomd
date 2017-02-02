@@ -4,11 +4,59 @@ import (
 	"testing"
 
 	. "github.com/FactomProject/factomd/common/adminBlock"
-	//"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
-	//"github.com/FactomProject/factomd/state"
 	"github.com/FactomProject/factomd/testHelper"
 )
+
+func TestServerFaultGetHash(t *testing.T) {
+	a := new(ServerFault)
+	h := a.Hash()
+	expected := "5039b1b0a2a8420f89bfc5527c2c8b596a3f7c49d05eb70a53d821668523c9b8"
+	if h.String() != expected {
+		t.Errorf("Wrong hash returned - %v vs %v", h.String(), expected)
+	}
+}
+
+func TestServerFaultTypeIDCheck(t *testing.T) {
+	a := new(ServerFault)
+	b, err := a.MarshalBinary()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	if b[0] != a.Type() {
+		t.Errorf("Invalid byte marshalled")
+	}
+	a2 := new(ServerFault)
+	err = a2.UnmarshalBinary(b)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	b[0] = (b[0] + 1) % 255
+	err = a2.UnmarshalBinary(b)
+	if err == nil {
+		t.Errorf("No error caught")
+	}
+}
+
+func TestUnmarshalNilServerFault(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Panic caught during the test - %v", r)
+		}
+	}()
+
+	a := new(ServerFault)
+	err := a.UnmarshalBinary(nil)
+	if err == nil {
+		t.Errorf("Error is nil when it shouldn't be")
+	}
+
+	err = a.UnmarshalBinary([]byte{})
+	if err == nil {
+		t.Errorf("Error is nil when it shouldn't be")
+	}
+}
 
 func TestServerFaultMarshalUnmarshal(t *testing.T) {
 	sf := new(ServerFault)

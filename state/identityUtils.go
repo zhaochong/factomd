@@ -5,7 +5,6 @@
 package state
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 
@@ -67,7 +66,6 @@ func (id *Identity) VerifySignature(msg []byte, sig *[constants.SIGNATURE_LENGTH
 		copy(pub[:], tmp)
 		valid := ed.VerifyCanonical(&pub, msg, sig)
 		if !valid {
-
 		} else {
 			return true, nil
 		}
@@ -81,10 +79,6 @@ func (e *Identity) JSONByte() ([]byte, error) {
 
 func (e *Identity) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *Identity) JSONBuffer(b *bytes.Buffer) error {
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *Identity) String() string {

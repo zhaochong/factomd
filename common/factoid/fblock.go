@@ -166,11 +166,9 @@ func (b *FBlock) MarshalTrans() ([]byte, error) {
 	// 	}
 
 	for i, trans = range b.Transactions {
-
 		for periodMark < len(b.endOfPeriod) &&
 			b.endOfPeriod[periodMark] > 0 && // Ignore if markers are not set
 			i == b.endOfPeriod[periodMark] {
-
 			out.WriteByte(constants.MARKER)
 			periodMark++
 		}
@@ -285,7 +283,6 @@ func (b *FBlock) UnmarshalBinaryData(data []byte) (newdata []byte, err error) {
 	// To catch memory errors, we capture the panic and turn it into
 	// a reported error.
 	defer func() {
-		return
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling transaction: %v", r)
 		}
@@ -359,55 +356,6 @@ func (b *FBlock) UnmarshalBinary(data []byte) (err error) {
 	defer factoidFBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = b.UnmarshalBinaryData(data)
 	return err
-}
-
-// Tests if the transaction is equal in all of its structures, and
-// in order of the structures.  Largely used to test and debug, but
-// generally useful.
-func (b1 *FBlock) IsEqual(block interfaces.IBlock) []interfaces.IBlock {
-	callTime := time.Now().UnixNano()
-	defer factoidFBlockIsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
-
-	b2, ok := block.(*FBlock)
-
-	if !ok || // Not the right kind of interfaces.IBlock
-		b1.ExchRate != b2.ExchRate ||
-		b1.DBHeight != b2.DBHeight {
-		r := make([]interfaces.IBlock, 0, 3)
-		return append(r, b1)
-	}
-
-	r := b1.BodyMR.IsEqual(b2.BodyMR)
-	if r != nil {
-		return append(r, b1)
-	}
-	r = b1.PrevKeyMR.IsEqual(b2.PrevKeyMR)
-	if r != nil {
-		return append(r, b1)
-	}
-	r = b1.PrevLedgerKeyMR.IsEqual(b2.PrevLedgerKeyMR)
-	if r != nil {
-		return append(r, b1)
-	}
-
-	if b1.endOfPeriod != b2.endOfPeriod {
-		return append(r, b1)
-	}
-
-	for i, mm := range b1.endOfPeriod {
-		if b2.endOfPeriod[i] != mm {
-			return append(r, b1)
-		}
-	}
-
-	for i, trans := range b1.Transactions {
-		r := trans.IsEqual(b2.Transactions[i])
-		if r != nil {
-			return append(r, b1)
-		}
-	}
-
-	return nil
 }
 
 func (b *FBlock) GetChainID() interfaces.IHash {
@@ -772,12 +720,6 @@ func (e *FBlock) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidFBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *FBlock) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer factoidFBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 type ExpandedFBlock FBlock

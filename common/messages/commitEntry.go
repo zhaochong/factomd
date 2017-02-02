@@ -5,10 +5,8 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
-	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/entryCreditBlock"
@@ -116,16 +114,6 @@ func (m *CommitEntryMsg) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesCommitEntryMsgType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.COMMIT_ENTRY_MSG
-}
-
-func (m *CommitEntryMsg) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesCommitEntryMsgInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *CommitEntryMsg) Bytes() []byte {
-	return nil
 }
 
 func (m *CommitEntryMsg) Sign(key interfaces.Signer) error {
@@ -293,12 +281,6 @@ func (e *CommitEntryMsg) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesCommitEntryMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *CommitEntryMsg) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesCommitEntryMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func NewCommitEntryMsg() *CommitEntryMsg {

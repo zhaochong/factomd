@@ -5,10 +5,10 @@
 package factoid
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 )
@@ -42,12 +42,6 @@ func (b RCD_2) GetAddress() (interfaces.IAddress, error) {
 	return nil, nil
 }
 
-func (b RCD_2) GetHash() interfaces.IHash {
-	callTime := time.Now().UnixNano()
-	defer factoidrcd2GetHash.Observe(float64(time.Now().UnixNano() - callTime))	
-	return nil
-}
-
 func (b RCD_2) NumberOfSignatures() int {
 	callTime := time.Now().UnixNano()
 	defer factoidrcd2NumberOfSignatures.Observe(float64(time.Now().UnixNano() - callTime))	
@@ -57,6 +51,10 @@ func (b RCD_2) NumberOfSignatures() int {
 /***************************************
  *       Methods
  ***************************************/
+
+func (b RCD_2) IsSameAs(rcd interfaces.IRCD) bool {
+	return b.String() == rcd.String()
+}
 
 func (b RCD_2) UnmarshalBinary(data []byte) error {
 	callTime := time.Now().UnixNano()
@@ -83,12 +81,8 @@ func (e *RCD_2) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *RCD_2) JSONBuffer(b *bytes.Buffer) error {
 	callTime := time.Now().UnixNano()
 	defer factoidrcd2JSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (b RCD_2) String() string {
 	callTime := time.Now().UnixNano()
 	defer factoidrcd2String.Observe(float64(time.Now().UnixNano() - callTime))	
@@ -112,32 +106,13 @@ func (w RCD_2) Clone() interfaces.IRCD {
 	return c
 }
 
-func (a1 *RCD_2) IsEqual(addr interfaces.IBlock) []interfaces.IBlock {
-	callTime := time.Now().UnixNano()
-	defer factoidrcd2IsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
-	a2, ok := addr.(*RCD_2)
-	if !ok || // Not the right kind of interfaces.IBlock
-		a1.N != a2.N || // Size of sig has to match
-		a1.M != a2.M || // Size of sig has to match
-		len(a1.N_Addresses) != len(a2.N_Addresses) { // Size of arrays has to match
-		r := make([]interfaces.IBlock, 0, 5)
-		return append(r, a1)
-	}
-
-	for i, addr := range a1.N_Addresses {
-		r := addr.IsEqual(a2.N_Addresses[i])
-		if r != nil {
-			return append(r, a1)
-		}
-	}
-
-	return nil
-}
-
 func (t *RCD_2) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer factoidrcd2UnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 
+	if data == nil || len(data) < 5 {
+		return nil, fmt.Errorf("Not enough data to unmarshal")
+	}
 	typ := int8(data[0])
 	data = data[1:]
 	if typ != 2 {

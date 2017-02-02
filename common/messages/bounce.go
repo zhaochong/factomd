@@ -5,18 +5,16 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/rand"
+	"strings"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
-
-	"math/rand"
-	"strings"
-	"time"
 )
 
 type Bounce struct {
@@ -103,7 +101,6 @@ func (m *Bounce) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *Bounce) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -129,12 +126,6 @@ func (e *Bounce) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesBounceJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *Bounce) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesBounceJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *Bounce) Sign(key interfaces.Signer) error {
@@ -288,6 +279,5 @@ func (m *Bounce) String() string {
 }
 
 func (a *Bounce) IsSameAs(b *Bounce) bool {
-
 	return true
 }

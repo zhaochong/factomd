@@ -5,7 +5,6 @@
 package entryCreditBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -28,9 +27,25 @@ type ECBlockHeader struct {
 var _ = fmt.Print
 var _ interfaces.Printable = (*ECBlockHeader)(nil)
 
+func (c *ECBlockHeader) Init() {
+	if c.BodyHash == nil {
+		c.BodyHash = primitives.NewZeroHash()
+	}
+	if c.PrevHeaderHash == nil {
+		c.PrevHeaderHash = primitives.NewZeroHash()
+	}
+	if c.PrevFullHash == nil {
+		c.PrevFullHash = primitives.NewZeroHash()
+	}
+	if c.HeaderExpansionArea == nil {
+		c.HeaderExpansionArea = make([]byte, 0)
+	}
+}
+
 func (e *ECBlockHeader) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockHeadString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("   %-20s %x\n", "ECChainID", e.GetECChainID().Bytes()[:3]))
 	out.WriteString(fmt.Sprintf("   %-20s %x\n", "BodyHash", e.BodyHash.Bytes()[:3]))
@@ -140,10 +155,7 @@ func NewECBlockHeader() *ECBlockHeader {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockHeadNewECBlockHeader.Observe(float64(time.Now().UnixNano() - callTime))	
 	h := new(ECBlockHeader)
-	h.BodyHash = primitives.NewZeroHash()
-	h.PrevHeaderHash = primitives.NewZeroHash()
-	h.PrevFullHash = primitives.NewZeroHash()
-	h.HeaderExpansionArea = make([]byte, 0)
+	h.Init()
 	return h
 }
 
@@ -159,15 +171,10 @@ func (e *ECBlockHeader) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *ECBlockHeader) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryCreditBlockecblockHeadJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (e *ECBlockHeader) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockHeadMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	buf := new(primitives.Buffer)
 
 	// 32 byte ECChainID

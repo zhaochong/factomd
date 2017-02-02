@@ -6,7 +6,7 @@ package factoid_test
 
 import (
 	"encoding/hex"
-	"fmt"
+	//"fmt"
 	"math/rand"
 	"testing"
 
@@ -14,13 +14,31 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	. "github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
-	"github.com/FactomProject/factomd/common/primitives"
 )
 
 // Random first "address".  It isn't a real one, but one we are using for now.
 var adr1 = [constants.ADDRESS_LENGTH]byte{
 	0x61, 0xe3, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72, 0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
 	0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c, 0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00,
+}
+
+func TestUnmarshalNilTransaction(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Panic caught during the test - %v", r)
+		}
+	}()
+
+	a := new(Transaction)
+	err := a.UnmarshalBinary(nil)
+	if err == nil {
+		t.Errorf("Error is nil when it shouldn't be")
+	}
+
+	err = a.UnmarshalBinary([]byte{})
+	if err == nil {
+		t.Errorf("Error is nil when it shouldn't be")
+	}
 }
 
 type zeroReader struct{}
@@ -41,7 +59,6 @@ func (zeroReader) Read(buf []byte) (int, error) {
 }
 
 func nextAddress() interfaces.IAddress {
-
 	public, _, _ := ed25519.GenerateKey(zero)
 
 	addr := new(Address)
@@ -71,10 +88,9 @@ func nextAuth2() interfaces.IRCD {
 	return rcd
 }
 
-var nb interfaces.IBlock
+var nb interfaces.ITransaction
 
-func getSignedTrans() interfaces.IBlock {
-
+func getSignedTrans() interfaces.ITransaction {
 	if nb != nil {
 		return nb
 	}
@@ -100,59 +116,54 @@ func getSignedTrans() interfaces.IBlock {
 	}
 
 	for i := 0; i < 2; i++ {
-
 		t.AddAuthorization(nextAuth2())
 	}
 
 	return nb
 }
 
+/*
 // This test prints bunches of stuff that must be visually checked.
 // Mostly we keep it commented out.
-func TestTransaction(test *testing.T) {
+func TestTransaction(t *testing.T) {
 	nb = getSignedTrans()
 	bytes, _ := nb.CustomMarshalText()
 	fmt.Printf("Transaction:\n%slen: %d\n", string(bytes), len(bytes))
 	fmt.Println("\n---------------------------------------------------------------------")
 }
+*/
 
-func Test_Address_MarshalUnMarshal(test *testing.T) {
+func TestAddress_MarshalUnMarshal(t *testing.T) {
 	a := nextAddress()
 	adr, err := a.MarshalBinary()
 	if err != nil {
-		primitives.Prtln(err)
-		test.Fail()
+		t.Errorf("%v", err)
 	}
 	_, err = a.UnmarshalBinaryData(adr)
 	if err != nil {
-		primitives.Prtln(err)
-		test.Fail()
+		t.Errorf("%v", err)
 	}
 }
 
-func Test_Multisig_MarshalUnMarshal(test *testing.T) {
+func TestMultisig_MarshalUnMarshal(t *testing.T) {
 	rcd := nextAuth2()
 	auth2, err := rcd.MarshalBinary()
 	if err != nil {
-		primitives.Prtln(err)
-		test.Fail()
+		t.Errorf("%v", err)
 	}
 
 	_, err = rcd.UnmarshalBinaryData(auth2)
 
 	if err != nil {
-		primitives.Prtln(err)
-		test.Fail()
+		t.Errorf("%v", err)
 	}
 }
 
-func Test_Transaction_MarshalUnMarshal(test *testing.T) {
-
+func TestTransaction_MarshalUnMarshal(t *testing.T) {
 	getSignedTrans()                // Make sure we have a signed transaction
 	data, err := nb.MarshalBinary() // Marshal our signed transaction
 	if err != nil {                 // If we have an error, print our stack
-		primitives.Prtln(err) //   and fail our test
-		test.Fail()
+		t.Errorf("%v", err)
 	}
 
 	xb := new(Transaction)
@@ -160,40 +171,32 @@ func Test_Transaction_MarshalUnMarshal(test *testing.T) {
 	err = xb.UnmarshalBinary(data) // Now Unmarshal
 
 	if err != nil {
-		primitives.Prtln(err)
-		test.Fail()
-		return
+		t.Errorf("%v", err)
+		t.FailNow()
 	}
 
-	//     txt1,_ := xb.CustomMarshalText()
-	//     txt2,_ := nb.CustomMarshalText()
-	//     primitives.Prtln(string(txt1))
-	//     primitives.Prtln(string(txt2))
-
-	if xb.IsEqual(nb) != nil {
-		primitives.Prtln("Trans\n", nb, "Unmarshal Trans\n", xb)
-		test.Fail()
+	if xb.IsSameAs(nb) == false {
+		t.Errorf("Trans\n", nb, "Unmarshal Trans\n", xb)
 	}
-
 }
 
-func Test_ValidateAmounts(test *testing.T) {
+func TestValidateAmounts(t *testing.T) {
 	var zero uint64
 	_, err := ValidateAmounts(zero - 1)
 	if err != nil {
-		test.Failed()
+		t.Failed()
 	}
 	_, err = ValidateAmounts(1, 2, 3, 4, 5, zero-1)
 	if err != nil {
-		test.Failed()
+		t.Failed()
 	}
 	_, err = ValidateAmounts(0x6FFFFFFFFFFFFFFF, 1)
 	if err != nil {
-		test.Failed()
+		t.Failed()
 	}
 	_, err = ValidateAmounts(1, 0x6FFFFFFFFFFFFFFF, 1)
 	if err != nil {
-		test.Failed()
+		t.Failed()
 	}
 }
 

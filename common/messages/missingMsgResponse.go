@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -100,18 +99,6 @@ func (m *MissingMsgResponse) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingMsgNewMissingMsgType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.MISSING_MSG_RESPONSE
-}
-
-func (m *MissingMsgResponse) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesMissingMsgNewMissingMsgInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *MissingMsgResponse) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesMissingMsgNewMissingMsgBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
 }
 
 func (m *MissingMsgResponse) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -244,7 +231,6 @@ func (m *MissingMsgResponse) Validate(state interfaces.IState) int {
 }
 
 func (m *MissingMsgResponse) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 func (m *MissingMsgResponse) LeaderExecute(state interfaces.IState) {
@@ -256,7 +242,6 @@ func (m *MissingMsgResponse) LeaderExecute(state interfaces.IState) {
 func (m *MissingMsgResponse) FollowerExecute(state interfaces.IState) {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingMsgNewMissingMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
-
 	state.FollowerExecuteMMR(m)
 
 	return
@@ -274,16 +259,9 @@ func (e *MissingMsgResponse) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *MissingMsgResponse) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesMissingMsgNewMissingMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func NewMissingMsgResponse(state interfaces.IState, msgResponse interfaces.IMsg, ackResponse interfaces.IMsg) interfaces.IMsg {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingMsgNewMissingMsg.Observe(float64(time.Now().UnixNano() - callTime))
-
 	msg := new(MissingMsgResponse)
 
 	msg.Peer2Peer = true // Always a peer2peer request.

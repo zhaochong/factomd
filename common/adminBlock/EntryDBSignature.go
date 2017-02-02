@@ -1,7 +1,6 @@
 package adminBlock
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/FactomProject/factomd/common/constants"
@@ -18,6 +17,13 @@ type DBSignatureEntry struct {
 var _ interfaces.IABEntry = (*DBSignatureEntry)(nil)
 var _ interfaces.BinaryMarshallable = (*DBSignatureEntry)(nil)
 
+func (e *DBSignatureEntry) Init() {
+	if e.IdentityAdminChainID == nil {
+		e.IdentityAdminChainID = primitives.NewZeroHash()
+	}
+	e.PrevDBSig.Init()
+}
+
 func (c *DBSignatureEntry) UpdateState(state interfaces.IState) error {
 	callTime := time.Now().UnixNano()
 	defer entryDBSignatureUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
@@ -29,6 +35,12 @@ func (c *DBSignatureEntry) UpdateState(state interfaces.IState) error {
 func NewDBSignatureEntry(identityAdminChainID interfaces.IHash, sig interfaces.IFullSignature) (*DBSignatureEntry, error) {
 	callTime := time.Now().UnixNano()
 	defer entryDBSignatureNewDBSignatureEntry.Observe(float64(time.Now().UnixNano() - callTime))	
+	if identityAdminChainID == nil {
+		return nil, fmt.Errorf("No identityAdminChainID provided")
+	}
+	if sig == nil {
+		return nil, fmt.Errorf("No sig provided")
+	}
 	e := new(DBSignatureEntry)
 	e.IdentityAdminChainID = identityAdminChainID
 	bytes, err := sig.MarshalBinary()
@@ -54,6 +66,7 @@ func (e *DBSignatureEntry) Type() byte {
 func (e *DBSignatureEntry) MarshalBinary() (data []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer entryDBSignatureMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -64,12 +77,12 @@ func (e *DBSignatureEntry) MarshalBinary() (data []byte, err error) {
 	}
 	buf.Write(data)
 
-	_, err = buf.Write(e.PrevDBSig.Pub[:])
+	_, err = buf.Write(e.PrevDBSig.GetPubBytes())
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = buf.Write(e.PrevDBSig.Sig[:])
+	_, err = buf.Write(e.PrevDBSig.GetSigBytes())
 	if err != nil {
 		return nil, err
 	}
@@ -121,15 +134,10 @@ func (e *DBSignatureEntry) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *DBSignatureEntry) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryDBSignatureJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (e *DBSignatureEntry) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryDBSignatureUpdateStateString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %20s -- %17s %8x %12s %8s %12s %8x",
 		"DB Signature",

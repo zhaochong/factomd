@@ -27,6 +27,14 @@ func PublicKeyStringToECAddressString(public string) (string, error) {
 	return primitives.ConvertECAddressToUserStr(add), nil
 }
 
+func PublicKeyStringToECAddress(public string) (interfaces.IAddress, error) {
+	pubHex, err := hex.DecodeString(public)
+	if err != nil {
+		return nil, err
+	}
+	return PublicKeyToECAddress(pubHex)
+}
+
 func PublicKeyToECAddress(public []byte) (interfaces.IAddress, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidConversionsPublicKeyToECAddress.Observe(float64(time.Now().UnixNano() - callTime))	

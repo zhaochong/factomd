@@ -1,9 +1,9 @@
 package entryBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 )
@@ -23,15 +23,27 @@ type EBlockHeader struct {
 var _ interfaces.Printable = (*EBlockHeader)(nil)
 var _ interfaces.IEntryBlockHeader = (*EBlockHeader)(nil)
 
+func (e *EBlockHeader) Init() {
+	if e.ChainID == nil {
+		e.ChainID = primitives.NewZeroHash()
+	}
+	if e.BodyMR == nil {
+		e.BodyMR = primitives.NewZeroHash()
+	}
+	if e.PrevKeyMR == nil {
+		e.PrevKeyMR = primitives.NewZeroHash()
+	}
+	if e.PrevFullHash == nil {
+		e.PrevFullHash = primitives.NewZeroHash()
+	}
+}
+
 // NewEBlockHeader initializes a new empty Entry Block Header.
 func NewEBlockHeader() *EBlockHeader {
 	callTime := time.Now().UnixNano()
 	defer eBlockHeaderNewEBlockHeader.Observe(float64(time.Now().UnixNano() - callTime))	
 	e := new(EBlockHeader)
-	e.ChainID = primitives.NewZeroHash()
-	e.BodyMR = primitives.NewZeroHash()
-	e.PrevKeyMR = primitives.NewZeroHash()
-	e.PrevFullHash = primitives.NewZeroHash()
+	e.Init()
 	return e
 }
 
@@ -47,15 +59,10 @@ func (e *EBlockHeader) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *EBlockHeader) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer eBlockHeaderJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (e *EBlockHeader) String() string {
 	callTime := time.Now().UnixNano()
 	defer eBlockHeaderString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString("  Entry Block Header\n")
 	out.WriteString(fmt.Sprintf("    %20s: %x\n", "ChainID", e.ChainID.Bytes()[:3]))
@@ -156,18 +163,12 @@ func (c *EBlockHeader) SetEntryCount(entryCount uint32) {
 func (e *EBlockHeader) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer eBlockHeaderMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	buf := new(primitives.Buffer)
 
-	// 32 byte ChainID
 	buf.Write(e.ChainID.Bytes())
-
-	// 32 byte Body MR
 	buf.Write(e.BodyMR.Bytes())
-
-	// 32 byte Previous Key MR
 	buf.Write(e.PrevKeyMR.Bytes())
-
-	// 32 byte Previous Full Hash
 	buf.Write(e.PrevFullHash.Bytes())
 
 	if err := binary.Write(buf, binary.BigEndian, e.EBSequence); err != nil {
@@ -189,6 +190,7 @@ func (e *EBlockHeader) MarshalBinary() ([]byte, error) {
 func (e *EBlockHeader) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer eBlockHeaderUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	buf := primitives.NewBuffer(data)
 	hash := make([]byte, 32)
 	newData = data

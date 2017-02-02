@@ -1,7 +1,6 @@
 package adminBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 
@@ -21,7 +20,14 @@ type AddFederatedServerSigningKey struct {
 var _ interfaces.IABEntry = (*AddFederatedServerSigningKey)(nil)
 var _ interfaces.BinaryMarshallable = (*AddFederatedServerSigningKey)(nil)
 
+func (e *AddFederatedServerSigningKey) Init() {
+	if e.IdentityChainID == nil {
+		e.IdentityChainID = primitives.NewZeroHash()
+	}
+}
+
 func (c *AddFederatedServerSigningKey) UpdateState(state interfaces.IState) error {
+	c.Init()
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerSigningKeyUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.UpdateAuthorityFromABEntry(c)
@@ -29,6 +35,7 @@ func (c *AddFederatedServerSigningKey) UpdateState(state interfaces.IState) erro
 }
 
 func (e *AddFederatedServerSigningKey) String() string {
+	e.Init()
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerSigningKeyString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
@@ -61,6 +68,7 @@ func (e *AddFederatedServerSigningKey) Type() byte {
 
 func (e *AddFederatedServerSigningKey) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
+	e.Init()
 	defer entryAddFederatedServerSigningKeyMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
@@ -135,12 +143,6 @@ func (e *AddFederatedServerSigningKey) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryAddFederatedServerSigningKeyJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *AddFederatedServerSigningKey) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryAddFederatedServerSigningKeyJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *AddFederatedServerSigningKey) IsInterpretable() bool {

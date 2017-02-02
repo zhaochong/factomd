@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -61,14 +60,6 @@ func (m *ChangeServerKeyMsg) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesChangeServerKeyMsgType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.CHANGESERVER_KEY_MSG
-}
-
-func (m *ChangeServerKeyMsg) Int() int {
-	return -1
-}
-
-func (m *ChangeServerKeyMsg) Bytes() []byte {
-	return nil
 }
 
 func (m *ChangeServerKeyMsg) GetTimestamp() interfaces.Timestamp {
@@ -158,12 +149,6 @@ func (e *ChangeServerKeyMsg) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *ChangeServerKeyMsg) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesChangeServerKeyMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (m *ChangeServerKeyMsg) Sign(key interfaces.Signer) error {
 	callTime := time.Now().UnixNano()
 	defer messagesChangeServerKeyMsgSign.Observe(float64(time.Now().UnixNano() - callTime))
@@ -191,7 +176,6 @@ func (m *ChangeServerKeyMsg) UnmarshalBinaryData(data []byte) (newData []byte, e
 	callTime := time.Now().UnixNano()
 	defer messagesChangeServerKeyMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
-		return
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Add Server Message: %v", r)
 		}

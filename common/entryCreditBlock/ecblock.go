@@ -5,8 +5,6 @@
 package entryCreditBlock
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"io"
 
@@ -36,9 +34,24 @@ var _ interfaces.BinaryMarshallableAndCopyable = (*ECBlock)(nil)
 var _ interfaces.IEntryCreditBlock = (*ECBlock)(nil)
 var _ interfaces.DatabaseBlockWithEntries = (*ECBlock)(nil)
 
+func (c *ECBlock) Init() {
+	if c.Header == nil {
+		h := new(ECBlockHeader)
+		h.Init()
+		c.Header = h
+	}
+	if c.Body == nil {
+		c.Body = new(ECBlockBody)
+	}
+}
+
 func (c *ECBlock) UpdateState(state interfaces.IState) error {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
+	if state == nil {
+		return fmt.Errorf("No State provided")
+	}
+	c.Init()
 	state.UpdateECs(c)
 	return nil
 }
@@ -46,15 +59,16 @@ func (c *ECBlock) UpdateState(state interfaces.IState) error {
 func (c *ECBlock) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockString.Observe(float64(time.Now().UnixNano() - callTime))	
-	str := c.Header.String()
-	str = str + c.Body.String()
+	str := c.GetHeader().String()
+	str = str + c.GetBody().String()
 	return str
 }
 
 func (c *ECBlock) GetEntries() []interfaces.IECBlockEntry {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockGetEntries.Observe(float64(time.Now().UnixNano() - callTime))	
-	return c.Body.GetEntries()
+	c.Init()
+	return c.GetBody().GetEntries()
 }
 
 func (c *ECBlock) GetEntryByHash(hash interfaces.IHash) interfaces.IECBlockEntry {
@@ -79,7 +93,7 @@ func (c *ECBlock) GetEntryByHash(hash interfaces.IHash) interfaces.IECBlockEntry
 func (c *ECBlock) GetEntryHashes() []interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockGetEntryHashes.Observe(float64(time.Now().UnixNano() - callTime))	
-	entries := c.Body.GetEntries()
+	entries := c.GetBody().GetEntries()
 	answer := make([]interfaces.IHash, 0, len(entries))
 	for _, entry := range entries {
 		if entry.ECID() == ECIDBalanceIncrease || entry.ECID() == ECIDChainCommit || entry.ECID() == ECIDEntryCommit {
@@ -92,7 +106,7 @@ func (c *ECBlock) GetEntryHashes() []interfaces.IHash {
 func (c *ECBlock) GetEntrySigHashes() []interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockGetEntrySigHashes.Observe(float64(time.Now().UnixNano() - callTime))	
-	entries := c.Body.GetEntries()
+	entries := c.GetBody().GetEntries()
 	answer := make([]interfaces.IHash, 0, len(entries))
 	for _, entry := range entries {
 		if entry.ECID() == ECIDBalanceIncrease || entry.ECID() == ECIDChainCommit || entry.ECID() == ECIDEntryCommit {
@@ -108,12 +122,14 @@ func (c *ECBlock) GetEntrySigHashes() []interfaces.IHash {
 func (c *ECBlock) GetBody() interfaces.IECBlockBody {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockGetBody.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	return c.Body
 }
 
 func (c *ECBlock) GetHeader() interfaces.IECBlockHeader {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockGetHeader.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	return c.Header
 }
 
@@ -127,13 +143,13 @@ func (c *ECBlock) New() interfaces.BinaryMarshallableAndCopyable {
 func (c *ECBlock) GetDatabaseHeight() uint32 {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))	
-	return c.Header.GetDBHeight()
+	return c.GetHeader().GetDBHeight()
 }
 
 func (c *ECBlock) GetChainID() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))	
-	return c.Header.GetECChainID()
+	return c.GetHeader().GetECChainID()
 }
 
 func (c *ECBlock) DatabasePrimaryIndex() interfaces.IHash {
@@ -191,6 +207,7 @@ func (e *ECBlock) HeaderHash() (interfaces.IHash, error) {
 func (e *ECBlock) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	buf := new(primitives.Buffer)
 
 	// Header
@@ -216,13 +233,14 @@ func (e *ECBlock) MarshalBinary() ([]byte, error) {
 func (e *ECBlock) BuildHeader() error {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockBuildHeader.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	// Marshal the Body
 	p, err := e.marshalBodyBinary()
 	if err != nil {
 		return err
 	}
 
-	header := e.Header.(*ECBlockHeader)
+	header := e.GetHeader().(*ECBlockHeader)
 	header.BodyHash = primitives.Sha(p)
 	header.ObjectCount = uint64(len(e.GetBody().GetEntries()))
 	header.BodySize = uint64(len(p))
@@ -280,6 +298,7 @@ func (e *ECBlock) UnmarshalBinary(data []byte) (err error) {
 func (e *ECBlock) marshalBodyBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockmarshalBodyBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	buf := new(primitives.Buffer)
 
 	for _, v := range e.GetBody().GetEntries() {
@@ -289,50 +308,6 @@ func (e *ECBlock) marshalBodyBinary() ([]byte, error) {
 		}
 		buf.WriteByte(v.ECID())
 		buf.Write(p)
-	}
-
-	return buf.DeepCopyBytes(), nil
-}
-
-func (e *ECBlock) marshalHeaderBinary() ([]byte, error) {
-	callTime := time.Now().UnixNano()
-	defer entryCreditBlockecblockmarshalHeaderBinary.Observe(float64(time.Now().UnixNano() - callTime))	
-	buf := new(primitives.Buffer)
-
-	// 32 byte ECChainID
-	buf.Write(e.GetHeader().GetECChainID().Bytes())
-
-	// 32 byte BodyHash
-	buf.Write(e.GetHeader().GetBodyHash().Bytes())
-
-	// 32 byte Previous Header Hash
-	buf.Write(e.GetHeader().GetPrevHeaderHash().Bytes())
-
-	// 32 byte Previous Full Hash
-	buf.Write(e.GetHeader().GetPrevFullHash().Bytes())
-
-	// 4 byte Directory Block Height
-	if err := binary.Write(buf, binary.BigEndian, e.GetHeader().GetDBHeight()); err != nil {
-		return buf.Bytes(), err
-	}
-
-	// variable Header Expansion Size
-	if err := primitives.EncodeVarInt(buf,
-		uint64(len(e.GetHeader().GetHeaderExpansionArea()))); err != nil {
-		return buf.Bytes(), err
-	}
-
-	// varable byte Header Expansion Area
-	buf.Write(e.Header.GetHeaderExpansionArea())
-
-	// 8 byte Object Count
-	if err := binary.Write(buf, binary.BigEndian, e.Header.GetObjectCount()); err != nil {
-		return nil, err
-	}
-
-	// 8 byte size of the Body
-	if err := binary.Write(buf, binary.BigEndian, e.Header.GetBodySize()); err != nil {
-		return nil, err
 	}
 
 	return buf.DeepCopyBytes(), nil
@@ -349,7 +324,7 @@ func (e *ECBlock) unmarshalBodyBinaryData(data []byte) ([]byte, error) {
 		}
 	}()
 
-	for i := uint64(0); i < e.Header.GetObjectCount(); i++ {
+	for i := uint64(0); i < e.GetHeader().GetObjectCount(); i++ {
 		var id byte
 		id, err = buf.ReadByte()
 		if err != nil {
@@ -366,7 +341,7 @@ func (e *ECBlock) unmarshalBodyBinaryData(data []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			e.Body.SetEntries(append(e.Body.GetEntries(), s))
+			e.GetBody().AddEntry(s)
 		case ECIDMinuteNumber:
 			m := NewMinuteNumber(0)
 			if buf.Len() < MinuteNumberSize {
@@ -377,7 +352,7 @@ func (e *ECBlock) unmarshalBodyBinaryData(data []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			e.Body.SetEntries(append(e.Body.GetEntries(), m))
+			e.GetBody().AddEntry(m)
 		case ECIDChainCommit:
 			if buf.Len() < CommitChainSize {
 				err = io.EOF
@@ -388,7 +363,7 @@ func (e *ECBlock) unmarshalBodyBinaryData(data []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			e.Body.SetEntries(append(e.Body.GetEntries(), c))
+			e.GetBody().AddEntry(c)
 		case ECIDEntryCommit:
 			if buf.Len() < CommitEntrySize {
 				err = io.EOF
@@ -399,14 +374,14 @@ func (e *ECBlock) unmarshalBodyBinaryData(data []byte) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			e.Body.SetEntries(append(e.Body.GetEntries(), c))
+			e.GetBody().AddEntry(c)
 		case ECIDBalanceIncrease:
 			c := NewIncreaseBalance()
 			tmp, err := c.UnmarshalBinaryData(buf.DeepCopyBytes())
 			if err != nil {
 				return nil, err
 			}
-			e.Body.SetEntries(append(e.Body.GetEntries(), c))
+			e.GetBody().AddEntry(c)
 			buf = primitives.NewBuffer(tmp)
 		default:
 			err = fmt.Errorf("Unsupported ECID: %x\n", id)
@@ -424,70 +399,6 @@ func (b *ECBlock) unmarshalBodyBinary(data []byte) (err error) {
 	return
 }
 
-func (e *ECBlock) unmarshalHeaderBinaryData(data []byte) (newData []byte, err error) {
-	callTime := time.Now().UnixNano()
-	defer entryCreditBlockecblockunmarshalHeaderBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
-	buf := primitives.NewBuffer(data)
-	hash := make([]byte, 32)
-
-	if _, err = buf.Read(hash); err != nil {
-		return
-	} else {
-		e.Header.GetECChainID().SetBytes(hash)
-	}
-
-	if _, err = buf.Read(hash); err != nil {
-		return
-	} else {
-		e.Header.GetBodyHash().SetBytes(hash)
-	}
-
-	if _, err = buf.Read(hash); err != nil {
-		return
-	} else {
-		e.Header.GetPrevHeaderHash().SetBytes(hash)
-	}
-
-	if _, err = buf.Read(hash); err != nil {
-		return
-	} else {
-		e.Header.GetPrevFullHash().SetBytes(hash)
-	}
-
-	h := e.Header.GetDBHeight()
-	if err = binary.Read(buf, binary.BigEndian, &h); err != nil {
-		return
-	}
-
-	// read the Header Expansion Area
-	hesize, tmp := primitives.DecodeVarInt(buf.DeepCopyBytes())
-	buf = primitives.NewBuffer(tmp)
-	e.Header.SetHeaderExpansionArea(make([]byte, hesize))
-	if _, err = buf.Read(e.Header.GetHeaderExpansionArea()); err != nil {
-		return
-	}
-
-	oc := e.Header.GetObjectCount()
-	if err = binary.Read(buf, binary.BigEndian, &oc); err != nil {
-		return
-	}
-
-	sz := e.Header.GetBodySize()
-	if err = binary.Read(buf, binary.BigEndian, &sz); err != nil {
-		return
-	}
-
-	newData = buf.DeepCopyBytes()
-	return
-}
-
-func (e *ECBlock) unmarshalHeaderBinary(data []byte) error {
-	callTime := time.Now().UnixNano()
-	defer entryCreditBlockecblockunmarshalHeaderBinary.Observe(float64(time.Now().UnixNano() - callTime))	
-	_, err := e.unmarshalHeaderBinaryData(data)
-	return err
-}
-
 func (e *ECBlock) JSONByte() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
@@ -498,12 +409,6 @@ func (e *ECBlock) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockecblockJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *ECBlock) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryCreditBlockecblockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 /********************************************************

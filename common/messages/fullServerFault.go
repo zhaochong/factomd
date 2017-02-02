@@ -5,11 +5,8 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
-	"time"
-
 	"math"
 
 	"github.com/FactomProject/factomd/common/adminBlock"
@@ -369,7 +366,6 @@ func (sl *SigList) MarshalBinary() (data []byte, err error) {
 func (sl *SigList) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer messagesFullServerFaultUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
-
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling SigList in Full Server Fault: %v", r)
@@ -574,7 +570,6 @@ func (m *FullServerFault) GetDBHeight() uint32 {
 func (m *FullServerFault) Validate(state interfaces.IState) int {
 	callTime := time.Now().UnixNano()
 	defer messagesFullServerFaultValidate.Observe(float64(time.Now().UnixNano() - callTime))
-
 	// Ignore old faults
 	if m.DBHeight <= state.GetHighestSavedBlk() {
 		return -1
@@ -671,7 +666,6 @@ func (m *FullServerFault) SigTally(state interfaces.IState) int {
 }
 
 func (m *FullServerFault) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -697,12 +691,6 @@ func (e *FullServerFault) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesFullServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *FullServerFault) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesFullServerFaultJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (a *FullServerFault) IsSameAs(b *FullServerFault) bool {

@@ -5,7 +5,6 @@
 package factoid
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"runtime/debug"
@@ -24,9 +23,9 @@ type Transaction struct {
 	// #inputs     uint8          number of inputs
 	// #outputs    uint8          number of outputs
 	// #ecoutputs  uint8          number of outECs (Number of EntryCredits)
-	Inputs    []interfaces.IInAddress      `json:"inputs"`
-	Outputs   []interfaces.IOutAddress     `json:"outputs"`
-	OutECs    []interfaces.IOutECAddress   `json:"outecs"`
+	Inputs    []interfaces.ITransAddress   `json:"inputs"`
+	Outputs   []interfaces.ITransAddress   `json:"outputs"`
+	OutECs    []interfaces.ITransAddress   `json:"outecs"`
 	RCDs      []interfaces.IRCD            `json:"rcds"`
 	SigBlocks []interfaces.ISignatureBlock `json:"sigblocks"`
 
@@ -38,6 +37,65 @@ type Transaction struct {
 var _ interfaces.ITransaction = (*Transaction)(nil)
 var _ interfaces.Printable = (*Transaction)(nil)
 var _ interfaces.BinaryMarshallableAndCopyable = (*Transaction)(nil)
+
+func (t *Transaction) IsSameAs(trans interfaces.ITransaction) bool {
+	if trans == nil {
+		if t == nil {
+			return true
+		}
+		return false
+	}
+	if t.GetTimestamp().GetTimeMilliUInt64() != trans.GetTimestamp().GetTimeMilliUInt64() {
+		return false
+	}
+	ins := trans.GetInputs()
+	if len(t.Inputs) != len(ins) {
+		return false
+	}
+	outs := trans.GetOutputs()
+	if len(t.Outputs) != len(outs) {
+		return false
+	}
+	outECs := trans.GetECOutputs()
+	if len(t.OutECs) != len(outECs) {
+		return false
+	}
+	rcds := trans.GetRCDs()
+	if len(t.RCDs) != len(ins) {
+		return false
+	}
+	sigs := trans.GetSignatureBlocks()
+	if len(t.SigBlocks) != len(ins) {
+		return false
+	}
+
+	for i := range t.Inputs {
+		if t.Inputs[i].IsSameAs(ins[i]) == false {
+			return false
+		}
+	}
+	for i := range t.Outputs {
+		if t.Outputs[i].IsSameAs(outs[i]) == false {
+			return false
+		}
+	}
+	for i := range t.OutECs {
+		if t.OutECs[i].IsSameAs(outECs[i]) == false {
+			return false
+		}
+	}
+	for i := range t.RCDs {
+		if t.RCDs[i].IsSameAs(rcds[i]) == false {
+			return false
+		}
+	}
+	for i := range t.SigBlocks {
+		if t.SigBlocks[i].IsSameAs(sigs[i]) == false {
+			return false
+		}
+	}
+	return true
+}
 
 func (w *Transaction) New() interfaces.BinaryMarshallableAndCopyable {
 	callTime := time.Now().UnixNano()
@@ -314,7 +372,6 @@ func (t Transaction) Validate(index int) error {
 		}
 	} else {
 		if index == 0 {
-			primitives.PrtStk()
 			fmt.Println(index, t)
 			return fmt.Errorf("Coinbase transactions cannot have inputs.")
 		}
@@ -336,7 +393,7 @@ func (t Transaction) Validate(index int) error {
 		}
 		// If the Address (which is really a hash) isn't equal to the hash of
 		// the RCD, this transaction is bogus.
-		if t.Inputs[i].GetAddress().IsEqual(address) != nil {
+		if t.Inputs[i].GetAddress().IsSameAs(address) == false {
 			return fmt.Errorf("The %d Input does not match the %d RCD", i, i)
 		}
 	}
@@ -366,102 +423,10 @@ func (t Transaction) ValidateSignatures() error {
 	return nil
 }
 
-// Tests if the transaction is equal in all of its structures, and
-// in order of the structures.  Largely used to test and debug, but
-// generally useful.
-func (t1 *Transaction) IsEqual(trans interfaces.IBlock) []interfaces.IBlock {
-	callTime := time.Now().UnixNano()
-	defer factoidTransactionIsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
-
-	t2, ok := trans.(interfaces.ITransaction)
-
-	if !ok || // Not the right kind of interfaces.IBlock
-		len(t1.Inputs) != len(t2.GetInputs()) || // Size of arrays has to match
-		len(t1.Outputs) != len(t2.GetOutputs()) || // Size of arrays has to match
-		len(t1.OutECs) != len(t2.GetECOutputs()) { // Size of arrays has to match
-
-		r := make([]interfaces.IBlock, 0, 5)
-		return append(r, t1)
-	}
-
-	for i, input := range t1.GetInputs() {
-		adr, err := t2.GetInput(i)
-		if err != nil {
-			r := make([]interfaces.IBlock, 0, 5)
-			return append(r, t1)
-		}
-		r := input.IsEqual(adr)
-		if r != nil {
-			return append(r, t1)
-		}
-
-	}
-	for i, output := range t1.GetOutputs() {
-		adr, err := t2.GetOutput(i)
-		if err != nil {
-			r := make([]interfaces.IBlock, 0, 5)
-			return append(r, t1)
-		}
-		r := output.IsEqual(adr)
-		if r != nil {
-			return append(r, t1)
-		}
-
-	}
-	for i, outEC := range t1.GetECOutputs() {
-		adr, err := t2.GetECOutput(i)
-		if err != nil {
-			r := make([]interfaces.IBlock, 0, 5)
-			return append(r, t1)
-		}
-		r := outEC.IsEqual(adr)
-		if r != nil {
-			return append(r, t1)
-		}
-
-	}
-	for i, a := range t1.RCDs {
-		adr, err := t2.GetRCD(i)
-		if err != nil {
-			r := make([]interfaces.IBlock, 0, 5)
-			return append(r, t1)
-		}
-		r := a.IsEqual(adr)
-		if r != nil {
-			return append(r, t1)
-		}
-
-	}
-	for i, s := range t1.SigBlocks {
-		r := s.IsEqual(t2.GetSignatureBlock(i))
-		if r != nil {
-			return append(r, t1)
-		}
-	}
-
-	return nil
-}
-
-func (t Transaction) GetInputs() []interfaces.IInAddress       { 
-		callTime := time.Now().UnixNano()
-	defer factoidTransactionGetInputs.Observe(float64(time.Now().UnixNano() - callTime))	
-return t.Inputs 
-}
-func (t Transaction) GetOutputs() []interfaces.IOutAddress     { 
-		callTime := time.Now().UnixNano()
-	defer factoidTransactionGetOutputs.Observe(float64(time.Now().UnixNano() - callTime))	
-return t.Outputs 
-}
-func (t Transaction) GetECOutputs() []interfaces.IOutECAddress { 
-		callTime := time.Now().UnixNano()
-	defer factoidTransactionGetECOutputs.Observe(float64(time.Now().UnixNano() - callTime))	
-return t.OutECs 
-}
-func (t Transaction) GetRCDs() []interfaces.IRCD               { 
-		callTime := time.Now().UnixNano()
-	defer factoidTransactionGetRCDs.Observe(float64(time.Now().UnixNano() - callTime))	
-return t.RCDs
- }
+func (t Transaction) GetInputs() []interfaces.ITransAddress    { return t.Inputs }
+func (t Transaction) GetOutputs() []interfaces.ITransAddress   { return t.Outputs }
+func (t Transaction) GetECOutputs() []interfaces.ITransAddress { return t.OutECs }
+func (t Transaction) GetRCDs() []interfaces.IRCD               { return t.RCDs }
 
 func (t *Transaction) GetSignatureBlocks() []interfaces.ISignatureBlock {
 	callTime := time.Now().UnixNano()
@@ -479,7 +444,7 @@ func (t *Transaction) GetSignatureBlocks() []interfaces.ISignatureBlock {
 	return t.SigBlocks
 }
 
-func (t *Transaction) GetInput(i int) (interfaces.IInAddress, error) {
+func (t *Transaction) GetInput(i int) (interfaces.ITransAddress, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransactionGetInput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if i > len(t.Inputs) {
@@ -488,7 +453,7 @@ func (t *Transaction) GetInput(i int) (interfaces.IInAddress, error) {
 	return t.Inputs[i], nil
 }
 
-func (t *Transaction) GetOutput(i int) (interfaces.IOutAddress, error) {
+func (t *Transaction) GetOutput(i int) (interfaces.ITransAddress, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransactionGetOutput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if i > len(t.Outputs) {
@@ -497,7 +462,7 @@ func (t *Transaction) GetOutput(i int) (interfaces.IOutAddress, error) {
 	return t.Outputs[i], nil
 }
 
-func (t *Transaction) GetECOutput(i int) (interfaces.IOutECAddress, error) {
+func (t *Transaction) GetECOutput(i int) (interfaces.ITransAddress, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransactionGetECOutput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if i > len(t.OutECs) {
@@ -520,7 +485,6 @@ func (t *Transaction) GetRCD(i int) (interfaces.IRCD, error) {
 func (t *Transaction) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransactionUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
-
 	// To catch memory errors, I capture the panic and turn it into
 	// a reported error.
 	defer func() {
@@ -544,26 +508,26 @@ func (t *Transaction) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 	numOutECs := int(data[0])
 	data = data[1:]
 
-	t.Inputs = make([]interfaces.IInAddress, numInputs, numInputs)
-	t.Outputs = make([]interfaces.IOutAddress, numOutputs, numOutputs)
-	t.OutECs = make([]interfaces.IOutECAddress, numOutECs, numOutECs)
+	t.Inputs = make([]interfaces.ITransAddress, numInputs, numInputs)
+	t.Outputs = make([]interfaces.ITransAddress, numOutputs, numOutputs)
+	t.OutECs = make([]interfaces.ITransAddress, numOutECs, numOutECs)
 
 	for i, _ := range t.Inputs {
-		t.Inputs[i] = new(InAddress)
+		t.Inputs[i] = new(TransAddress)
 		data, err = t.Inputs[i].UnmarshalBinaryData(data)
 		if err != nil || t.Inputs[i] == nil {
 			return nil, err
 		}
 	}
 	for i, _ := range t.Outputs {
-		t.Outputs[i] = new(OutAddress)
+		t.Outputs[i] = new(TransAddress)
 		data, err = t.Outputs[i].UnmarshalBinaryData(data)
 		if err != nil {
 			return nil, err
 		}
 	}
 	for i, _ := range t.OutECs {
-		t.OutECs[i] = new(OutECAddress)
+		t.OutECs[i] = new(TransAddress)
 		data, err = t.OutECs[i].UnmarshalBinaryData(data)
 		if err != nil {
 			return nil, err
@@ -656,7 +620,6 @@ func (t Transaction) MarshalBinary() ([]byte, error) {
 	out.Write(data)
 
 	for i, rcd := range t.RCDs {
-
 		// Write the RCD
 		data, err := rcd.MarshalBinary()
 		if err != nil {
@@ -690,7 +653,7 @@ func (t *Transaction) AddInput(input interfaces.IAddress, amount uint64) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransactionAddInput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if t.Inputs == nil {
-		t.Inputs = make([]interfaces.IInAddress, 0, 5)
+		t.Inputs = make([]interfaces.ITransAddress, 0, 5)
 	}
 	out := NewInAddress(input, amount)
 	t.Inputs = append(t.Inputs, out)
@@ -705,7 +668,7 @@ func (t *Transaction) AddOutput(output interfaces.IAddress, amount uint64) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransactionAddOutput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if t.Outputs == nil {
-		t.Outputs = make([]interfaces.IOutAddress, 0, 5)
+		t.Outputs = make([]interfaces.ITransAddress, 0, 5)
 	}
 	out := NewOutAddress(output, amount)
 	t.Outputs = append(t.Outputs, out)
@@ -719,7 +682,7 @@ func (t *Transaction) AddECOutput(ecoutput interfaces.IAddress, amount uint64) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransactionAddECOutput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if t.OutECs == nil {
-		t.OutECs = make([]interfaces.IOutECAddress, 0, 5)
+		t.OutECs = make([]interfaces.ITransAddress, 0, 5)
 	}
 	out := NewOutECAddress(ecoutput, amount)
 	t.OutECs = append(t.OutECs, out)
@@ -750,15 +713,15 @@ func (t *Transaction) CustomMarshalText() (text []byte, err error) {
 	primitives.WriteNumber16(&out, uint16(len(t.OutECs)))
 	out.WriteString("\n")
 	for _, address := range t.Inputs {
-		text, _ := address.CustomMarshalText()
+		text, _ := address.CustomMarshalTextInput()
 		out.Write(text)
 	}
 	for _, address := range t.Outputs {
-		text, _ := address.CustomMarshalText()
+		text, _ := address.CustomMarshalTextOutput()
 		out.Write(text)
 	}
 	for _, ecaddress := range t.OutECs {
-		text, _ := ecaddress.CustomMarshalText()
+		text, _ := ecaddress.CustomMarshalTextECOutput()
 		out.Write(text)
 	}
 	for i, rcd := range t.RCDs {
@@ -803,12 +766,6 @@ func (e *Transaction) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransactionJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *Transaction) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer factoidTransactionJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *Transaction) HasUserAddress(userAddr string) bool {

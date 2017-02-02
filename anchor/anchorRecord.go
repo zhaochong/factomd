@@ -8,7 +8,6 @@
 package anchor
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -58,12 +57,6 @@ func (e *AnchorRecord) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer anchorJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *AnchorRecord) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer anchorJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *AnchorRecord) String() string {

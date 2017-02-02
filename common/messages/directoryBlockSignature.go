@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -130,14 +129,6 @@ func (m *DirectoryBlockSignature) Type() byte {
 	return constants.DIRECTORY_BLOCK_SIGNATURE_MSG
 }
 
-func (m *DirectoryBlockSignature) Int() int {
-	return -1
-}
-
-func (m *DirectoryBlockSignature) Bytes() []byte {
-	return nil
-}
-
 // Validate the message, given the state.  Three possible results:
 //  < 0 -- Message is invalid.  Discard
 //  0   -- Cannot tell if message is Valid
@@ -250,6 +241,11 @@ func (m *DirectoryBlockSignature) VerifySignature() (bool, error) {
 func (m *DirectoryBlockSignature) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer messagesDirectoryBlockSignatureUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Error unmarshalling: %v", r)
+		}
+	}()
 
 	newData = data
 	if newData[0] != m.Type() {
@@ -417,10 +413,4 @@ func (e *DirectoryBlockSignature) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesDirectoryBlockSignatureJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *DirectoryBlockSignature) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesDirectoryBlockSignatureJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }

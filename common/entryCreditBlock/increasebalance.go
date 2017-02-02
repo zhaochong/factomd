@@ -5,7 +5,6 @@
 package entryCreditBlock
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -25,9 +24,19 @@ var _ interfaces.BinaryMarshallable = (*IncreaseBalance)(nil)
 var _ interfaces.ShortInterpretable = (*IncreaseBalance)(nil)
 var _ interfaces.IECBlockEntry = (*IncreaseBalance)(nil)
 
+func (e *IncreaseBalance) Init() {
+	if e.ECPubKey == nil {
+		e.ECPubKey = new(primitives.ByteSlice32)
+	}
+	if e.TXID == nil {
+		e.TXID = primitives.NewZeroHash()
+	}
+}
+
 func (e *IncreaseBalance) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockincreaseBalanceString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf(" %-20s\n", "IncreaseBalance"))
 	out.WriteString(fmt.Sprintf("   %-20s %x\n", "ECPubKey", e.ECPubKey[:3]))
@@ -42,7 +51,7 @@ func NewIncreaseBalance() *IncreaseBalance {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockincreaseBalanceNewIncreaseBalance.Observe(float64(time.Now().UnixNano() - callTime))	
 	r := new(IncreaseBalance)
-	r.TXID = primitives.NewZeroHash()
+	r.Init()
 	return r
 }
 
@@ -87,6 +96,7 @@ func (b *IncreaseBalance) Interpret() string {
 func (b *IncreaseBalance) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockincreaseBalanceMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	b.Init()
 	buf := new(primitives.Buffer)
 
 	buf.Write(b.ECPubKey[:])
@@ -154,12 +164,6 @@ func (e *IncreaseBalance) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockincreaseBalanceJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *IncreaseBalance) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryCreditBlockincreaseBalanceJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *IncreaseBalance) GetTimestamp() interfaces.Timestamp {

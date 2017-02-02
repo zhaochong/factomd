@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -94,9 +93,6 @@ func (m *AuditServerFault) GetTimestamp() interfaces.Timestamp {
 }
 
 func (m *AuditServerFault) GetHash() interfaces.IHash {
-	callTime := time.Now().UnixNano()
-	defer messagesAuditServerFaultGetHash.Observe(float64(time.Now().UnixNano() - callTime))
-
 	return nil
 }
 
@@ -117,18 +113,6 @@ func (m *AuditServerFault) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesAuditServerFaultType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.AUDIT_SERVER_FAULT_MSG
-}
-
-func (m *AuditServerFault) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesAuditServerFaultInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *AuditServerFault) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesAuditServerFaultBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
 }
 
 func (m *AuditServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -249,12 +233,10 @@ func (m *AuditServerFault) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *AuditServerFault) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
 func (m *AuditServerFault) LeaderExecute(state interfaces.IState) {
-
 }
 
 func (m *AuditServerFault) FollowerExecute(interfaces.IState) {
@@ -270,10 +252,4 @@ func (e *AuditServerFault) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesAuditServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *AuditServerFault) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesAuditServerFaultJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }

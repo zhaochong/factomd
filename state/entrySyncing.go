@@ -183,9 +183,6 @@ func (s *State) catchupEBlocks() {
 	s.setTimersMakeRequests()
 
 	// If we still have blocks that we are asking for, then let's not add to the list.
-	if len(s.MissingEntryBlocks) > 5 {
-		return
-	}
 
 	s.syncEntryBlocks()
 	s.syncEntries(false)

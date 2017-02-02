@@ -1,8 +1,8 @@
 package adminBlock
 
 import (
-	"bytes"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -26,9 +26,6 @@ func NewIncreaseServerCount(num byte) (e *IncreaseServerCount) {
 }
 
 func (c *IncreaseServerCount) UpdateState(state interfaces.IState) error {
-	callTime := time.Now().UnixNano()
-	defer entryIncreaseServerCountUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
-
 	return nil
 }
 
@@ -59,7 +56,11 @@ func (e *IncreaseServerCount) UnmarshalBinaryData(data []byte) (newData []byte, 
 	}()
 
 	newData = data
+	if newData[0] != e.Type() {
+		return nil, fmt.Errorf("Invalid Entry type")
+	}
 	newData = newData[1:]
+
 	e.Amount, newData = newData[0], newData[1:]
 
 	return
@@ -82,12 +83,6 @@ func (e *IncreaseServerCount) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryIncreaseServerCountJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *IncreaseServerCount) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryIncreaseServerCountJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *IncreaseServerCount) String() string {

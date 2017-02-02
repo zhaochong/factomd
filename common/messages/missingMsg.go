@@ -5,7 +5,6 @@
 package messages
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -109,14 +108,6 @@ func (m *MissingMsg) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingMsgType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.MISSING_MSG
-}
-
-func (m *MissingMsg) Int() int {
-	return -1
-}
-
-func (m *MissingMsg) Bytes() []byte {
-	return nil
 }
 
 func (m *MissingMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -247,7 +238,6 @@ func (m *MissingMsg) Validate(state interfaces.IState) int {
 }
 
 func (m *MissingMsg) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 func (m *MissingMsg) LeaderExecute(state interfaces.IState) {
@@ -274,12 +264,6 @@ func (e *MissingMsg) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *MissingMsg) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesMissingMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 // AddHeight: Add a Missing Message Height to the request
 func (e *MissingMsg) AddHeight(h uint32) {
 	callTime := time.Now().UnixNano()
@@ -291,7 +275,6 @@ func (e *MissingMsg) AddHeight(h uint32) {
 func NewMissingMsg(state interfaces.IState, vm int, dbHeight uint32, processlistHeight uint32) *MissingMsg {
 	callTime := time.Now().UnixNano()
 	defer messagesMissingMsgNewMissingMsg.Observe(float64(time.Now().UnixNano() - callTime))
-
 	msg := new(MissingMsg)
 
 	msg.Asking = state.GetIdentityChainID()

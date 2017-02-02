@@ -5,11 +5,9 @@
 package messages
 
 import (
-	"bytes"
+	"encoding/binary"
 	"fmt"
 	"time"
-
-	"encoding/binary"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -121,18 +119,6 @@ func (m *Heartbeat) Type() byte {
 	callTime := time.Now().UnixNano()
 	defer messagesHeartbeatType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.HEARTBEAT_MSG
-}
-
-func (m *Heartbeat) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesHeartbeatInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *Heartbeat) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesHeartbeatBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
 }
 
 func (m *Heartbeat) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
@@ -301,7 +287,6 @@ func (m *Heartbeat) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *Heartbeat) ComputeVMIndex(state interfaces.IState) {
-
 }
 
 // Execute the leader functions of the given message
@@ -336,12 +321,6 @@ func (e *Heartbeat) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesHeartbeatJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *Heartbeat) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesHeartbeatJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *Heartbeat) Sign(key interfaces.Signer) error {

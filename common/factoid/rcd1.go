@@ -5,9 +5,9 @@
 package factoid
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/FactomProject/ed25519"
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -27,19 +27,13 @@ type RCD_1 struct {
 
 var _ interfaces.IRCD = (*RCD_1)(nil)
 
-/*************************************
- *       Stubs
- *************************************/
-
-func (b RCD_1) GetHash() interfaces.IHash {
-	callTime := time.Now().UnixNano()
-	defer factoidrcd1GetHash.Observe(float64(time.Now().UnixNano() - callTime))	
-	return nil
-}
-
 /***************************************
  *       Methods
  ***************************************/
+
+func (b RCD_1) IsSameAs(rcd interfaces.IRCD) bool {
+	return b.String() == rcd.String()
+}
 
 func (b RCD_1) UnmarshalBinary(data []byte) error {
 	callTime := time.Now().UnixNano()
@@ -58,12 +52,6 @@ func (e *RCD_1) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidrcd1JSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *RCD_1) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer factoidrcd1JSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (b RCD_1) String() string {
@@ -137,23 +125,13 @@ func (w1 RCD_1) NumberOfSignatures() int {
 	return 1
 }
 
-func (a1 *RCD_1) IsEqual(addr interfaces.IBlock) []interfaces.IBlock {
-	callTime := time.Now().UnixNano()
-	defer factoidrcd1IsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
-	a2, ok := addr.(*RCD_1)
-
-	if !ok || a1.PublicKey != a2.PublicKey { // Not the right object or sigature
-		r := make([]interfaces.IBlock, 0, 5)
-		return append(r, a1)
-	}
-
-	return nil
-}
-
 func (t *RCD_1) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer factoidrcd1UnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 
+	if data == nil || len(data) < 1+constants.ADDRESS_LENGTH {
+		return nil, fmt.Errorf("Not enough data to unmarshal")
+	}
 	typ := int8(data[0])
 	data = data[1:]
 

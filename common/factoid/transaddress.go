@@ -11,13 +11,13 @@
 package factoid
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"github.com/FactomProject/factomd/common/primitives/random"
 )
 
 type TransAddress struct {
@@ -28,6 +28,14 @@ type TransAddress struct {
 }
 
 var _ interfaces.ITransAddress = (*TransAddress)(nil)
+
+func RandomTransAddress() interfaces.ITransAddress {
+	ta := new(TransAddress)
+	ta.Address = RandomAddress()
+	ta.Amount = random.RandUInt64()
+	ta.UserAddress = random.RandomString()
+	return ta
+}
 
 func (t *TransAddress) SetUserAddress(v string) {
 	callTime := time.Now().UnixNano()
@@ -41,24 +49,11 @@ func (t *TransAddress) GetUserAddress() string {
 	return t.UserAddress
 }
 
-// Not useful on TransAddress objects
-func (t *TransAddress) GetHash() interfaces.IHash {
-	callTime := time.Now().UnixNano()
-	defer factoidTransAddressGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
-	return nil
-}
-
 func (t *TransAddress) UnmarshalBinary(data []byte) error {
 	callTime := time.Now().UnixNano()
 	defer factoidTransAddressUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err := t.UnmarshalBinaryData(data)
 	return err
-}
-
-func (t *TransAddress) CustomMarshalText() ([]byte, error) {
-	callTime := time.Now().UnixNano()
-	defer factoidTransAddressCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))	
-	return nil, nil
 }
 
 func (e *TransAddress) JSONByte() ([]byte, error) {
@@ -73,39 +68,28 @@ func (e *TransAddress) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *TransAddress) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer factoidTransAddressJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (t *TransAddress) String() string {
 	callTime := time.Now().UnixNano()
 	defer factoidTransAddressString.Observe(float64(time.Now().UnixNano() - callTime))	
-	txt, _ := t.CustomMarshalText()
-	return (string(txt))
+	str, _ := t.JSONString()
+	return str
 }
 
-func (t *TransAddress) IsEqual(addr interfaces.IBlock) []interfaces.IBlock {
+func (t *TransAddress) IsSameAs(add interfaces.ITransAddress) bool {
 	callTime := time.Now().UnixNano()
 	defer factoidTransAddressIsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
-	a, ok := addr.(interfaces.ITransAddress)
-	if !ok || // Not the right kind of interfaces.IBlock
-		a.GetAmount() != t.GetAmount() {
-		r := make([]interfaces.IBlock, 0, 5)
-		return append(r, t)
-	} // Amount is different
-	r := a.GetAddress().IsEqual(t.GetAddress()) // Address is different
-	if r != nil {
-		return append(r, t)
+	if t.GetAmount() != add.GetAmount() {
+		return false
 	}
-	return nil
+	if t.GetAddress().IsSameAs(add.GetAddress()) == false {
+		return false
+	}
+	return true
 }
 
 func (t *TransAddress) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransAddressUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
-
 	if len(data) < 36 {
 		return nil, fmt.Errorf("Data source too short to UnmarshalBinary() an address: %d", len(data))
 	}
@@ -203,4 +187,61 @@ func (ta TransAddress) CustomMarshalTextEC2(label string) ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidTransAddressCustomMarshalTextEC2.Observe(float64(time.Now().UnixNano() - callTime))	
 	return ta.CustomMarshalTextAll(false, label)
+}
+
+func (ta TransAddress) CustomMarshalTextInput() ([]byte, error) {
+	return ta.CustomMarshalText2("input")
+}
+
+func (ta TransAddress) StringInput() string {
+	b, _ := ta.CustomMarshalTextInput()
+	return string(b)
+}
+
+func (ta TransAddress) CustomMarshalTextOutput() ([]byte, error) {
+	return ta.CustomMarshalText2("output")
+}
+
+func (ta TransAddress) StringOutput() string {
+	b, _ := ta.CustomMarshalTextOutput()
+	return string(b)
+}
+
+func (ta TransAddress) CustomMarshalTextECOutput() ([]byte, error) {
+	return ta.CustomMarshalTextEC2("ecoutput")
+}
+
+func (ta TransAddress) StringECOutput() string {
+	b, _ := ta.CustomMarshalTextECOutput()
+	return string(b)
+}
+
+/******************************
+ * Helper functions
+ ******************************/
+
+func NewOutECAddress(address interfaces.IAddress, amount uint64) interfaces.ITransAddress {
+	ta := new(TransAddress)
+	ta.Amount = amount
+	ta.Address = address
+	ta.UserAddress = primitives.ConvertECAddressToUserStr(address)
+	return ta
+}
+
+func NewOutAddress(address interfaces.IAddress, amount uint64) interfaces.ITransAddress {
+	ta := new(TransAddress)
+	ta.Amount = amount
+	ta.Address = address
+	ta.UserAddress = primitives.ConvertFctAddressToUserStr(address)
+	return ta
+}
+
+func NewInAddress(address interfaces.IAddress, amount uint64) interfaces.ITransAddress {
+	ta := new(TransAddress)
+	ta.Amount = amount
+	ta.Address = address
+	//  at this point we know this address is an EC address.
+	//  so fill useraddress with a factoid formatted human readable address
+	ta.UserAddress = primitives.ConvertFctAddressToUserStr(address)
+	return ta
 }

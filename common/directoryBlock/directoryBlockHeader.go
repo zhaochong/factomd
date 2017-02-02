@@ -5,7 +5,6 @@
 package directoryBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -32,6 +31,18 @@ type DBlockHeader struct {
 var _ interfaces.Printable = (*DBlockHeader)(nil)
 var _ interfaces.BinaryMarshallable = (*DBlockHeader)(nil)
 var _ interfaces.IDirectoryBlockHeader = (*DBlockHeader)(nil)
+
+func (h *DBlockHeader) Init() {
+	if h.BodyMR == nil {
+		h.BodyMR = primitives.NewZeroHash()
+	}
+	if h.PrevKeyMR == nil {
+		h.PrevKeyMR = primitives.NewZeroHash()
+	}
+	if h.PrevFullHash == nil {
+		h.PrevFullHash = primitives.NewZeroHash()
+	}
+}
 
 func (h *DBlockHeader) GetVersion() byte {
 	callTime := time.Now().UnixNano()
@@ -141,15 +152,10 @@ func (e *DBlockHeader) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *DBlockHeader) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer directoryBlockHeaderJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (e *DBlockHeader) String() string {
 	callTime := time.Now().UnixNano()
 	defer directoryBlockHeaderString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("  Version:         %v\n", e.Version))
 	out.WriteString(fmt.Sprintf("  NetworkID:       %x\n", e.NetworkID))
@@ -167,6 +173,7 @@ func (e *DBlockHeader) String() string {
 func (b *DBlockHeader) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer directoryBlockHeaderMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	b.Init()
 	var buf primitives.Buffer
 
 	buf.WriteByte(b.Version)
@@ -276,6 +283,7 @@ func NewDBlockHeader() *DBlockHeader {
 	callTime := time.Now().UnixNano()
 	defer directoryBlockHeaderNewDBlockHeader.Observe(float64(time.Now().UnixNano() - callTime))	
 	d := new(DBlockHeader)
+
 	d.BodyMR = primitives.NewZeroHash()
 	d.PrevKeyMR = primitives.NewZeroHash()
 	d.PrevFullHash = primitives.NewZeroHash()

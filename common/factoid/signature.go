@@ -5,7 +5,6 @@
 package factoid
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -22,6 +21,10 @@ type FactoidSignature struct {
 }
 
 var _ interfaces.ISignature = (*FactoidSignature)(nil)
+
+func (s *FactoidSignature) IsSameAs(sig interfaces.ISignature) bool {
+	return primitives.AreBytesEqual(s.Bytes(), sig.Bytes())
+}
 
 func (s *FactoidSignature) Verify([]byte) bool {
 	callTime := time.Now().UnixNano()
@@ -42,12 +45,6 @@ func (s *FactoidSignature) GetKey() []byte {
 	return s.Signature[32:]
 }
 
-func (s *FactoidSignature) GetHash() interfaces.IHash {
-	callTime := time.Now().UnixNano()
-	defer factoidSignatureGetHash.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
-}
-
 func (h *FactoidSignature) MarshalText() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidSignatureMarshalText.Observe(float64(time.Now().UnixNano() - callTime))
@@ -66,12 +63,6 @@ func (s *FactoidSignature) JSONString() (string, error) {
 	return primitives.EncodeJSONString(s)
 }
 
-func (s *FactoidSignature) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer factoidSignatureJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(s, b)
-}
-
 func (s FactoidSignature) String() string {
 	callTime := time.Now().UnixNano()
 	defer factoidSignatureString.Observe(float64(time.Now().UnixNano() - callTime))
@@ -80,19 +71,6 @@ func (s FactoidSignature) String() string {
 		return "<error>"
 	}
 	return string(txt)
-}
-
-// Checks that the FactoidSignatures are the same.
-func (s1 *FactoidSignature) IsEqual(sig interfaces.IBlock) []interfaces.IBlock {
-	callTime := time.Now().UnixNano()
-	defer factoidSignatureIsEqual.Observe(float64(time.Now().UnixNano() - callTime))
-	s2, ok := sig.(*FactoidSignature)
-	if !ok || // Not the right kind of interfaces.IBlock
-		s1.Signature != s2.Signature { // Not the right rcd
-		r := make([]interfaces.IBlock, 0, 5)
-		return append(r, s1)
-	}
-	return nil
 }
 
 // Index is ignored.  We only have one FactoidSignature
@@ -137,6 +115,9 @@ func (s FactoidSignature) CustomMarshalText() ([]byte, error) {
 func (s *FactoidSignature) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer factoidSignatureUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	if data == nil || len(data) < constants.SIGNATURE_LENGTH {
+		return nil, fmt.Errorf("Not enough data to unmarshal")
+	}
 	copy(s.Signature[:], data[:constants.SIGNATURE_LENGTH])
 	return data[constants.SIGNATURE_LENGTH:], nil
 }

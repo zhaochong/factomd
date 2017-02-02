@@ -60,18 +60,6 @@ func (m *RemoveServerMsg) Type() byte {
 	return constants.REMOVESERVER_MSG
 }
 
-func (m *RemoveServerMsg) Int() int {
-	callTime := time.Now().UnixNano()
-	defer messagesRemoveServerMsgInt.Observe(float64(time.Now().UnixNano() - callTime))
-	return -1
-}
-
-func (m *RemoveServerMsg) Bytes() []byte {
-	callTime := time.Now().UnixNano()
-	defer messagesRemoveServerMsgBytes.Observe(float64(time.Now().UnixNano() - callTime))
-	return nil
-}
-
 func (m *RemoveServerMsg) GetTimestamp() interfaces.Timestamp {
 	callTime := time.Now().UnixNano()
 	defer messagesRemoveServerMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
@@ -143,12 +131,6 @@ func (e *RemoveServerMsg) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer messagesRemoveServerMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *RemoveServerMsg) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer messagesRemoveServerMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
-	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *RemoveServerMsg) Sign(key interfaces.Signer) error {

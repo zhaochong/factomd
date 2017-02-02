@@ -43,7 +43,6 @@ func (db *MapDB) ListAllBuckets() ([][]byte, error) {
 
 // Don't do anything here.
 func (db *MapDB) Trim() {
-
 }
 
 func (db *MapDB) createCache(bucket []byte) {
@@ -225,4 +224,21 @@ func (db *MapDB) Clear(bucket []byte) error {
 	}
 	delete(db.Cache, string(bucket))
 	return nil
+}
+
+func (db *MapDB) DoesKeyExist(bucket, key []byte) (bool, error) {
+	db.createCache(bucket)
+
+	db.Sem.RLock()
+	defer db.Sem.RUnlock()
+
+	if db.Cache == nil {
+		db.Cache = map[string]map[string][]byte{}
+	}
+	_, ok := db.Cache[string(bucket)]
+	if ok == false {
+		db.Cache[string(bucket)] = map[string][]byte{}
+	}
+	_, ok = db.Cache[string(bucket)][string(key)]
+	return ok, nil
 }

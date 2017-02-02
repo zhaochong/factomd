@@ -113,6 +113,9 @@ func (s *State) Process() (progress bool) {
 		}
 	}
 
+	process := make(chan interfaces.IMsg, 10000)
+	room := func() bool { return len(process) < 9995 }
+
 	var vm *VM
 	if s.Leader {
 		vm = s.LeaderPL.VMs[s.LeaderVMIndex]
@@ -121,12 +124,26 @@ func (s *State) Process() (progress bool) {
 		}
 	}
 
+	/** Process all the DBStates  that might be pending **/
+
+	for room() {
+		ix := int(s.GetHighestSavedBlk()) - s.DBStatesReceivedBase + 1
+		if ix < 0 || ix >= len(s.DBStatesReceived) {
+			break
+		}
+		msg := s.DBStatesReceived[ix]
+		if msg == nil {
+			break
+		}
+		process <- msg
+		s.DBStatesReceived[ix] = nil
+	}
+
 	s.ReviewHolding()
 
-	more := false
 	// Process acknowledgements if we have some.
 ackLoop:
-	for i := 0; i < 55; i++ {
+	for room() {
 		select {
 		case ack := <-s.ackQueue:
 			a := ack.(*messages.Ack)
@@ -134,43 +151,53 @@ ackLoop:
 				if s.IgnoreMissing {
 					now := s.GetTimestamp().GetTimeSeconds()
 					if now-a.GetTimestamp().GetTimeSeconds() < 60*15 {
-						ack.FollowerExecute(s)
+						s.executeMsg(vm, ack)
 					}
 				} else {
-					ack.FollowerExecute(s)
+					s.executeMsg(vm, ack)
 				}
 			}
 			progress = true
 		default:
-			more = true
 			break ackLoop
 		}
 	}
 
 	// Process inbound messages
 emptyLoop:
-	for i := 0; i < 55; i++ {
+	for room() {
 		select {
 		case msg := <-s.msgQueue:
+			process <- msg
 			if s.executeMsg(vm, msg) && !msg.IsPeer2Peer() {
 				msg.SendOut(s, msg)
 			}
 		default:
-			more = true
 			break emptyLoop
 		}
 	}
 
 	// Reprocess any stalled messages, but not so much compared inbound messages
 	// Process last first
-	for i := 0; i < 30 && len(s.XReview) > 0; i++ {
-		l := len(s.XReview) - 1
-		msg := s.XReview[l]
+	for _, msg := range s.XReview {
+		if !room() {
+			break
+		}
+		if msg == nil {
+			continue
+		}
+		process <- msg
 		progress = s.executeMsg(vm, msg) || progress
-		s.XReview = s.XReview[:l]
 	}
-	if !more {
-		time.Sleep(10 * time.Millisecond)
+	s.XReview = s.XReview[:0]
+
+	for len(process) > 0 {
+		msg := <-process
+		s.executeMsg(vm, msg)
+		if !msg.IsPeer2Peer() {
+			msg.SendOut(s, msg)
+		}
+		s.UpdateState()
 	}
 
 	return
@@ -442,6 +469,11 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 
 	dbheight := dbstatemsg.DirectoryBlock.GetHeader().GetDBHeight()
 
+	// ignore if too old.
+	if dbheight < s.GetHighestSavedBlk() {
+		return
+	}
+
 	// ignore if we didn't ask for it, or if it is at least something with our range of asking for.
 	if !dbstatemsg.IsInDB && (s.DBStates.LastBegin-1 > int(dbheight) || s.DBStates.LastEnd+20 < int(dbheight)) {
 		return
@@ -456,13 +488,21 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 		s.AddStatus(fmt.Sprintf("FollowerExecuteDBState(): DBState might be valid %d", dbheight))
 
 		// Don't add duplicate dbstate messages.
-		for _, v := range s.XReview {
-			if ds, ok := v.(*messages.DBStateMsg); ok && ds.GetHash().Fixed() == dbstatemsg.DirectoryBlock.GetHash().Fixed() {
-				return
+		if s.DBStatesReceivedBase < int(s.GetHighestSavedBlk()) {
+			cut := int(s.GetHighestSavedBlk()) - s.DBStatesReceivedBase
+			if len(s.DBStatesReceived) > cut {
+				s.DBStatesReceived = append(make([]*messages.DBStateMsg, 0), s.DBStatesReceived[cut:]...)
 			}
+			s.DBStatesReceivedBase += cut
 		}
-
-		s.Holding[dbstatemsg.GetRepeatHash().Fixed()] = dbstatemsg
+		ix := int(dbheight) - s.DBStatesReceivedBase
+		if ix < 0 {
+			return
+		}
+		for len(s.DBStatesReceived) <= ix {
+			s.DBStatesReceived = append(s.DBStatesReceived, nil)
+		}
+		s.DBStatesReceived[ix] = dbstatemsg
 		return
 	case -1:
 		s.AddStatus(fmt.Sprintf("FollowerExecuteDBState(): DBState is invalid at ht %d", dbheight))
@@ -656,7 +696,7 @@ func (s *State) FollowerExecuteDataResponse(m interfaces.IMsg) {
 		for i, missing := range s.MissingEntries {
 			e := missing.entryhash
 
-			if e.IsSameAs(entry.GetHash()) {
+			if e.Fixed() == entry.GetHash().Fixed() {
 				s.DB.InsertEntry(entry)
 				var missing []MissingEntry
 				missing = append(missing, s.MissingEntries[:i]...)
@@ -824,6 +864,10 @@ func (s *State) LeaderExecuteDBSig(m interfaces.IMsg) {
 	dbs := m.(*messages.DirectoryBlockSignature)
 	pl := s.ProcessLists.Get(dbs.DBHeight)
 
+	if dbs.DBHeight != s.LLeaderHeight {
+		m.FollowerExecute(s)
+		return
+	}
 	if len(pl.VMs[dbs.VMIndex].List) > 0 {
 		return
 	}
@@ -946,10 +990,10 @@ func (s *State) ProcessChangeServerKey(dbheight uint32, changeServerKeyMsg inter
 	case constants.TYPE_ADD_BTC_ANCHOR_KEY:
 		var btcKey [20]byte
 		copy(btcKey[:], ask.Key.Bytes()[:20])
-		s.LeaderPL.AdminBlock.AddFederatedServerBitcoinAnchorKey(ask.IdentityChainID, ask.KeyPriority, ask.KeyType, &btcKey)
+		s.LeaderPL.AdminBlock.AddFederatedServerBitcoinAnchorKey(ask.IdentityChainID, ask.KeyPriority, ask.KeyType, btcKey)
 	case constants.TYPE_ADD_FED_SERVER_KEY:
 		pub := ask.Key.Fixed()
-		s.LeaderPL.AdminBlock.AddFederatedServerSigningKey(ask.IdentityChainID, &pub)
+		s.LeaderPL.AdminBlock.AddFederatedServerSigningKey(ask.IdentityChainID, pub)
 	case constants.TYPE_ADD_MATRYOSHKA:
 		s.LeaderPL.AdminBlock.AddMatryoshkaHash(ask.IdentityChainID, ask.Key)
 	}

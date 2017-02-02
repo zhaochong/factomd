@@ -5,8 +5,6 @@
 package entryBlock
 
 import (
-	"bytes"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -28,10 +26,21 @@ var _ interfaces.DatabaseBatchable = (*EBlock)(nil)
 var _ interfaces.IEntryBlock = (*EBlock)(nil)
 var _ interfaces.DatabaseBlockWithEntries = (*EBlock)(nil)
 
+func (c *EBlock) Init() {
+	if c.Header == nil {
+		h := new(EBlockHeader)
+		h.Init()
+		c.Header = h
+	}
+	if c.Body == nil {
+		c.Body = new(EBlockBody)
+	}
+}
+
 func (c *EBlock) GetEntryHashes() []interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer entryBlockGetEntryHashes.Observe(float64(time.Now().UnixNano() - callTime))	
-	return c.Body.EBEntries[:]
+	return c.GetBody().GetEBEntries()
 }
 
 func (c *EBlock) GetEntrySigHashes() []interfaces.IHash {
@@ -49,8 +58,9 @@ func (c *EBlock) New() interfaces.BinaryMarshallableAndCopyable {
 func (e *EBlock) GetWelds() [][]byte {
 	callTime := time.Now().UnixNano()
 	defer entryBlockGetWelds.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var answer [][]byte
-	for _, entry := range e.Body.EBEntries {
+	for _, entry := range e.GetEntryHashes() {
 		answer = append(answer, primitives.DoubleSha(append(entry.Bytes(), e.GetChainID().Bytes()...)))
 	}
 	return answer
@@ -71,13 +81,13 @@ func (e *EBlock) GetWeldHashes() []interfaces.IHash {
 func (c *EBlock) GetDatabaseHeight() uint32 {
 	callTime := time.Now().UnixNano()
 	defer entryBlockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))	
-	return c.Header.GetDBHeight()
+	return c.GetHeader().GetDBHeight()
 }
 
 func (c *EBlock) GetChainID() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer entryBlockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))	
-	return c.Header.GetChainID()
+	return c.GetHeader().GetChainID()
 }
 
 func (c *EBlock) GetHashOfChainID() []byte {
@@ -111,12 +121,14 @@ func (c *EBlock) DatabaseSecondaryIndex() interfaces.IHash {
 func (c *EBlock) GetHeader() interfaces.IEntryBlockHeader {
 	callTime := time.Now().UnixNano()
 	defer entryBlockGetHeader.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	return c.Header
 }
 
 func (c *EBlock) GetBody() interfaces.IEBlockBody {
 	callTime := time.Now().UnixNano()
 	defer entryBlockGetBody.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	return c.Body
 }
 
@@ -125,7 +137,8 @@ func (c *EBlock) GetBody() interfaces.IEBlockBody {
 func (e *EBlock) AddEBEntry(entry interfaces.IEBEntry) error {
 	callTime := time.Now().UnixNano()
 	defer entryBlockAddEBEntry.Observe(float64(time.Now().UnixNano() - callTime))	
-	e.Body.EBEntries = append(e.Body.EBEntries, entry.GetHash())
+	e.Init()
+	e.GetBody().AddEBEntry(entry.GetHash())
 	if err := e.BuildHeader(); err != nil {
 		return err
 	}
@@ -135,30 +148,15 @@ func (e *EBlock) AddEBEntry(entry interfaces.IEBEntry) error {
 // AddEndOfMinuteMarker adds the End of Minute to the Entry Block. The End of
 // Minut byte becomes the last byte in a 32 byte slice that is added to the
 // Entry Block Body as an Entry Block Entry.
-func (e *EBlock) AddEndOfMinuteMarker(m byte) {
-	// create a map of possible minute markers that may be found in the
-	// EBlock Body
+func (e *EBlock) AddEndOfMinuteMarker(m byte) error {
 	callTime := time.Now().UnixNano()
 	defer entryBlockAddEndOfMinuteMarker.Observe(float64(time.Now().UnixNano() - callTime))	
-	mins := make(map[string]uint8)
-	for i := byte(1); i <= 10; i++ {
-		h := make([]byte, 32)
-		h[len(h)-1] = i
-		mins[hex.EncodeToString(h)] = i
+	e.Init()
+	e.GetBody().AddEndOfMinuteMarker(m)
+	if err := e.BuildHeader(); err != nil {
+		return err
 	}
-
-	// check if the previous entry is a minute marker and return without
-	// writing if it is
-	prevEntry := e.Body.EBEntries[len(e.Body.EBEntries)-1]
-	if _, exist := mins[prevEntry.String()]; exist {
-		return
-	}
-
-	h := make([]byte, 32)
-	h[len(h)-1] = m
-	hash := primitives.NewZeroHash()
-	hash.SetBytes(h)
-	e.Body.EBEntries = append(e.Body.EBEntries, hash)
+	return nil
 }
 
 // BuildHeader updates the Entry Block Header to include information about the
@@ -167,8 +165,8 @@ func (e *EBlock) AddEndOfMinuteMarker(m byte) {
 func (e *EBlock) BuildHeader() error {
 	callTime := time.Now().UnixNano()
 	defer entryBlockBuildHeader.Observe(float64(time.Now().UnixNano() - callTime))	
-	e.Header.SetBodyMR(e.Body.MR())
-	e.Header.SetEntryCount(uint32(len(e.Body.EBEntries)))
+	e.GetHeader().SetBodyMR(e.GetBody().MR())
+	e.GetHeader().SetEntryCount(uint32(len(e.GetEntryHashes())))
 	return nil
 }
 
@@ -195,7 +193,7 @@ func (e *EBlock) HeaderHash() (interfaces.IHash, error) {
 	callTime := time.Now().UnixNano()
 	defer entryBlockHeaderHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	e.BuildHeader()
-	header, err := e.Header.MarshalBinary()
+	header, err := e.GetHeader().MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +205,7 @@ func (e *EBlock) BodyKeyMR() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer entryBlockBodyKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	e.BuildHeader()
-	return e.Header.GetBodyMR()
+	return e.GetHeader().GetBodyMR()
 }
 
 // KeyMR returns the hash of the hash of the Entry Block Header concatinated
@@ -223,19 +221,20 @@ func (e *EBlock) KeyMR() (interfaces.IHash, error) {
 	if err != nil {
 		return nil, err
 	}
-	return primitives.Sha(append(h.Bytes(), e.Header.GetBodyMR().Bytes()...)), nil
+	return primitives.Sha(append(h.Bytes(), e.GetHeader().GetBodyMR().Bytes()...)), nil
 }
 
 // MarshalBinary returns the serialized binary form of the Entry Block.
 func (e *EBlock) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	buf := new(primitives.Buffer)
 
 	if err := e.BuildHeader(); err != nil {
 		return nil, err
 	}
-	if p, err := e.Header.MarshalBinary(); err != nil {
+	if p, err := e.GetHeader().MarshalBinary(); err != nil {
 		return nil, err
 	} else {
 		buf.Write(p)
@@ -277,7 +276,11 @@ func (e *EBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	defer entryBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	newData = data
 
-	newData, err = e.Header.UnmarshalBinaryData(newData)
+	if e.Header == nil {
+		e.Header = new(EBlockHeader)
+	}
+
+	newData, err = e.GetHeader().UnmarshalBinaryData(newData)
 	if err != nil {
 		return
 	}
@@ -301,9 +304,10 @@ func (e *EBlock) UnmarshalBinary(data []byte) (err error) {
 func (e *EBlock) marshalBodyBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryBlockmarshalBodyBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	buf := new(primitives.Buffer)
 
-	for _, v := range e.Body.EBEntries {
+	for _, v := range e.GetEntryHashes() {
 		buf.Write(v.Bytes())
 	}
 
@@ -319,18 +323,19 @@ func (e *EBlock) unmarshalBodyBinaryData(data []byte) (newData []byte, err error
 			err = fmt.Errorf("Error unmarshalling: %v", r)
 		}
 	}()
+	e.Init()
 
 	buf := primitives.NewBuffer(data)
 	hash := make([]byte, 32)
 
-	for i := uint32(0); i < e.Header.GetEntryCount(); i++ {
+	for i := uint32(0); i < e.GetHeader().GetEntryCount(); i++ {
 		if _, err := buf.Read(hash); err != nil {
 			return nil, err
 		}
 
 		h := primitives.NewZeroHash()
 		h.SetBytes(hash)
-		e.Body.EBEntries = append(e.Body.EBEntries, h)
+		e.GetBody().AddEBEntry(h)
 	}
 
 	newData = buf.DeepCopyBytes()
@@ -356,17 +361,12 @@ func (e *EBlock) JSONString() (string, error) {
 	return primitives.EncodeJSONString(e)
 }
 
-func (e *EBlock) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
-}
-
 func (e *EBlock) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryBlockString.Observe(float64(time.Now().UnixNano() - callTime))	
-	str := e.Header.String()
-	str = str + e.Body.String()
+	e.Init()
+	str := e.GetHeader().String()
+	str = str + e.GetBody().String()
 	return str
 }
 

@@ -5,7 +5,6 @@
 package entryCreditBlock
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -39,9 +38,34 @@ var _ interfaces.ShortInterpretable = (*CommitChain)(nil)
 var _ interfaces.IECBlockEntry = (*CommitChain)(nil)
 var _ interfaces.ISignable = (*CommitChain)(nil)
 
+func (e *CommitChain) Init() {
+	if e.MilliTime == nil {
+		e.MilliTime = new(primitives.ByteSlice6)
+	}
+	if e.ChainIDHash == nil {
+		e.ChainIDHash = primitives.NewZeroHash()
+	}
+	if e.Weld == nil {
+		e.Weld = primitives.NewZeroHash()
+	}
+	if e.EntryHash == nil {
+		e.EntryHash = primitives.NewZeroHash()
+	}
+	if e.ECPubKey == nil {
+		e.ECPubKey = new(primitives.ByteSlice32)
+	}
+	if e.Sig == nil {
+		e.Sig = new(primitives.ByteSlice64)
+	}
+	if e.SigHash == nil {
+		e.SigHash = primitives.NewZeroHash()
+	}
+}
+
 func (e *CommitChain) String() string {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitChainString.Observe(float64(time.Now().UnixNano() - callTime))	
+	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf(" %-20s\n", "CommitChain"))
 	out.WriteString(fmt.Sprintf("   %-20s %d\n", "Version", e.Version))
@@ -128,6 +152,7 @@ func (c *CommitChain) CommitMsg() []byte {
 func (c *CommitChain) GetTimestamp() interfaces.Timestamp {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	a := make([]byte, 2, 8)
 	a = append(a, c.MilliTime[:]...)
 	milli := uint64(binary.BigEndian.Uint64(a))
@@ -138,6 +163,7 @@ func (c *CommitChain) IsValid() bool {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitIsValid.Observe(float64(time.Now().UnixNano() - callTime))	
 
+	c.Init()
 	//double check the credits in the commit
 	if c.Credits < 10 || c.Version != 0 {
 		return false
@@ -156,16 +182,15 @@ func (c *CommitChain) GetHash() interfaces.IHash {
 func (c *CommitChain) GetSigHash() interfaces.IHash {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitGetSigHash.Observe(float64(time.Now().UnixNano() - callTime))	
-	if c.SigHash == nil {
-		data := c.CommitMsg()
-		c.SigHash = primitives.Sha(data)
-	}
+	data := c.CommitMsg()
+	c.SigHash = primitives.Sha(data)
 	return c.SigHash
 }
 
 func (c *CommitChain) MarshalBinarySig() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitMarshalBinarySig.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	buf := new(primitives.Buffer)
 
 	// 1 byte Version
@@ -197,6 +222,7 @@ func (c *CommitChain) MarshalBinarySig() ([]byte, error) {
 func (c *CommitChain) MarshalBinaryTransaction() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitMarshalBinaryTransaction.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	buf := new(primitives.Buffer)
 
 	b, err := c.MarshalBinarySig()
@@ -216,6 +242,7 @@ func (c *CommitChain) MarshalBinaryTransaction() ([]byte, error) {
 func (c *CommitChain) MarshalBinary() ([]byte, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	buf := new(primitives.Buffer)
 
 	b, err := c.MarshalBinaryTransaction()
@@ -237,6 +264,7 @@ func (c *CommitChain) MarshalBinary() ([]byte, error) {
 func (c *CommitChain) Sign(privateKey []byte) error {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitSign.Observe(float64(time.Now().UnixNano() - callTime))	
+	c.Init()
 	sig, err := primitives.SignSignable(privateKey, c)
 	if err != nil {
 		return err
@@ -407,10 +435,4 @@ func (e *CommitChain) JSONString() (string, error) {
 	callTime := time.Now().UnixNano()
 	defer entryCreditBlockCommitJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
-}
-
-func (e *CommitChain) JSONBuffer(b *bytes.Buffer) error {
-	callTime := time.Now().UnixNano()
-	defer entryCreditBlockCommitJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
-	return primitives.EncodeJSONToBuffer(e, b)
 }
