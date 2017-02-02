@@ -14,11 +14,13 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
 	"github.com/FactomProject/factomd/common/primitives"
+	"github.com/FactomProject/weavelink"
 )
 
 // Controller manages the peer to peer network.
@@ -51,6 +53,7 @@ type Controller struct {
 	lastPeerRequest            time.Time       // Last time we asked peers about the peers they know about.
 	specialPeersString         string          // configuration set special peers
 	partsAssembler             *PartsAssembler // a data structure that assembles full messages from received message parts
+	useWeavelink               bool            // flag to indicate we should try to connect to our peers via weavelink, too
 }
 
 type ControllerInit struct {
@@ -61,6 +64,7 @@ type ControllerInit struct {
 	SeedURL                  string           // URL to a source of peer info
 	SpecialPeers             string           // Peers to always connect to at startup, and stay persistent
 	ConnectionMetricsChannel chan interface{} // Channel on which we put the connection metrics map, periodically.
+	UseWeavelink             bool             // flag to indicate we should try to connect to our peers via weavelink, too
 }
 
 // CommandDialPeer is used to instruct the Controller to dial a peer address
@@ -177,6 +181,7 @@ func (c *Controller) Init(ci ControllerInit) *Controller {
 	c.connectionMetricsChannel = ci.ConnectionMetricsChannel
 	c.listenPort = ci.Port
 	NetworkListenPort = ci.Port
+	c.useWeavelink = ci.UseWeavelink
 	c.lastPeerManagement = time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	c.lastPeerRequest = time.Now()
 	CurrentNetwork = ci.Network
@@ -240,6 +245,11 @@ func (c *Controller) ChangeLogLevel(level uint8) {
 
 func (c *Controller) DialPeer(peer Peer, persistent bool) {
 	debug("ctrlr", "DialPeer message for %s", peer.PeerIdent())
+	if c.useWeavelink {
+		weavelinkPort, _ := strconv.Atoi(peer.Port)
+		weavelinkPort += 10
+		weavelink.InitiateNewConnection(fmt.Sprintf("%s:%d", peer.Address, weavelinkPort))
+	}
 	BlockFreeChannelSend(c.commandChannel, CommandDialPeer{peer: peer, persistent: persistent})
 }
 

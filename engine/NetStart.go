@@ -336,6 +336,17 @@ func NetStart(s *state.State) {
 		if 0 < networkPortOverride {
 			networkPort = fmt.Sprintf("%d", networkPortOverride)
 		}
+
+		if useWeavelink {
+			s.UseWeavelink = true
+			weavelink.Init(":8002",
+				fmt.Sprintf(":%d", (s.PortNumber+10)),
+				"00:00:00:00:00:02",
+				s.GetFactomNodeName(),
+				"",
+				"default")
+		}
+
 		ci := p2p.ControllerInit{
 			Port:                     networkPort,
 			PeersFile:                s.PeersFile,
@@ -344,6 +355,7 @@ func NetStart(s *state.State) {
 			SeedURL:                  seedURL,
 			SpecialPeers:             specialPeers,
 			ConnectionMetricsChannel: connectionMetricsChannel,
+			UseWeavelink:             s.UseWeavelink,
 		}
 		p2pNetwork = new(p2p.Controller).Init(ci)
 		p2pNetwork.StartNetwork()
@@ -363,10 +375,6 @@ func NetStart(s *state.State) {
 		// Command line peers lets us manually set special peers
 		p2pNetwork.DialSpecialPeersString(peers)
 		go networkHousekeeping() // This goroutine executes once a second to keep the proxy apprised of the network status.
-		if useWeavelink {
-			s.UseWeavelink = true
-			weavelink.Init()
-		}
 	}
 
 	switch net {
