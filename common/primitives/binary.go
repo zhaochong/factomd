@@ -18,6 +18,8 @@ type Buffer struct {
 }
 
 func (b *Buffer) DeepCopyBytes() []byte {
+//	callTime := time.Now().UnixNano()
+//	defer primitivesBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	return b.Next(b.Len())
 }
 
