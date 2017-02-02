@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"math"
 
@@ -59,38 +60,56 @@ var _ interfaces.IMsg = (*FullServerFault)(nil)
 var _ Signable = (*FullServerFault)(nil)
 
 func (m *FullServerFault) GetAmINegotiator() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetAmINegotiator.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.AmINegotiator
 }
 
 func (m *FullServerFault) SetAmINegotiator(b bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultSetAmINegotiator.Observe(float64(time.Now().UnixNano() - callTime))
 	m.AmINegotiator = b
 }
 
 func (m *FullServerFault) GetMyVoteTallied() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetMyVoteTallied.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.MyVoteTallied
 }
 
 func (m *FullServerFault) SetMyVoteTallied(b bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultSetMyVoteTallied.Observe(float64(time.Now().UnixNano() - callTime))
 	m.MyVoteTallied = b
 }
 
 func (m *FullServerFault) GetPledgeDone() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetPledgeDone.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.PledgeDone
 }
 
 func (m *FullServerFault) SetPledgeDone(b bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultSetPledgeDone.Observe(float64(time.Now().UnixNano() - callTime))
 	m.PledgeDone = b
 }
 
 func (m *FullServerFault) GetLastMatch() int64 {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetLastMatch.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.LastMatch
 }
 
 func (m *FullServerFault) SetLastMatch(b int64) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultSetLastMatch.Observe(float64(time.Now().UnixNano() - callTime))
 	m.LastMatch = b
 }
 
 func (m *FullServerFault) IsNil() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultIsNil.Observe(float64(time.Now().UnixNano() - callTime))
 	if m == nil {
 		return true
 	}
@@ -104,6 +123,8 @@ func (m *FullServerFault) IsNil() bool {
 }
 
 func (m *FullServerFault) AddFaultVote(issuerID [32]byte, sig interfaces.IFullSignature) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultAddFaultVote.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.IsNil() {
 		return
 	}
@@ -115,6 +136,8 @@ func (m *FullServerFault) AddFaultVote(issuerID [32]byte, sig interfaces.IFullSi
 }
 
 func (m *FullServerFault) Priority(state interfaces.IState) (priority int64) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultPriority.Observe(float64(time.Now().UnixNano() - callTime))
 	now := state.GetTimestamp()
 
 	// After 20 seconds, a negotiation's priority is now zero.
@@ -134,6 +157,8 @@ func (m *FullServerFault) Priority(state interfaces.IState) (priority int64) {
 // Return the serial height for this Full Fault message.  Can return nil if there is
 // no process list at this dbheight, or if we are missing a preceeding Full Fault message.
 func (m *FullServerFault) GetSerialHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetSerialHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.SSerialHash == nil {
 		sh, err := primitives.CreateHash(m.SSerialHash, m.GetCoreHash())
 		if err != nil {
@@ -145,18 +170,26 @@ func (m *FullServerFault) GetSerialHash() interfaces.IHash {
 }
 
 func (m *FullServerFault) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	return state.ProcessFullServerFault(dbheight, m)
 }
 
 func (m *FullServerFault) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *FullServerFault) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *FullServerFault) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -168,6 +201,8 @@ func (m *FullServerFault) GetMsgHash() interfaces.IHash {
 }
 
 func (m *FullServerFault) GetCoreHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetCoreHash.Observe(float64(time.Now().UnixNano() - callTime))
 	data, err := m.MarshalCore()
 	if err != nil {
 		return nil
@@ -176,14 +211,20 @@ func (m *FullServerFault) GetCoreHash() interfaces.IHash {
 }
 
 func (m *FullServerFault) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *FullServerFault) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.FULL_SERVER_FAULT_MSG
 }
 
 func (m *FullServerFault) MarshalCore() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultMarshalCore.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Server Fault Core: %v", r)
@@ -217,6 +258,8 @@ func (m *FullServerFault) MarshalCore() (data []byte, err error) {
 }
 
 func (m *FullServerFault) MarshalForSF() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultMarshalForSF.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Server Fault Core: %v", r)
@@ -250,6 +293,8 @@ func (m *FullServerFault) MarshalForSF() (data []byte, err error) {
 }
 
 func (m *FullServerFault) MarshalForSignature() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Invalid Server Fault: %v", r)
@@ -304,6 +349,8 @@ func (m *FullServerFault) MarshalForSignature() (data []byte, err error) {
 }
 
 func (sl *SigList) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, uint32(sl.Length))
@@ -320,6 +367,8 @@ func (sl *SigList) MarshalBinary() (data []byte, err error) {
 }
 
 func (sl *SigList) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -342,6 +391,8 @@ func (sl *SigList) UnmarshalBinaryData(data []byte) (newData []byte, err error) 
 }
 
 func (m *FullServerFault) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	resp, err := m.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -361,6 +412,8 @@ func (m *FullServerFault) MarshalBinary() (data []byte, err error) {
 
 // Make this stuff easier to read.
 func Unmarshall(thing interfaces.BinaryMarshallable, err error, data []byte) ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultUnmarshall.Observe(float64(time.Now().UnixNano() - callTime))
 	if err != nil {
 		return nil, err
 	}
@@ -372,6 +425,8 @@ func Unmarshall(thing interfaces.BinaryMarshallable, err error, data []byte) ([]
 //                               UnmarshalBinaryData for FullServerFault
 //
 func (m *FullServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFault.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling With Signatures Invalid Server Fault: %v", r)
@@ -436,19 +491,27 @@ func (m *FullServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err 
 }
 
 func (m *FullServerFault) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *FullServerFault) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *FullServerFault) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *FullServerFault) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -458,6 +521,8 @@ func (m *FullServerFault) Sign(key interfaces.Signer) error {
 }
 
 func (m *FullServerFault) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultString.Observe(float64(time.Now().UnixNano() - callTime))
 	if m == nil {
 		return "-nil-"
 	}
@@ -476,6 +541,8 @@ func (m *FullServerFault) String() string {
 }
 
 func (m *FullServerFault) StringWithSigCnt(s interfaces.IState) string {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultStringWithSigCnt.Observe(float64(time.Now().UnixNano() - callTime))
 	if m == nil {
 		return "-nil-"
 	}
@@ -495,6 +562,8 @@ func (m *FullServerFault) StringWithSigCnt(s interfaces.IState) string {
 }
 
 func (m *FullServerFault) GetDBHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.DBHeight
 }
 
@@ -503,6 +572,8 @@ func (m *FullServerFault) GetDBHeight() uint32 {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *FullServerFault) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultValidate.Observe(float64(time.Now().UnixNano() - callTime))
 
 	// Ignore old faults
 	if m.DBHeight <= state.GetHighestSavedBlk() {
@@ -547,14 +618,20 @@ func (m *FullServerFault) Validate(state interfaces.IState) int {
 }
 
 func (m *FullServerFault) SetAlreadyProcessed() {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultSetAlreadyProcessed.Observe(float64(time.Now().UnixNano() - callTime))
 	m.alreadyProcessed = true
 }
 
 func (m *FullServerFault) GetAlreadyProcessed() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultGetAlreadyProcessed.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.alreadyProcessed
 }
 
 func (m *FullServerFault) HasEnoughSigs(state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultHasEnoughSigs.Observe(float64(time.Now().UnixNano() - callTime))
 	sigTally := m.SigTally(state)
 	if sigTally > len(state.GetFedServers(m.DBHeight))/2 {
 		return true
@@ -563,6 +640,8 @@ func (m *FullServerFault) HasEnoughSigs(state interfaces.IState) bool {
 }
 
 func (m *FullServerFault) SigTally(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultSigTally.Observe(float64(time.Now().UnixNano() - callTime))
 	validSigCount := 0
 	// Check main signature
 	bytes, err := m.MarshalForSignature()
@@ -597,26 +676,38 @@ func (m *FullServerFault) ComputeVMIndex(state interfaces.IState) {
 
 // Execute the leader functions of the given message
 func (m *FullServerFault) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	m.FollowerExecute(state)
 }
 
 func (m *FullServerFault) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteFullFault(m)
 }
 
 func (e *FullServerFault) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *FullServerFault) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *FullServerFault) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (a *FullServerFault) IsSameAs(b *FullServerFault) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -644,6 +735,8 @@ func (a *FullServerFault) IsSameAs(b *FullServerFault) bool {
 }
 
 func (a *FullServerFault) ToAdminBlockEntry() *adminBlock.ServerFault {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultToAdminBlockEntry.Observe(float64(time.Now().UnixNano() - callTime))
 	sf := new(adminBlock.ServerFault)
 
 	sf.Timestamp = a.Timestamp
@@ -664,6 +757,8 @@ func (a *FullServerFault) ToAdminBlockEntry() *adminBlock.ServerFault {
 //*******************************************************************************
 
 func NewFullServerFault(Previous *FullServerFault, faultMessage *ServerFault, sigList []interfaces.IFullSignature, sysHeight int) *FullServerFault {
+	callTime := time.Now().UnixNano()
+	defer messagesFullServerFaultNewFullServerFault.Observe(float64(time.Now().UnixNano() - callTime))
 	sf := new(FullServerFault)
 	sf.ClearFault = false
 	sf.Timestamp = faultMessage.Timestamp

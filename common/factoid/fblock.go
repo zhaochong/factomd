@@ -45,6 +45,8 @@ var _ interfaces.BinaryMarshallableAndCopyable = (*FBlock)(nil)
 var _ interfaces.DatabaseBlockWithEntries = (*FBlock)(nil)
 
 func (c *FBlock) GetEntryHashes() []interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetEntryHashes.Observe(float64(time.Now().UnixNano() - callTime))	
 	entries := c.Transactions[:]
 	answer := make([]interfaces.IHash, len(entries))
 	for i, entry := range entries {
@@ -54,6 +56,8 @@ func (c *FBlock) GetEntryHashes() []interfaces.IHash {
 }
 
 func (c *FBlock) GetTransactionByHash(hash interfaces.IHash) interfaces.ITransaction {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetTransactionByHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	if hash == nil {
 		return nil
 	}
@@ -71,6 +75,8 @@ func (c *FBlock) GetTransactionByHash(hash interfaces.IHash) interfaces.ITransac
 }
 
 func (c *FBlock) GetEntrySigHashes() []interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetEntrySigHashes.Observe(float64(time.Now().UnixNano() - callTime))	
 	entries := c.Transactions[:]
 	answer := make([]interfaces.IHash, len(entries))
 	for i, entry := range entries {
@@ -80,23 +86,33 @@ func (c *FBlock) GetEntrySigHashes() []interfaces.IHash {
 }
 
 func (c *FBlock) New() interfaces.BinaryMarshallableAndCopyable {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockNew.Observe(float64(time.Now().UnixNano() - callTime))	
 	return new(FBlock)
 }
 
 func (c *FBlock) DatabasePrimaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.GetKeyMR()
 }
 
 func (c *FBlock) DatabaseSecondaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.GetLedgerKeyMR()
 }
 
 func (c *FBlock) GetDatabaseHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.DBHeight
 }
 
 // Return the timestamp of the coinbase transaction
 func (b *FBlock) GetCoinbaseTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetCoinbaseTimestamp.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(b.Transactions) == 0 {
 		return nil
 	}
@@ -104,6 +120,8 @@ func (b *FBlock) GetCoinbaseTimestamp() interfaces.Timestamp {
 }
 
 func (b *FBlock) EndOfPeriod(period int) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockEndOfPeriod.Observe(float64(time.Now().UnixNano() - callTime))	
 	if period == 0 {
 		return
 	} else {
@@ -116,18 +134,26 @@ func (b *FBlock) EndOfPeriod(period int) {
 }
 
 func (b *FBlock) GetTransactions() []interfaces.ITransaction {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetTransactions.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.Transactions
 }
 
 func (b FBlock) GetNewInstance() interfaces.IFBlock {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetNewInstance.Observe(float64(time.Now().UnixNano() - callTime))	
 	return new(FBlock)
 }
 
 func (b *FBlock) GetEndOfPeriod() [10]int {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetEndOfPeriod.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.endOfPeriod
 }
 
 func (b *FBlock) MarshalTrans() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockMarshalTrans.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	var periodMark = 0
 	var i int
@@ -166,6 +192,8 @@ func (b *FBlock) MarshalTrans() ([]byte, error) {
 }
 
 func (b *FBlock) MarshalHeader() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockMarshalHeader.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	out.Write(constants.FACTOID_CHAINID)
@@ -217,6 +245,8 @@ func (b *FBlock) MarshalHeader() ([]byte, error) {
 
 // Write out the block
 func (b *FBlock) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	data, err := b.MarshalHeader()
@@ -235,6 +265,8 @@ func (b *FBlock) MarshalBinary() ([]byte, error) {
 }
 
 func UnmarshalFBlock(data []byte) (interfaces.IFBlock, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockUnmarshalFBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	block := new(FBlock)
 
 	err := block.UnmarshalBinary(data)
@@ -248,6 +280,8 @@ func UnmarshalFBlock(data []byte) (interfaces.IFBlock, error) {
 // UnmarshalBinary assumes that the Binary is all good.  We do error
 // out if there isn't enough data, or the transaction is too large.
 func (b *FBlock) UnmarshalBinaryData(data []byte) (newdata []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	// To catch memory errors, we capture the panic and turn it into
 	// a reported error.
 	defer func() {
@@ -321,6 +355,8 @@ func (b *FBlock) UnmarshalBinaryData(data []byte) (newdata []byte, err error) {
 }
 
 func (b *FBlock) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = b.UnmarshalBinaryData(data)
 	return err
 }
@@ -329,6 +365,8 @@ func (b *FBlock) UnmarshalBinary(data []byte) (err error) {
 // in order of the structures.  Largely used to test and debug, but
 // generally useful.
 func (b1 *FBlock) IsEqual(block interfaces.IBlock) []interfaces.IBlock {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockIsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	b2, ok := block.(*FBlock)
 
@@ -373,11 +411,16 @@ func (b1 *FBlock) IsEqual(block interfaces.IBlock) []interfaces.IBlock {
 }
 
 func (b *FBlock) GetChainID() interfaces.IHash {
+		callTime := time.Now().UnixNano()
+	defer factoidFBlockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))	
+
 	return primitives.NewHash(constants.FACTOID_CHAINID)
 }
 
 // Calculates the Key Merkle Root for this block and returns it.
 func (b *FBlock) GetKeyMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	bodyMR := b.GetBodyMR()
 
 	data, err := b.MarshalHeader()
@@ -392,10 +435,14 @@ func (b *FBlock) GetKeyMR() interfaces.IHash {
 }
 
 func (b *FBlock) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.GetLedgerKeyMR()
 }
 
 func (b *FBlock) GetLedgerKeyMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetLedgerKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	ledgerMR := b.GetLedgerMR()
 
 	data, err := b.MarshalHeader()
@@ -411,6 +458,8 @@ func (b *FBlock) GetLedgerKeyMR() interfaces.IHash {
 
 // Returns the LedgerMR for this block.
 func (b *FBlock) GetLedgerMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetLedgerKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	hashes := make([]interfaces.IHash, 0, len(b.Transactions))
 	marker := 0
 	for i, trans := range b.Transactions {
@@ -431,6 +480,8 @@ func (b *FBlock) GetLedgerMR() interfaces.IHash {
 }
 
 func (b *FBlock) GetBodyMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetBodyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	hashes := make([]interfaces.IHash, 0, len(b.Transactions))
 	marker := 0
@@ -453,43 +504,63 @@ func (b *FBlock) GetBodyMR() interfaces.IHash {
 }
 
 func (b *FBlock) GetPrevKeyMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetPrevKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.PrevKeyMR
 }
 
 func (b *FBlock) SetPrevKeyMR(hash interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockSetPrevKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.PrevKeyMR = hash
 }
 
 func (b *FBlock) GetPrevLedgerKeyMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockGetPrevLedgerKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.PrevLedgerKeyMR
 }
 
 func (b *FBlock) SetPrevLedgerKeyMR(hash interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockSetPrevLedgerKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.PrevLedgerKeyMR = hash
 }
 
 func (b *FBlock) CalculateHashes() {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockCalculateHashes.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.BodyMR = nil
 	b.GetBodyMR()
 }
 
 func (b *FBlock) SetDBHeight(dbheight uint32) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.DBHeight = dbheight
 }
 
 func (b *FBlock) GetDBHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.DBHeight
 }
 
 func (b *FBlock) SetExchRate(rate uint64) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.ExchRate = rate
 }
 
 func (b *FBlock) GetExchRate() uint64 {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.ExchRate
 }
 
 func (b FBlock) ValidateTransaction(index int, trans interfaces.ITransaction) error {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockValidateTransaction.Observe(float64(time.Now().UnixNano() - callTime))	
 	// Calculate the fee due.
 	{
 		err := trans.Validate(index)
@@ -539,6 +610,8 @@ func (b FBlock) ValidateTransaction(index int, trans interfaces.ITransaction) er
 }
 
 func (b FBlock) Validate() error {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockValidateTransaction.Observe(float64(time.Now().UnixNano() - callTime))	
 	for i, trans := range b.Transactions {
 		if err := b.ValidateTransaction(i, trans); err != nil {
 			return nil
@@ -574,6 +647,8 @@ func (b FBlock) Validate() error {
 // payout to the servers, so it has no inputs.   This transaction must
 // be deterministic so that all servers will know and expect its output.
 func (b *FBlock) AddCoinbase(trans interfaces.ITransaction) error {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockAddCoinbase.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.BodyMR = nil
 	if len(b.Transactions) != 0 {
 		return fmt.Errorf("The coinbase transaction must be the first transaction")
@@ -600,6 +675,8 @@ func (b *FBlock) AddCoinbase(trans interfaces.ITransaction) error {
 // Add the given transaction to this block.  Reports an error if this
 // cannot be done, or if the transaction is invalid.
 func (b *FBlock) AddTransaction(trans interfaces.ITransaction) error {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockAddTransaction.Observe(float64(time.Now().UnixNano() - callTime))	
 	// These tests check that the Transaction itself is valid.  If it
 	// is not internally valid, it never will be valid.
 	b.BodyMR = nil
@@ -615,6 +692,8 @@ func (b *FBlock) AddTransaction(trans interfaces.ITransaction) error {
 }
 
 func (b FBlock) String() string {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockString.Observe(float64(time.Now().UnixNano() - callTime))	
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return err.Error()
@@ -624,6 +703,8 @@ func (b FBlock) String() string {
 
 // Marshal to text.  Largely a debugging thing.
 func (b FBlock) CustomMarshalText() (text []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	out.WriteString("Transaction Block\n")
@@ -682,20 +763,28 @@ func (b FBlock) CustomMarshalText() (text []byte, err error) {
 }
 
 func (e *FBlock) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *FBlock) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *FBlock) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 type ExpandedFBlock FBlock
 
 func (e FBlock) MarshalJSON() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))	
 	return json.Marshal(struct {
 		ExpandedFBlock
 		ChainID     string `json:"chainid"`
@@ -714,6 +803,8 @@ func (e FBlock) MarshalJSON() ([]byte, error) {
  **************************/
 
 func NewFBlock(prev interfaces.IFBlock) interfaces.IFBlock {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockNewFBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	scb := new(FBlock)
 	scb.BodyMR = new(primitives.Hash)
 	if prev != nil {
@@ -731,6 +822,8 @@ func NewFBlock(prev interfaces.IFBlock) interfaces.IFBlock {
 }
 
 func CheckBlockPairIntegrity(block interfaces.IFBlock, prev interfaces.IFBlock) error {
+	callTime := time.Now().UnixNano()
+	defer factoidFBlockCheckBlockPairIntegrity.Observe(float64(time.Now().UnixNano() - callTime))	
 	if block == nil {
 		return fmt.Errorf("No block specified")
 	}

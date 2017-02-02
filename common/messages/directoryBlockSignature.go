@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/directoryBlock"
@@ -41,6 +42,8 @@ var _ interfaces.IMsg = (*DirectoryBlockSignature)(nil)
 var _ Signable = (*DirectoryBlockSignature)(nil)
 
 func (a *DirectoryBlockSignature) IsSameAs(b *DirectoryBlockSignature) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -83,18 +86,26 @@ func (a *DirectoryBlockSignature) IsSameAs(b *DirectoryBlockSignature) bool {
 }
 
 func (e *DirectoryBlockSignature) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	return state.ProcessDBSig(dbheight, e)
 }
 
 func (m *DirectoryBlockSignature) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *DirectoryBlockSignature) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *DirectoryBlockSignature) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	data, _ := m.MarshalForSignature()
 	if data == nil {
 		return nil
@@ -105,6 +116,8 @@ func (m *DirectoryBlockSignature) GetMsgHash() interfaces.IHash {
 }
 
 func (m *DirectoryBlockSignature) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.Timestamp == nil {
 		m.Timestamp = new(primitives.Timestamp)
 	}
@@ -112,6 +125,8 @@ func (m *DirectoryBlockSignature) GetTimestamp() interfaces.Timestamp {
 }
 
 func (m *DirectoryBlockSignature) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.DIRECTORY_BLOCK_SIGNATURE_MSG
 }
 
@@ -128,6 +143,8 @@ func (m *DirectoryBlockSignature) Bytes() []byte {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *DirectoryBlockSignature) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.DBHeight < state.GetLLeaderHeight() {
 		state.AddStatus(fmt.Sprintf("DirectoryBlockSignature: Fail dbht: %v %s", state.GetLLeaderHeight(), m.String()))
 		return -1
@@ -179,14 +196,20 @@ func (m *DirectoryBlockSignature) ComputeVMIndex(state interfaces.IState) {
 
 // Execute the leader functions of the given message
 func (m *DirectoryBlockSignature) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.LeaderExecuteDBSig(m)
 }
 
 func (m *DirectoryBlockSignature) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteMsg(m)
 }
 
 func (m *DirectoryBlockSignature) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureSign.Observe(float64(time.Now().UnixNano() - callTime))
 	// Signature that goes into admin block
 	err := m.SignHeader(key)
 	if err != nil {
@@ -202,6 +225,8 @@ func (m *DirectoryBlockSignature) Sign(key interfaces.Signer) error {
 }
 
 func (m *DirectoryBlockSignature) SignHeader(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureSignHeader.Observe(float64(time.Now().UnixNano() - callTime))
 	header, err := m.DirectoryBlockHeader.MarshalBinary()
 	if err != nil {
 		return err
@@ -211,14 +236,20 @@ func (m *DirectoryBlockSignature) SignHeader(key interfaces.Signer) error {
 }
 
 func (m *DirectoryBlockSignature) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *DirectoryBlockSignature) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *DirectoryBlockSignature) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 
 	newData = data
 	if newData[0] != m.Type() {
@@ -280,11 +311,15 @@ func (m *DirectoryBlockSignature) UnmarshalBinaryData(data []byte) (newData []by
 }
 
 func (m *DirectoryBlockSignature) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *DirectoryBlockSignature) MarshalForSignature() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.DirectoryBlockHeader == nil {
 		m.DirectoryBlockHeader = directoryBlock.NewDBlockHeader()
 	}
@@ -340,6 +375,8 @@ func (m *DirectoryBlockSignature) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *DirectoryBlockSignature) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 
 	var sig interfaces.IFullSignature
 	resp, err := m.MarshalForSignature()
@@ -358,6 +395,8 @@ func (m *DirectoryBlockSignature) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *DirectoryBlockSignature) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureString.Observe(float64(time.Now().UnixNano() - callTime))
 	return fmt.Sprintf("%6s-VM%3d:          DBHt:%5d -- Signer[:3]=%x PrevDBKeyMR[:3]=%x hash[:3]=%x",
 		"DBSig",
 		m.VMIndex,
@@ -369,13 +408,19 @@ func (m *DirectoryBlockSignature) String() string {
 }
 
 func (e *DirectoryBlockSignature) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DirectoryBlockSignature) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DirectoryBlockSignature) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesDirectoryBlockSignatureJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }

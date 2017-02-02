@@ -20,6 +20,8 @@ var _ interfaces.IABEntry = (*AddFederatedServerBitcoinAnchorKey)(nil)
 var _ interfaces.BinaryMarshallable = (*AddFederatedServerBitcoinAnchorKey)(nil)
 
 func (e *AddFederatedServerBitcoinAnchorKey) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8x %12s %8x %12s %8s",
 		"AddFederatedServerBitcoinAnchorKey",
@@ -31,12 +33,16 @@ func (e *AddFederatedServerBitcoinAnchorKey) String() string {
 }
 
 func (c *AddFederatedServerBitcoinAnchorKey) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.UpdateAuthorityFromABEntry(c)
 	return nil
 }
 
 // Create a new DB Signature Entry
 func NewAddFederatedServerBitcoinAnchorKey(identityChainID interfaces.IHash, keyPriority byte, keyType byte, ecdsaPublicKey primitives.ByteSlice20) (e *AddFederatedServerBitcoinAnchorKey) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyNewAddFederatedServerBitcoinAnchorKey.Observe(float64(time.Now().UnixNano() - callTime))	
 	e = new(AddFederatedServerBitcoinAnchorKey)
 	e.IdentityChainID = identityChainID
 	e.KeyPriority = keyPriority
@@ -46,10 +52,14 @@ func NewAddFederatedServerBitcoinAnchorKey(identityChainID interfaces.IHash, key
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.TYPE_ADD_BTC_ANCHOR_KEY
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -73,6 +83,8 @@ func (e *AddFederatedServerBitcoinAnchorKey) MarshalBinary() ([]byte, error) {
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Add Federated Server Bitcoin Anchor Key: %v", r)
@@ -106,19 +118,27 @@ func (e *AddFederatedServerBitcoinAnchorKey) UnmarshalBinaryData(data []byte) (n
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerBitcoinAnchorKeyJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 

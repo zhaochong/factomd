@@ -7,6 +7,8 @@ package messages
 import (
 	"bytes"
 	"fmt"
+	"time"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -27,6 +29,8 @@ var _ interfaces.IMsg = (*InvalidDirectoryBlock)(nil)
 var _ Signable = (*InvalidDirectoryBlock)(nil)
 
 func (a *InvalidDirectoryBlock) IsSameAs(b *InvalidDirectoryBlock) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -49,6 +53,8 @@ func (a *InvalidDirectoryBlock) IsSameAs(b *InvalidDirectoryBlock) bool {
 }
 
 func (m *InvalidDirectoryBlock) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -58,20 +64,28 @@ func (m *InvalidDirectoryBlock) Sign(key interfaces.Signer) error {
 }
 
 func (m *InvalidDirectoryBlock) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *InvalidDirectoryBlock) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *InvalidDirectoryBlock) Process(uint32, interfaces.IState) bool { return true }
 
 func (m *InvalidDirectoryBlock) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *InvalidDirectoryBlock) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.hash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -83,6 +97,8 @@ func (m *InvalidDirectoryBlock) GetHash() interfaces.IHash {
 }
 
 func (m *InvalidDirectoryBlock) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -94,10 +110,14 @@ func (m *InvalidDirectoryBlock) GetMsgHash() interfaces.IHash {
 }
 
 func (m *InvalidDirectoryBlock) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *InvalidDirectoryBlock) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.INVALID_DIRECTORY_BLOCK_MSG
 }
 
@@ -110,6 +130,8 @@ func (m *InvalidDirectoryBlock) Bytes() []byte {
 }
 
 func (m *InvalidDirectoryBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlock.UnmarshalBinaryDataObserve(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -141,11 +163,15 @@ func (m *InvalidDirectoryBlock) UnmarshalBinaryData(data []byte) (newData []byte
 }
 
 func (m *InvalidDirectoryBlock) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *InvalidDirectoryBlock) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	resp, err := m.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -163,6 +189,8 @@ func (m *InvalidDirectoryBlock) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *InvalidDirectoryBlock) MarshalForSignature() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 	buf.Write([]byte{m.Type()})
 	if d, err := m.Timestamp.MarshalBinary(); err != nil {
@@ -218,13 +246,19 @@ func (m *InvalidDirectoryBlock) FollowerExecute(interfaces.IState) {
 }
 
 func (e *InvalidDirectoryBlock) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *InvalidDirectoryBlock) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *InvalidDirectoryBlock) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesInvalidDirectoryBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }

@@ -22,11 +22,15 @@ var _ interfaces.IABEntry = (*AddFederatedServerSigningKey)(nil)
 var _ interfaces.BinaryMarshallable = (*AddFederatedServerSigningKey)(nil)
 
 func (c *AddFederatedServerSigningKey) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.UpdateAuthorityFromABEntry(c)
 	return nil
 }
 
 func (e *AddFederatedServerSigningKey) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8x %12s %8s %12s %d",
 		"AddFederatedServerSigningKey",
@@ -39,6 +43,8 @@ func (e *AddFederatedServerSigningKey) String() string {
 
 // Create a new DB Signature Entry
 func NewAddFederatedServerSigningKey(identityChainID interfaces.IHash, keyPriority byte, publicKey primitives.PublicKey, height uint32) (e *AddFederatedServerSigningKey) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyNewAddFederatedServerSigningKey.Observe(float64(time.Now().UnixNano() - callTime))	
 	e = new(AddFederatedServerSigningKey)
 	e.IdentityChainID = identityChainID
 	e.KeyPriority = keyPriority
@@ -48,10 +54,14 @@ func NewAddFederatedServerSigningKey(identityChainID interfaces.IHash, keyPriori
 }
 
 func (e *AddFederatedServerSigningKey) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.TYPE_ADD_FED_SERVER_KEY
 }
 
 func (e *AddFederatedServerSigningKey) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -76,6 +86,8 @@ func (e *AddFederatedServerSigningKey) MarshalBinary() ([]byte, error) {
 }
 
 func (e *AddFederatedServerSigningKey) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Add Federated server Signing Key Entry: %v", r)
@@ -107,19 +119,27 @@ func (e *AddFederatedServerSigningKey) UnmarshalBinaryData(data []byte) (newData
 }
 
 func (e *AddFederatedServerSigningKey) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *AddFederatedServerSigningKey) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AddFederatedServerSigningKey) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AddFederatedServerSigningKey) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
@@ -132,6 +152,8 @@ func (e *AddFederatedServerSigningKey) Interpret() string {
 }
 
 func (e *AddFederatedServerSigningKey) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerSigningKeyHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)

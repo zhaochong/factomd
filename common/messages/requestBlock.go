@@ -7,6 +7,8 @@ package messages
 import (
 	"bytes"
 	"fmt"
+	"time"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -26,6 +28,8 @@ type RequestBlock struct {
 var _ interfaces.IMsg = (*RequestBlock)(nil)
 
 func (a *RequestBlock) IsSameAs(b *RequestBlock) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -41,10 +45,14 @@ func (a *RequestBlock) IsSameAs(b *RequestBlock) bool {
 func (m *RequestBlock) Process(uint32, interfaces.IState) bool { return true }
 
 func (m *RequestBlock) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *RequestBlock) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.hash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -56,6 +64,8 @@ func (m *RequestBlock) GetHash() interfaces.IHash {
 }
 
 func (m *RequestBlock) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -67,10 +77,14 @@ func (m *RequestBlock) GetMsgHash() interfaces.IHash {
 }
 
 func (m *RequestBlock) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *RequestBlock) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.REQUEST_BLOCK_MSG
 }
 
@@ -83,6 +97,8 @@ func (m *RequestBlock) Bytes() []byte {
 }
 
 func (m *RequestBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling RequestBlock: %v", r)
@@ -106,11 +122,15 @@ func (m *RequestBlock) UnmarshalBinaryData(data []byte) (newData []byte, err err
 }
 
 func (m *RequestBlock) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *RequestBlock) MarshalForSignature() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 	buf.Write([]byte{m.Type()})
 	if d, err := m.Timestamp.MarshalBinary(); err != nil {
@@ -125,11 +145,15 @@ func (m *RequestBlock) MarshalForSignature() (data []byte, err error) {
 }
 
 func (m *RequestBlock) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	//TODO: sign or delete
 	return m.MarshalForSignature()
 }
 
 func (m *RequestBlock) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlock.Observe(float64(time.Now().UnixNano() - callTime))
 	return "Request Block"
 }
 
@@ -171,13 +195,19 @@ func (m *RequestBlock) FollowerExecute(interfaces.IState) {
 }
 
 func (e *RequestBlock) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RequestBlock) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *RequestBlock) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesRequestBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }

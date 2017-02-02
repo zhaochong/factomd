@@ -26,6 +26,8 @@ var _ interfaces.ShortInterpretable = (*IncreaseBalance)(nil)
 var _ interfaces.IECBlockEntry = (*IncreaseBalance)(nil)
 
 func (e *IncreaseBalance) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf(" %-20s\n", "IncreaseBalance"))
 	out.WriteString(fmt.Sprintf("   %-20s %x\n", "ECPubKey", e.ECPubKey[:3]))
@@ -37,6 +39,8 @@ func (e *IncreaseBalance) String() string {
 }
 
 func NewIncreaseBalance() *IncreaseBalance {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceNewIncreaseBalance.Observe(float64(time.Now().UnixNano() - callTime))	
 	r := new(IncreaseBalance)
 	r.TXID = primitives.NewZeroHash()
 	return r
@@ -47,6 +51,8 @@ func (a *IncreaseBalance) GetEntryHash() interfaces.IHash {
 }
 
 func (e *IncreaseBalance) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -55,7 +61,9 @@ func (e *IncreaseBalance) Hash() interfaces.IHash {
 }
 
 func (e *IncreaseBalance) GetHash() interfaces.IHash {
-	return e.Hash()
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
+		return e.Hash()
 }
 
 func (e *IncreaseBalance) GetSigHash() interfaces.IHash {
@@ -63,6 +71,8 @@ func (e *IncreaseBalance) GetSigHash() interfaces.IHash {
 }
 
 func (b *IncreaseBalance) ECID() byte {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceECID.Observe(float64(time.Now().UnixNano() - callTime))	
 	return ECIDBalanceIncrease
 }
 
@@ -75,6 +85,8 @@ func (b *IncreaseBalance) Interpret() string {
 }
 
 func (b *IncreaseBalance) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	buf.Write(b.ECPubKey[:])
@@ -89,6 +101,8 @@ func (b *IncreaseBalance) MarshalBinary() ([]byte, error) {
 }
 
 func (b *IncreaseBalance) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling IncreaseBalance: %v", r)
@@ -124,19 +138,27 @@ func (b *IncreaseBalance) UnmarshalBinaryData(data []byte) (newData []byte, err 
 }
 
 func (b *IncreaseBalance) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *IncreaseBalance) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *IncreaseBalance) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *IncreaseBalance) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockincreaseBalanceJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 

@@ -45,6 +45,8 @@ type DBStateMsg struct {
 var _ interfaces.IMsg = (*DBStateMsg)(nil)
 
 func (a *DBStateMsg) IsSameAs(b *DBStateMsg) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			return
@@ -101,10 +103,14 @@ func (a *DBStateMsg) IsSameAs(b *DBStateMsg) bool {
 }
 
 func (m *DBStateMsg) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return m.DirectoryBlock.GetHash()
 }
 
 func (m *DBStateMsg) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	//	data, _ := m.MarshalBinary()
 	//	return primitives.Sha(data)
@@ -114,6 +120,8 @@ func (m *DBStateMsg) GetHash() interfaces.IHash {
 }
 
 func (m *DBStateMsg) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -125,18 +133,26 @@ func (m *DBStateMsg) GetMsgHash() interfaces.IHash {
 }
 
 func (m *DBStateMsg) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.DBSTATE_MSG
 }
 
 func (m *DBStateMsg) Int() int {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgInt.Observe(float64(time.Now().UnixNano() - callTime))	
 	return -1
 }
 
 func (m *DBStateMsg) Bytes() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgBytes.Observe(float64(time.Now().UnixNano() - callTime))	
 	return nil
 }
 
 func (m *DBStateMsg) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))	
 	return m.Timestamp
 }
 
@@ -145,6 +161,8 @@ func (m *DBStateMsg) GetTimestamp() interfaces.Timestamp {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *DBStateMsg) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgValidate.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	// No matter what, a block has to have what a block has to have.
 	if m.DirectoryBlock == nil || m.AdminBlock == nil || m.FactoidBlock == nil || m.EntryCreditBlock == nil {
@@ -196,6 +214,8 @@ func (m *DBStateMsg) Validate(state interfaces.IState) int {
 }
 
 func (m *DBStateMsg) SigTally(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgSigTally.Observe(float64(time.Now().UnixNano() - callTime))	
 	dbheight := m.DirectoryBlock.GetHeader().GetDBHeight()
 
 	validSigCount := 0
@@ -227,34 +247,50 @@ func (m *DBStateMsg) SigTally(state interfaces.IState) int {
 }
 
 func (m *DBStateMsg) ComputeVMIndex(state interfaces.IState) {}
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 
 // Execute the leader functions of the given message
 func (m *DBStateMsg) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))	
 	m.FollowerExecute(state)
 }
 
 func (m *DBStateMsg) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsg.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.FollowerExecuteDBState(m)
 }
 
 // Acknowledgements do not go into the process list.
 func (e *DBStateMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgProcess.Observe(float64(time.Now().UnixNano() - callTime))	
 	panic("DBStatemsg should never have its Process() method called")
 }
 
 func (e *DBStateMsg) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DBStateMsg) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DBStateMsg) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *DBStateMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block State Message: %v", r)
@@ -332,11 +368,15 @@ func (m *DBStateMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error
 }
 
 func (m *DBStateMsg) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *DBStateMsg) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -404,6 +444,8 @@ func (m *DBStateMsg) MarshalBinary() ([]byte, error) {
 }
 
 func (m *DBStateMsg) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgString.Observe(float64(time.Now().UnixNano() - callTime))	
 	data, _ := m.MarshalBinary()
 	return fmt.Sprintf("DBState: dbht:%3d [size: %11s] dblock %6x admin %6x fb %6x ec %6x hash %6x",
 		m.DirectoryBlock.GetHeader().GetDBHeight(),
@@ -416,6 +458,8 @@ func (m *DBStateMsg) String() string {
 }
 
 func NewDBStateMsg(timestamp interfaces.Timestamp,
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMsgNewDBStateMsg.Observe(float64(time.Now().UnixNano() - callTime))	
 	d interfaces.IDirectoryBlock,
 	a interfaces.IAdminBlock,
 	f interfaces.IFBlock,

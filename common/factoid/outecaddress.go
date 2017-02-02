@@ -22,6 +22,8 @@ type OutECAddress struct {
 var _ interfaces.IOutECAddress = (*OutECAddress)(nil)
 
 func (b OutECAddress) String() string {
+	callTime := time.Now().UnixNano()
+	defer factoidOutECAddressString.Observe(float64(time.Now().UnixNano() - callTime))	
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -34,6 +36,8 @@ func (oa OutECAddress) GetName() string {
 }
 
 func (a OutECAddress) CustomMarshalText() (text []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidOutECAddressCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))	
 	return a.CustomMarshalTextEC2("ecoutput")
 }
 
@@ -42,6 +46,8 @@ func (a OutECAddress) CustomMarshalText() (text []byte, err error) {
  ******************************/
 
 func NewOutECAddress(address interfaces.IAddress, amount uint64) interfaces.IOutECAddress {
+	callTime := time.Now().UnixNano()
+	defer factoidOutECAddressNewOutAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	ta := new(OutECAddress)
 	ta.Amount = amount
 	ta.Address = address

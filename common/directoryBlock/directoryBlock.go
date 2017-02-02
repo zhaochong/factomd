@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -33,6 +34,8 @@ var _ interfaces.DatabaseBatchable = (*DirectoryBlock)(nil)
 var _ interfaces.DatabaseBlockWithEntries = (*DirectoryBlock)(nil)
 
 func (c *DirectoryBlock) SetEntryHash(hash, chainID interfaces.IHash, index int) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockSetEntryHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if len(c.DBEntries) < index {
 		ent := make([]interfaces.IDBEntry, index)
 		copy(ent, c.DBEntries)
@@ -45,24 +48,32 @@ func (c *DirectoryBlock) SetEntryHash(hash, chainID interfaces.IHash, index int)
 }
 
 func (c *DirectoryBlock) SetABlockHash(aBlock interfaces.IAdminBlock) error {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockSetABlockHash.Observe(float64(time.Now().UnixNano() - callTime))
 	hash := aBlock.DatabasePrimaryIndex()
 	c.SetEntryHash(hash, aBlock.GetChainID(), 0)
 	return nil
 }
 
 func (c *DirectoryBlock) SetECBlockHash(ecBlock interfaces.IEntryCreditBlock) error {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockSetECBlockHash.Observe(float64(time.Now().UnixNano() - callTime))
 	hash := ecBlock.DatabasePrimaryIndex()
 	c.SetEntryHash(hash, ecBlock.GetChainID(), 1)
 	return nil
 }
 
 func (c *DirectoryBlock) SetFBlockHash(fBlock interfaces.IFBlock) error {
+	callTime := time.Now().UnixNano()
+	defer directorySetFBlockHash.Observe(float64(time.Now().UnixNano() - callTime))
 	hash := fBlock.DatabasePrimaryIndex()
 	c.SetEntryHash(hash, fBlock.GetChainID(), 2)
 	return nil
 }
 
 func (c *DirectoryBlock) GetEntryHashes() []interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetEntryHashes.Observe(float64(time.Now().UnixNano() - callTime))
 	entries := c.DBEntries[:]
 	answer := make([]interfaces.IHash, len(entries))
 	for i, entry := range entries {
@@ -76,6 +87,8 @@ func (c *DirectoryBlock) GetEntrySigHashes() []interfaces.IHash {
 }
 
 func (c *DirectoryBlock) Sort() {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockSort.Observe(float64(time.Now().UnixNano() - callTime))
 	done := false
 	for i := 3; !done && i < len(c.DBEntries)-1; i++ {
 		done = true
@@ -93,6 +106,8 @@ func (c *DirectoryBlock) Sort() {
 }
 
 func (c *DirectoryBlock) GetEntryHashesForBranch() []interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetEntryHashesForBranch.Observe(float64(time.Now().UnixNano() - callTime))
 	entries := c.DBEntries[:]
 	answer := make([]interfaces.IHash, 2*len(entries))
 	for i, entry := range entries {
@@ -103,10 +118,14 @@ func (c *DirectoryBlock) GetEntryHashesForBranch() []interfaces.IHash {
 }
 
 func (c *DirectoryBlock) GetDBEntries() []interfaces.IDBEntry {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetDBEntries.Observe(float64(time.Now().UnixNano() - callTime))
 	return c.DBEntries
 }
 
 func (c *DirectoryBlock) GetEBlockDBEntries() []interfaces.IDBEntry {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetEBlockDBEntries.Observe(float64(time.Now().UnixNano() - callTime))
 	answer := []interfaces.IDBEntry{}
 	for _, v := range c.DBEntries {
 		if v.GetChainID().String() == "000000000000000000000000000000000000000000000000000000000000000a" {
@@ -124,6 +143,8 @@ func (c *DirectoryBlock) GetEBlockDBEntries() []interfaces.IDBEntry {
 }
 
 func (c *DirectoryBlock) GetKeyMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
 	keyMR, err := c.BuildKeyMerkleRoot()
 	if err != nil {
 		panic("Failed to build the key MR")
@@ -135,14 +156,20 @@ func (c *DirectoryBlock) GetKeyMR() interfaces.IHash {
 }
 
 func (c *DirectoryBlock) GetHeader() interfaces.IDirectoryBlockHeader {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetHeader.Observe(float64(time.Now().UnixNano() - callTime))
 	return c.Header
 }
 
 func (c *DirectoryBlock) SetHeader(header interfaces.IDirectoryBlockHeader) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockSetHeader.Observe(float64(time.Now().UnixNano() - callTime))
 	c.Header = header
 }
 
 func (c *DirectoryBlock) SetDBEntries(dbEntries []interfaces.IDBEntry) error {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockSetDBEntries.Observe(float64(time.Now().UnixNano() - callTime))
 	c.DBEntries = dbEntries
 	c.GetHeader().SetBlockCount(uint32(len(dbEntries)))
 	_, err := c.BuildBodyMR()
@@ -153,6 +180,8 @@ func (c *DirectoryBlock) SetDBEntries(dbEntries []interfaces.IDBEntry) error {
 }
 
 func (c *DirectoryBlock) New() interfaces.BinaryMarshallableAndCopyable {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockNew.Observe(float64(time.Now().UnixNano() - callTime))
 	dBlock := new(DirectoryBlock)
 	dBlock.Header = NewDBlockHeader()
 	dBlock.DBHash = primitives.NewZeroHash()
@@ -161,34 +190,50 @@ func (c *DirectoryBlock) New() interfaces.BinaryMarshallableAndCopyable {
 }
 
 func (c *DirectoryBlock) GetDatabaseHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))
 	return c.GetHeader().GetDBHeight()
 }
 
 func (c *DirectoryBlock) GetChainID() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.NewHash(constants.D_CHAINID)
 }
 
 func (c *DirectoryBlock) DatabasePrimaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
 	return c.GetKeyMR()
 }
 
 func (c *DirectoryBlock) DatabaseSecondaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
 	return c.GetHash()
 }
 
 func (e *DirectoryBlock) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DirectoryBlock) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DirectoryBlock) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *DirectoryBlock) String() string {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockString.Observe(float64(time.Now().UnixNano() - callTime))
 	var out primitives.Buffer
 
 	kmr := e.GetKeyMR()
@@ -211,6 +256,8 @@ func (e *DirectoryBlock) String() string {
 }
 
 func (b *DirectoryBlock) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	b.Sort()
@@ -238,6 +285,8 @@ func (b *DirectoryBlock) MarshalBinary() (data []byte, err error) {
 }
 
 func (b *DirectoryBlock) BuildBodyMR() (interfaces.IHash, error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockBuildBodyMR.Observe(float64(time.Now().UnixNano() - callTime))
 	hashes := make([]interfaces.IHash, len(b.GetDBEntries()))
 	for i, entry := range b.GetDBEntries() {
 		data, err := entry.MarshalBinary()
@@ -260,6 +309,8 @@ func (b *DirectoryBlock) BuildBodyMR() (interfaces.IHash, error) {
 }
 
 func (b *DirectoryBlock) HeaderHash() (interfaces.IHash, error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockHeaderHash.Observe(float64(time.Now().UnixNano() - callTime))
 	binaryEBHeader, err := b.GetHeader().MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -268,11 +319,15 @@ func (b *DirectoryBlock) HeaderHash() (interfaces.IHash, error) {
 }
 
 func (b *DirectoryBlock) BodyKeyMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockBodyKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
 	key, _ := b.BuildBodyMR()
 	return key
 }
 
 func (b *DirectoryBlock) BuildKeyMerkleRoot() (keyMR interfaces.IHash, err error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlokcBuildKeyMerkleRoot.Observe(float64(time.Now().UnixNano() - callTime))
 	// Create the Entry Block Key Merkle Root from the hash of Header and the Body Merkle Root
 
 	hashes := make([]interfaces.IHash, 0, 2)
@@ -294,6 +349,8 @@ func (b *DirectoryBlock) BuildKeyMerkleRoot() (keyMR interfaces.IHash, err error
 }
 
 func UnmarshalDBlock(data []byte) (interfaces.IDirectoryBlock, error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockUnmarshalDBlock.Observe(float64(time.Now().UnixNano() - callTime))
 	dBlock := new(DirectoryBlock)
 	dBlock.Header = NewDBlockHeader()
 	dBlock.DBHash = primitives.NewZeroHash()
@@ -306,6 +363,8 @@ func UnmarshalDBlock(data []byte) (interfaces.IDirectoryBlock, error) {
 }
 
 func (b *DirectoryBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block: %v", r)
@@ -341,19 +400,27 @@ func (b *DirectoryBlock) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func (h *DirectoryBlock) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return h.GetHeader().GetTimestamp()
 }
 
 func (b *DirectoryBlock) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
 
 func (b *DirectoryBlock) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return b.GetFullHash()
 }
 
 func (b *DirectoryBlock) GetFullHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockGetFullHash.Observe(float64(time.Now().UnixNano() - callTime))
 	binaryDblock, err := b.MarshalBinary()
 	if err != nil {
 		return nil
@@ -363,6 +430,8 @@ func (b *DirectoryBlock) GetFullHash() interfaces.IHash {
 }
 
 func (b *DirectoryBlock) AddEntry(chainID interfaces.IHash, keyMR interfaces.IHash) error {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockAddEntry.Observe(float64(time.Now().UnixNano() - callTime))
 	var dbentry interfaces.IDBEntry
 	dbentry = new(DBEntry)
 	dbentry.SetChainID(chainID)
@@ -380,6 +449,8 @@ func (b *DirectoryBlock) AddEntry(chainID interfaces.IHash, keyMR interfaces.IHa
  *********************************************************************/
 
 func NewDirectoryBlock(prev interfaces.IDirectoryBlock) interfaces.IDirectoryBlock {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockNewDirectoryBlock.Observe(float64(time.Now().UnixNano() - callTime))
 	newdb := new(DirectoryBlock)
 
 	newdb.Header = new(DBlockHeader)
@@ -405,6 +476,8 @@ func NewDirectoryBlock(prev interfaces.IDirectoryBlock) interfaces.IDirectoryBlo
 }
 
 func CheckBlockPairIntegrity(block interfaces.IDirectoryBlock, prev interfaces.IDirectoryBlock) error {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockCheckBlockPairIntegrity.Observe(float64(time.Now().UnixNano() - callTime))
 	if block == nil {
 		return fmt.Errorf("No block specified")
 	}
@@ -437,6 +510,8 @@ func CheckBlockPairIntegrity(block interfaces.IDirectoryBlock, prev interfaces.I
 type ExpandedDBlock DirectoryBlock
 
 func (e DirectoryBlock) MarshalJSON() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))
 	e.GetKeyMR()
 	e.GetFullHash()
 

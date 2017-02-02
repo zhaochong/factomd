@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -32,14 +33,20 @@ var _ interfaces.IMsg = (*ChangeServerKeyMsg)(nil)
 var _ Signable = (*ChangeServerKeyMsg)(nil)
 
 func (m *ChangeServerKeyMsg) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *ChangeServerKeyMsg) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *ChangeServerKeyMsg) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -51,6 +58,8 @@ func (m *ChangeServerKeyMsg) GetMsgHash() interfaces.IHash {
 }
 
 func (m *ChangeServerKeyMsg) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.CHANGESERVER_KEY_MSG
 }
 
@@ -63,10 +72,14 @@ func (m *ChangeServerKeyMsg) Bytes() []byte {
 }
 
 func (m *ChangeServerKeyMsg) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *ChangeServerKeyMsg) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	// Check to see if identity exists and is audit or fed server
 	if !state.VerifyIsAuthority(m.IdentityChainID) {
 		fmt.Println("ChangeServerKey Error. Server is not an authority")
@@ -108,36 +121,52 @@ func (m *ChangeServerKeyMsg) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *ChangeServerKeyMsg) ComputeVMIndex(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
 	m.VMIndex = state.ComputeVMIndex(constants.ADMIN_CHAINID)
 }
 
 // Execute the leader functions of the given message
 func (m *ChangeServerKeyMsg) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.LeaderExecute(m)
 }
 
 func (m *ChangeServerKeyMsg) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteMsg(m)
 }
 
 // Acknowledgements do not go into the process list.
 func (e *ChangeServerKeyMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	return state.ProcessChangeServerKey(dbheight, e)
 }
 
 func (e *ChangeServerKeyMsg) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ChangeServerKeyMsg) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ChangeServerKeyMsg) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *ChangeServerKeyMsg) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -147,14 +176,20 @@ func (m *ChangeServerKeyMsg) Sign(key interfaces.Signer) error {
 }
 
 func (m *ChangeServerKeyMsg) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsg.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *ChangeServerKeyMsg) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *ChangeServerKeyMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		return
 		if r := recover(); r != nil {
@@ -205,11 +240,15 @@ func (m *ChangeServerKeyMsg) UnmarshalBinaryData(data []byte) (newData []byte, e
 }
 
 func (m *ChangeServerKeyMsg) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *ChangeServerKeyMsg) MarshalForSignature() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -241,6 +280,8 @@ func (m *ChangeServerKeyMsg) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *ChangeServerKeyMsg) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	data, err := m.MarshalForSignature()
@@ -252,6 +293,7 @@ func (m *ChangeServerKeyMsg) MarshalBinary() ([]byte, error) {
 	if m.Signature != nil {
 		data, err = m.Signature.MarshalBinary()
 		if err != nil {
+			MarshalBinary
 			return nil, err
 		}
 		buf.Write(data)
@@ -261,6 +303,8 @@ func (m *ChangeServerKeyMsg) MarshalBinary() ([]byte, error) {
 }
 
 func (m *ChangeServerKeyMsg) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgString.Observe(float64(time.Now().UnixNano() - callTime))
 	var mtype string
 	if m.AdminBlockChange == constants.TYPE_ADD_MATRYOSHKA {
 		mtype = "MHash"
@@ -281,6 +325,8 @@ func (m *ChangeServerKeyMsg) String() string {
 }
 
 func (m *ChangeServerKeyMsg) IsSameAs(b *ChangeServerKeyMsg) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -314,6 +360,8 @@ func (m *ChangeServerKeyMsg) IsSameAs(b *ChangeServerKeyMsg) bool {
 }
 
 func NewChangeServerKeyMsg(state interfaces.IState, identityChain interfaces.IHash, adminChange byte, keyPriority byte, keyType byte, key interfaces.IHash) interfaces.IMsg {
+	callTime := time.Now().UnixNano()
+	defer messagesChangeServerKeyMsg.Observe(float64(time.Now().UnixNano() - callTime))
 	msg := new(ChangeServerKeyMsg)
 	msg.IdentityChainID = identityChain
 	msg.AdminBlockChange = adminChange

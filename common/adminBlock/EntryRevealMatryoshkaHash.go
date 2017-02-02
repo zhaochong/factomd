@@ -19,10 +19,14 @@ var _ interfaces.BinaryMarshallable = (*RevealMatryoshkaHash)(nil)
 var _ interfaces.IABEntry = (*RevealMatryoshkaHash)(nil)
 
 func (m *RevealMatryoshkaHash) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.TYPE_REVEAL_MATRYOSHKA
 }
 
 func NewRevealMatryoshkaHash(identityChainID interfaces.IHash, mHash interfaces.IHash) *RevealMatryoshkaHash {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashNewRevealMatryoshkaHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	e := new(RevealMatryoshkaHash)
 	e.IdentityChainID = identityChainID
 	e.MHash = mHash
@@ -35,6 +39,8 @@ func (c *RevealMatryoshkaHash) UpdateState(state interfaces.IState) error {
 }
 
 func (e *RevealMatryoshkaHash) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -45,6 +51,8 @@ func (e *RevealMatryoshkaHash) MarshalBinary() (data []byte, err error) {
 }
 
 func (e *RevealMatryoshkaHash) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Reveal Matryoshka Hash: %v", r)
@@ -71,23 +79,33 @@ func (e *RevealMatryoshkaHash) UnmarshalBinaryData(data []byte) (newData []byte,
 }
 
 func (e *RevealMatryoshkaHash) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *RevealMatryoshkaHash) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RevealMatryoshkaHash) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *RevealMatryoshkaHash) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *RevealMatryoshkaHash) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashString.Observe(float64(time.Now().UnixNano() - callTime))	
 	str := fmt.Sprintf("    E: %35s -- %17s %8x %12s %x",
 		"RevealMatryoshkaHash",
 		"IdentityChainID", e.IdentityChainID.Bytes()[3:5],
@@ -104,6 +122,8 @@ func (e *RevealMatryoshkaHash) Interpret() string {
 }
 
 func (e *RevealMatryoshkaHash) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryRevealMatryoshkaHashHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)

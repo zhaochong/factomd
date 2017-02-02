@@ -6,6 +6,7 @@ package messages
 
 import (
 	"bytes"
+	"time"
 	//	"encoding/binary"
 	"encoding/binary"
 	"fmt"
@@ -30,6 +31,8 @@ type DBStateMissing struct {
 var _ interfaces.IMsg = (*DBStateMissing)(nil)
 
 func (a *DBStateMissing) IsSameAs(b *DBStateMissing) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -47,14 +50,20 @@ func (a *DBStateMissing) IsSameAs(b *DBStateMissing) bool {
 }
 
 func (m *DBStateMissing) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *DBStateMissing) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *DBStateMissing) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -66,18 +75,26 @@ func (m *DBStateMissing) GetMsgHash() interfaces.IHash {
 }
 
 func (m *DBStateMissing) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.DBSTATE_MISSING_MSG
 }
 
 func (m *DBStateMissing) Int() int {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingInt.Observe(float64(time.Now().UnixNano() - callTime))
 	return -1
 }
 
 func (m *DBStateMissing) Bytes() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingBytes.Observe(float64(time.Now().UnixNano() - callTime))
 	return nil
 }
 
 func (m *DBStateMissing) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
@@ -86,6 +103,8 @@ func (m *DBStateMissing) GetTimestamp() interfaces.Timestamp {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *DBStateMissing) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.DBHeightStart > m.DBHeightEnd {
 		return -1
 	}
@@ -98,11 +117,15 @@ func (m *DBStateMissing) ComputeVMIndex(state interfaces.IState) {
 
 // Execute the leader functions of the given message
 func (m *DBStateMissing) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	m.FollowerExecute(state)
 }
 
 // Only send the same block again after 15 seconds.
 func (m *DBStateMissing) send(dbheight uint32, state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingsend.Observe(float64(time.Now().UnixNano() - callTime))
 
 	send := true
 
@@ -136,6 +159,8 @@ func (m *DBStateMissing) send(dbheight uint32, state interfaces.IState) {
 }
 
 func (m *DBStateMissing) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	if len(state.NetworkOutMsgQueue()) > 100 {
 		return
 	}
@@ -160,18 +185,26 @@ func (e *DBStateMissing) Process(dbheight uint32, state interfaces.IState) bool 
 }
 
 func (e *DBStateMissing) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DBStateMissing) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DBStateMissing) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *DBStateMissing) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block State Missing Message: %v", r)
@@ -198,11 +231,15 @@ func (m *DBStateMissing) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func (m *DBStateMissing) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *DBStateMissing) MarshalForSignature() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -221,14 +258,20 @@ func (m *DBStateMissing) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *DBStateMissing) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissing.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.MarshalForSignature()
 }
 
 func (m *DBStateMissing) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingString.Observe(float64(time.Now().UnixNano() - callTime))
 	return fmt.Sprintf("DBStateMissing: %d-%d", m.DBHeightStart, m.DBHeightEnd)
 }
 
 func NewDBStateMissing(state interfaces.IState, dbheightStart uint32, dbheightEnd uint32) interfaces.IMsg {
+	callTime := time.Now().UnixNano()
+	defer messagesDBStateMissingNewDBStateMissing.Observe(float64(time.Now().UnixNano() - callTime))
 	msg := new(DBStateMissing)
 
 	msg.Peer2Peer = true // Always a peer2peer request.

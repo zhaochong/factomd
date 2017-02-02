@@ -21,6 +21,8 @@ import (
  ***********************/
 
 func UnmarshalBinaryAuth(data []byte) (a interfaces.IRCD, newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidrcdUnmarshalBinaryAuth.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	t := data[0]
 
@@ -38,6 +40,8 @@ func UnmarshalBinaryAuth(data []byte) (a interfaces.IRCD, newData []byte, err er
 }
 
 func NewRCD_1(publicKey []byte) interfaces.IRCD {
+	callTime := time.Now().UnixNano()
+	defer factoidrcdNewRCD_1.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(publicKey) != constants.ADDRESS_LENGTH {
 		panic("Bad publickey.  This should not happen")
 	}
@@ -47,6 +51,8 @@ func NewRCD_1(publicKey []byte) interfaces.IRCD {
 }
 
 func NewRCD_2(n int, m int, addresses []interfaces.IAddress) (interfaces.IRCD, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidrcdNewRCD_2.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(addresses) != m {
 		return nil, fmt.Errorf("Improper number of addresses.  m = %d n = %d #addresses = %d", m, n, len(addresses))
 	}
@@ -61,6 +67,8 @@ func NewRCD_2(n int, m int, addresses []interfaces.IAddress) (interfaces.IRCD, e
 }
 
 func CreateRCD(data []byte) interfaces.IRCD {
+	callTime := time.Now().UnixNano()
+	defer factoidrcdCreateRCD.Observe(float64(time.Now().UnixNano() - callTime))	
 	switch data[0] {
 	case 1:
 		return new(RCD_1)

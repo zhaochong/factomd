@@ -7,6 +7,7 @@ package messages
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -26,6 +27,8 @@ type MissingData struct {
 var _ interfaces.IMsg = (*MissingData)(nil)
 
 func (a *MissingData) IsSameAs(b *MissingData) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -46,18 +49,26 @@ func (a *MissingData) IsSameAs(b *MissingData) bool {
 }
 
 func (m *MissingData) Process(uint32, interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	return true
 }
 
 func (m *MissingData) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *MissingData) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *MissingData) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -69,22 +80,32 @@ func (m *MissingData) GetMsgHash() interfaces.IHash {
 }
 
 func (m *MissingData) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *MissingData) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.MISSING_DATA
 }
 
 func (m *MissingData) Int() int {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataInt.Observe(float64(time.Now().UnixNano() - callTime))
 	return -1
 }
 
 func (m *MissingData) Bytes() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataBytes.Observe(float64(time.Now().UnixNano() - callTime))
 	return nil
 }
 
 func (m *MissingData) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -114,11 +135,15 @@ func (m *MissingData) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (m *MissingData) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingData.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *MissingData) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 	buf.Write([]byte{m.Type()})
 	if d, err := m.Timestamp.MarshalBinary(); err != nil {
@@ -137,6 +162,8 @@ func (m *MissingData) MarshalBinary() ([]byte, error) {
 }
 
 func (m *MissingData) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataString.Observe(float64(time.Now().UnixNano() - callTime))
 	return fmt.Sprintf("MissingData: [%x]", m.RequestHash.Bytes()[:5])
 }
 
@@ -152,10 +179,14 @@ func (m *MissingData) ComputeVMIndex(state interfaces.IState) {
 }
 
 func (m *MissingData) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	m.FollowerExecute(state)
 }
 
 func (m *MissingData) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	var dataObject interfaces.BinaryMarshallable
 	//var dataHash interfaces.IHash
 	rawObject, dataType, err := state.LoadDataByHash(m.RequestHash)
@@ -182,18 +213,26 @@ func (m *MissingData) FollowerExecute(state interfaces.IState) {
 }
 
 func (e *MissingData) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *MissingData) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *MissingData) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingDataJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func NewMissingData(state interfaces.IState, requestHash interfaces.IHash) interfaces.IMsg {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingData.Observe(float64(time.Now().UnixNano() - callTime))
 
 	msg := new(MissingData)
 

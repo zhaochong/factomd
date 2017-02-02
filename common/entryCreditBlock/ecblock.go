@@ -37,21 +37,29 @@ var _ interfaces.IEntryCreditBlock = (*ECBlock)(nil)
 var _ interfaces.DatabaseBlockWithEntries = (*ECBlock)(nil)
 
 func (c *ECBlock) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.UpdateECs(c)
 	return nil
 }
 
 func (c *ECBlock) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockString.Observe(float64(time.Now().UnixNano() - callTime))	
 	str := c.Header.String()
 	str = str + c.Body.String()
 	return str
 }
 
 func (c *ECBlock) GetEntries() []interfaces.IECBlockEntry {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetEntries.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Body.GetEntries()
 }
 
 func (c *ECBlock) GetEntryByHash(hash interfaces.IHash) interfaces.IECBlockEntry {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetEntryByHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	if hash == nil {
 		return nil
 	}
@@ -69,6 +77,8 @@ func (c *ECBlock) GetEntryByHash(hash interfaces.IHash) interfaces.IECBlockEntry
 }
 
 func (c *ECBlock) GetEntryHashes() []interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetEntryHashes.Observe(float64(time.Now().UnixNano() - callTime))	
 	entries := c.Body.GetEntries()
 	answer := make([]interfaces.IHash, 0, len(entries))
 	for _, entry := range entries {
@@ -80,6 +90,8 @@ func (c *ECBlock) GetEntryHashes() []interfaces.IHash {
 }
 
 func (c *ECBlock) GetEntrySigHashes() []interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetEntrySigHashes.Observe(float64(time.Now().UnixNano() - callTime))	
 	entries := c.Body.GetEntries()
 	answer := make([]interfaces.IHash, 0, len(entries))
 	for _, entry := range entries {
@@ -94,47 +106,67 @@ func (c *ECBlock) GetEntrySigHashes() []interfaces.IHash {
 }
 
 func (c *ECBlock) GetBody() interfaces.IECBlockBody {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetBody.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Body
 }
 
 func (c *ECBlock) GetHeader() interfaces.IECBlockHeader {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetHeader.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Header
 }
 
 func (c *ECBlock) New() interfaces.BinaryMarshallableAndCopyable {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockNew.Observe(float64(time.Now().UnixNano() - callTime))	
 	block, _ := NextECBlock(nil)
 	return block
 }
 
 func (c *ECBlock) GetDatabaseHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Header.GetDBHeight()
 }
 
 func (c *ECBlock) GetChainID() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Header.GetECChainID()
 }
 
 func (c *ECBlock) DatabasePrimaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	key, _ := c.HeaderHash()
 	return key
 }
 
 func (c *ECBlock) DatabaseSecondaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	key, _ := c.GetFullHash()
 	return key
 }
 
 func (e *ECBlock) AddEntry(entries ...interfaces.IECBlockEntry) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockAddEntry.Observe(float64(time.Now().UnixNano() - callTime))	
 	e.GetBody().SetEntries(append(e.GetBody().GetEntries(), entries...))
 }
 
 func (e *ECBlock) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	h, _ := e.GetFullHash()
 	return h
 }
 
 // This is the FullHash.
 func (e *ECBlock) GetFullHash() (interfaces.IHash, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockGetFullHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	p, err := e.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -143,6 +175,8 @@ func (e *ECBlock) GetFullHash() (interfaces.IHash, error) {
 }
 
 func (e *ECBlock) HeaderHash() (interfaces.IHash, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockHeaderHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	if err := e.BuildHeader(); err != nil {
 		return nil, err
 	}
@@ -155,6 +189,8 @@ func (e *ECBlock) HeaderHash() (interfaces.IHash, error) {
 }
 
 func (e *ECBlock) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	// Header
@@ -178,6 +214,8 @@ func (e *ECBlock) MarshalBinary() ([]byte, error) {
 }
 
 func (e *ECBlock) BuildHeader() error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockBuildHeader.Observe(float64(time.Now().UnixNano() - callTime))	
 	// Marshal the Body
 	p, err := e.marshalBodyBinary()
 	if err != nil {
@@ -193,6 +231,8 @@ func (e *ECBlock) BuildHeader() error {
 }
 
 func UnmarshalECBlock(data []byte) (interfaces.IEntryCreditBlock, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockUnmarshalECBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	block, _ := NextECBlock(nil)
 
 	err := block.UnmarshalBinary(data)
@@ -204,6 +244,8 @@ func UnmarshalECBlock(data []byte) (interfaces.IEntryCreditBlock, error) {
 }
 
 func (e *ECBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -229,11 +271,15 @@ func (e *ECBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (e *ECBlock) UnmarshalBinary(data []byte) (err error) {
-	_, err = e.UnmarshalBinaryData(data)
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+	_, err = e.UnmarshalBinary(data)
 	return
 }
 
 func (e *ECBlock) marshalBodyBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockmarshalBodyBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	for _, v := range e.GetBody().GetEntries() {
@@ -249,6 +295,8 @@ func (e *ECBlock) marshalBodyBinary() ([]byte, error) {
 }
 
 func (e *ECBlock) marshalHeaderBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockmarshalHeaderBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	// 32 byte ECChainID
@@ -291,6 +339,8 @@ func (e *ECBlock) marshalHeaderBinary() ([]byte, error) {
 }
 
 func (e *ECBlock) unmarshalBodyBinaryData(data []byte) ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockunmarshalBodyBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := primitives.NewBuffer(data)
 	var err error
 	defer func() {
@@ -368,11 +418,15 @@ func (e *ECBlock) unmarshalBodyBinaryData(data []byte) ([]byte, error) {
 }
 
 func (b *ECBlock) unmarshalBodyBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockunmarshalBodyBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = b.unmarshalBodyBinaryData(data)
 	return
 }
 
 func (e *ECBlock) unmarshalHeaderBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockunmarshalHeaderBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := primitives.NewBuffer(data)
 	hash := make([]byte, 32)
 
@@ -428,19 +482,27 @@ func (e *ECBlock) unmarshalHeaderBinaryData(data []byte) (newData []byte, err er
 }
 
 func (e *ECBlock) unmarshalHeaderBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockunmarshalHeaderBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err := e.unmarshalHeaderBinaryData(data)
 	return err
 }
 
 func (e *ECBlock) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ECBlock) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ECBlock) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
@@ -449,6 +511,8 @@ func (e *ECBlock) JSONBuffer(b *bytes.Buffer) error {
  ********************************************************/
 
 func NewECBlock() interfaces.IEntryCreditBlock {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockNewECBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	e := new(ECBlock)
 	e.Header = NewECBlockHeader()
 	e.Body = NewECBlockBody()
@@ -456,6 +520,8 @@ func NewECBlock() interfaces.IEntryCreditBlock {
 }
 
 func NextECBlock(prev interfaces.IEntryCreditBlock) (interfaces.IEntryCreditBlock, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockNextECBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	e := NewECBlock()
 
 	// Handle the really unusual case of the first block.
@@ -486,6 +552,8 @@ func NextECBlock(prev interfaces.IEntryCreditBlock) (interfaces.IEntryCreditBloc
 }
 
 func CheckBlockPairIntegrity(block interfaces.IEntryCreditBlock, prev interfaces.IEntryCreditBlock) error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockecblockCheckBlockPairIntegrity.Observe(float64(time.Now().UnixNano() - callTime))	
 	if block == nil {
 		return fmt.Errorf("No block specified")
 	}

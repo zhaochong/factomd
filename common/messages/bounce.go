@@ -4,15 +4,16 @@
 
 package messages
 
-import ()
 import (
 	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+
 	"math/rand"
 	"strings"
 	"time"
@@ -31,6 +32,8 @@ type Bounce struct {
 var _ interfaces.IMsg = (*Bounce)(nil)
 
 func (m *Bounce) AddData(dataSize int) {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceAddData.Observe(float64(time.Now().UnixNano() - callTime))
 	m.Data = make([]byte, dataSize)
 	for i, _ := range m.Data {
 		m.Data[i] = byte(rand.Int())
@@ -38,20 +41,28 @@ func (m *Bounce) AddData(dataSize int) {
 }
 
 func (m *Bounce) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 // We have to return the haswh of the underlying message.
 func (m *Bounce) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *Bounce) SizeOf() int {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceSizeOf.Observe(float64(time.Now().UnixNano() - callTime))
 	m.GetMsgHash()
 	return m.size
 }
 
 func (m *Bounce) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesBounce.Observe(float64(time.Now().UnixNano() - callTime))
 	data, err := m.MarshalForSignature()
 
 	m.size = len(data)
@@ -64,14 +75,20 @@ func (m *Bounce) GetMsgHash() interfaces.IHash {
 }
 
 func (m *Bounce) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.BOUNCE_MSG
 }
 
 func (m *Bounce) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesBounce.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *Bounce) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesBounce.Observe(float64(time.Now().UnixNano() - callTime))
 	return true, nil
 }
 
@@ -103,14 +120,20 @@ func (e *Bounce) Process(dbheight uint32, state interfaces.IState) bool {
 }
 
 func (e *Bounce) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Bounce) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *Bounce) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
@@ -123,6 +146,8 @@ func (m *Bounce) GetSignature() interfaces.IFullSignature {
 }
 
 func (m *Bounce) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -166,11 +191,15 @@ func (m *Bounce) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (m *Bounce) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *Bounce) MarshalForSignature() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -206,10 +235,14 @@ func (m *Bounce) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *Bounce) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesBounce.MarshalBinaryObserve(float64(time.Now().UnixNano() - callTime))
 	return m.MarshalForSignature()
 }
 
 func (m *Bounce) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesBounceString.Observe(float64(time.Now().UnixNano() - callTime))
 	// bbbb Origin: 2016-09-05 12:26:20.426954586 -0500 CDT left Bounce Start:             2016-09-05 12:26:05 Hops:     1 Size:    43 Last Hop Took 14.955 Average Hop: 14.955
 	now := time.Now()
 	t := fmt.Sprintf("%2d:%02d:%02d.%03d", now.Hour(), now.Minute(), now.Second(), now.Nanosecond()/1000000)

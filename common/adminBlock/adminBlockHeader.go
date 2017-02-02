@@ -30,6 +30,8 @@ var _ interfaces.Printable = (*ABlockHeader)(nil)
 var _ interfaces.BinaryMarshallable = (*ABlockHeader)(nil)
 
 func (e *ABlockHeader) String() string {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString("  Admin Block Header\n")
 	out.WriteString(fmt.Sprintf("    %20s: %10v\n", "PrevBackRefHash", e.PrevBackRefHash.String()))
@@ -42,55 +44,81 @@ func (e *ABlockHeader) String() string {
 }
 
 func (b *ABlockHeader) GetMessageCount() uint32 {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderGetMessageCount.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.MessageCount
 }
 
 func (b *ABlockHeader) SetMessageCount(messageCount uint32) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderSetMessageCount.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.MessageCount = messageCount
 }
 
 func (b *ABlockHeader) GetBodySize() uint32 {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderGetBodySize.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.BodySize
 }
 
 func (b *ABlockHeader) SetBodySize(bodySize uint32) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderSetBodySize.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.BodySize = bodySize
 }
 
 func (b *ABlockHeader) GetAdminChainID() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderGetAdminChainID.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.NewHash(constants.ADMIN_CHAINID)
 }
 
 func (b *ABlockHeader) GetDBHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.DBHeight
 }
 
 func (b *ABlockHeader) GetHeaderExpansionArea() []byte {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderGetHeaderExpansionArea.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.HeaderExpansionArea
 }
 
 func (b *ABlockHeader) GetHeaderExpansionSize() uint64 {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderGetHeaderExpansionSize.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.HeaderExpansionSize
 }
 
 func (b *ABlockHeader) GetPrevBackRefHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderGetPrevBackRefHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return b.PrevBackRefHash
 }
 
 func (b *ABlockHeader) SetDBHeight(dbheight uint32) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.DBHeight = dbheight
 }
 
 func (b *ABlockHeader) SetHeaderExpansionArea(area []byte) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.HeaderExpansionArea = area
 }
 
 func (b *ABlockHeader) SetPrevBackRefHash(BackRefHash interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.PrevBackRefHash = BackRefHash
 }
 
 // Write out the ABlockHeader to binary.
 func (b *ABlockHeader) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	data, err = b.GetAdminChainID().MarshalBinary()
@@ -117,6 +145,8 @@ func (b *ABlockHeader) MarshalBinary() (data []byte, err error) {
 }
 
 func (b *ABlockHeader) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Admin Block Header: %v", r)
@@ -147,25 +177,35 @@ func (b *ABlockHeader) UnmarshalBinaryData(data []byte) (newData []byte, err err
 
 // Read in the binary into the ABlockHeader.
 func (b *ABlockHeader) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *ABlockHeader) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ABlockHeader) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ABlockHeader) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 type ExpandedABlockHeader ABlockHeader
 
 func (e ABlockHeader) MarshalJSON() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockHeaderMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))	
 	return json.Marshal(struct {
 		ExpandedABlockHeader
 		AdminChainID string

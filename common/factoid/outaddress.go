@@ -19,6 +19,8 @@ type OutAddress struct {
 var _ interfaces.IOutAddress = (*OutAddress)(nil)
 
 func (b OutAddress) String() string {
+	callTime := time.Now().UnixNano()
+	defer factoidOutAddressString.Observe(float64(time.Now().UnixNano() - callTime))	
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -31,6 +33,8 @@ func (oa OutAddress) GetName() string {
 }
 
 func (a OutAddress) CustomMarshalText() (text []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidOutAddressCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))	
 	return a.CustomMarshalText2("output")
 }
 
@@ -39,6 +43,8 @@ func (a OutAddress) CustomMarshalText() (text []byte, err error) {
  ******************************/
 
 func NewOutAddress(address interfaces.IAddress, amount uint64) interfaces.IOutAddress {
+	callTime := time.Now().UnixNano()
+	defer factoidOutAddressNewOutAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	ta := new(OutAddress)
 	ta.Amount = amount
 	ta.Address = address

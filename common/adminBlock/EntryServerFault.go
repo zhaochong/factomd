@@ -32,6 +32,8 @@ var _ interfaces.IABEntry = (*ServerFault)(nil)
 var _ interfaces.BinaryMarshallable = (*ServerFault)(nil)
 
 func (sl *SigList) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, uint32(sl.Length))
@@ -48,6 +50,8 @@ func (sl *SigList) MarshalBinary() (data []byte, err error) {
 }
 
 func (sl *SigList) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling SigList in Full Server Fault: %v", r)
@@ -68,6 +72,8 @@ func (sl *SigList) UnmarshalBinaryData(data []byte) (newData []byte, err error) 
 }
 
 func (e *ServerFault) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 	core, err := e.MarshalCore()
 	if err != nil {
 		return err
@@ -103,6 +109,8 @@ func (e *ServerFault) UpdateState(state interfaces.IState) error {
 }
 
 func (m *ServerFault) MarshalCore() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultMarshalCore.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Server Fault Core: %v", r)
@@ -130,6 +138,8 @@ func (m *ServerFault) MarshalCore() (data []byte, err error) {
 }
 
 func (m *ServerFault) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Invalid Server Fault: %v", r)
@@ -169,6 +179,8 @@ func (m *ServerFault) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *ServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling With Signatures Invalid Server Fault: %v", r)
@@ -211,19 +223,27 @@ func (m *ServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (m *ServerFault) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (e *ServerFault) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ServerFault) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ServerFault) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
@@ -236,6 +256,8 @@ func (e *ServerFault) Interpret() string {
 }
 
 func (e *ServerFault) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -244,6 +266,8 @@ func (e *ServerFault) Hash() interfaces.IHash {
 }
 
 func (e *ServerFault) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultString.Observe(float64(time.Now().UnixNano() - callTime))	
 	str := fmt.Sprintf("    E: %35s -- DBheight %ds ServerID %8x AuditServer %8x, #sigs %d, VMIndex %d",
 		"EntryServerFault",
 		e.DBHeight,
@@ -254,10 +278,14 @@ func (e *ServerFault) String() string {
 }
 
 func (e *ServerFault) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.TYPE_SERVER_FAULT
 }
 
 func (e *ServerFault) Compare(b *ServerFault) int {
+	callTime := time.Now().UnixNano()
+	defer entryServerFaultCompare.Observe(float64(time.Now().UnixNano() - callTime))	
 	if e.Timestamp.GetTimeMilliUInt64() < b.Timestamp.GetTimeMilliUInt64() {
 		return -1
 	}

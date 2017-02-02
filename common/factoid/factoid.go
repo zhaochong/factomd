@@ -16,24 +16,32 @@ var _ = fmt.Sprintf
 
 // 1-byte version
 func FactoidTx_VersionCheck(version uint8) bool {
+	callTime := time.Now().UnixNano()
+	defer factoidFactoidFactoidTx_VersionCheck.Observe(float64(time.Now().UnixNano() - callTime))	
 	//	util.Trace(fmt.Sprintf("version being checked: %d", version))
 	return (0 == version)
 }
 
 // in reality: 5 bytes
 func FactoidTx_LocktimeCheck(locktime int64) bool {
+	callTime := time.Now().UnixNano()
+	defer factoidFactoidFactoidTx_LocktimeCheck.Observe(float64(time.Now().UnixNano() - callTime))	
 	//util.Trace(fmt.Sprintf("locktime being checked: 0x%X", locktime))
 	return (0 == locktime)
 }
 
 // 1-byte RCD version
 func FactoidTx_RCDVersionCheck(version uint8) bool {
+	callTime := time.Now().UnixNano()
+	defer factoidFactoidFactoidTx_RCDVersionCheck.Observe(float64(time.Now().UnixNano() - callTime))	
 	//util.Trace()
 	return (0 == version)
 }
 
 // 1-byte RCD type
 func FactoidTx_RCDTypeCheck(rcdtype uint8) bool {
+	callTime := time.Now().UnixNano()
+	defer factoidFactoidFactoidTx_RCDTypeCheck.Observe(float64(time.Now().UnixNano() - callTime))	
 	//util.Trace()
 	return (0 == rcdtype)
 }

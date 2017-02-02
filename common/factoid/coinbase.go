@@ -19,6 +19,8 @@ var addressCnt int = 0         // No coinbase payments until Milestone 3
 // Allows the amount paid in the coinbase to be modified.   This is
 // NOT allowed in production!  That's why it is here in Test!
 func UpdateAmount(amt uint64) {
+	callTime := time.Now().UnixNano()
+	defer factoidCoinbaseUpdateAmount.Observe(float64(time.Now().UnixNano() - callTime))	
 	amount = amt
 }
 
@@ -28,6 +30,8 @@ func UpdateAmount(amt uint64) {
 // Currently we are paying just a few fixed addresses.
 //
 func GetCoinbase(ftime interfaces.Timestamp) interfaces.ITransaction {
+	callTime := time.Now().UnixNano()
+	defer factoidCoinbaseGetCoinbase.Observe(float64(time.Now().UnixNano() - callTime))	
 	coinbase := new(Transaction)
 	coinbase.SetTimestamp(ftime)
 

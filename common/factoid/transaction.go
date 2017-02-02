@@ -40,31 +40,45 @@ var _ interfaces.Printable = (*Transaction)(nil)
 var _ interfaces.BinaryMarshallableAndCopyable = (*Transaction)(nil)
 
 func (w *Transaction) New() interfaces.BinaryMarshallableAndCopyable {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionNew.Observe(float64(time.Now().UnixNano() - callTime))	
 	return new(Transaction)
 }
 
 func (t *Transaction) SetBlockHeight(height uint32) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionSetBlockHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	t.BlockHeight = height
 }
 
 func (t *Transaction) GetBlockHeight() (height uint32) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetBlockHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return t.BlockHeight
 }
 
 // Clears caches if they are no long valid.
 func (t *Transaction) clearCaches() {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionclearCaches.Observe(float64(time.Now().UnixNano() - callTime))	
 	return
 }
 
 func (*Transaction) GetVersion() uint64 {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetVersion.Observe(float64(time.Now().UnixNano() - callTime))	
 	return 2
 }
 
 func (t *Transaction) GetTxID() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetTxID.Observe(float64(time.Now().UnixNano() - callTime))	
 	return t.GetSigHash()
 }
 
 func (t *Transaction) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	m, err := t.MarshalBinary()
 	if err != nil {
 		return nil
@@ -73,6 +87,8 @@ func (t *Transaction) GetHash() interfaces.IHash {
 }
 
 func (t Transaction) GetFullHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetFullHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	m, err := t.MarshalBinary()
 	if err != nil {
 		return nil
@@ -81,6 +97,8 @@ func (t Transaction) GetFullHash() interfaces.IHash {
 }
 
 func (t Transaction) GetSigHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetSigHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	m, err := t.MarshalBinarySig()
 	if err != nil {
 		return nil
@@ -89,6 +107,8 @@ func (t Transaction) GetSigHash() interfaces.IHash {
 }
 
 func (t Transaction) String() string {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionString.Observe(float64(time.Now().UnixNano() - callTime))	
 	txt, err := t.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -98,14 +118,20 @@ func (t Transaction) String() string {
 
 // MilliTimestamp is in milliseconds
 func (t *Transaction) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.NewTimestampFromMilliseconds(t.MilliTimestamp)
 }
 
 func (t *Transaction) SetTimestamp(ts interfaces.Timestamp) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionSetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))	
 	t.MilliTimestamp = ts.GetTimeMilliUInt64()
 }
 
 func (t *Transaction) SetSignatureBlock(i int, sig interfaces.ISignatureBlock) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionSetSignatureBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	for len(t.SigBlocks) <= i {
 		t.SigBlocks = append(t.SigBlocks, new(SignatureBlock))
 	}
@@ -113,6 +139,9 @@ func (t *Transaction) SetSignatureBlock(i int, sig interfaces.ISignatureBlock) {
 }
 
 func (t *Transaction) GetSignatureBlock(i int) interfaces.ISignatureBlock {
+	callTime := time.Now().UnixNano()
+func (t *Transaction) GetSignatureBlock(i int) interfaces.ISignatureBlock {
+	defer factoidTransactionSetBlockHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	for len(t.SigBlocks) <= i {
 		t.SigBlocks = append(t.SigBlocks, new(SignatureBlock))
 	}
@@ -120,6 +149,8 @@ func (t *Transaction) GetSignatureBlock(i int) interfaces.ISignatureBlock {
 }
 
 func (t *Transaction) AddRCD(rcd interfaces.IRCD) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionAddRCD.Observe(float64(time.Now().UnixNano() - callTime))	
 	t.RCDs = append(t.RCDs, rcd)
 	t.clearCaches()
 }
@@ -139,6 +170,8 @@ func (t *Transaction) AddRCD(rcd interfaces.IRCD) {
 //    all full nodes. A fee of 10 EC equivalent must be paid for each
 //    signature included.
 func (t Transaction) CalculateFee(factoshisPerEC uint64) (uint64, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionCalculateFee.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	// First look at the size of the transaction, and make sure
 	// everything is inbounds.
@@ -168,6 +201,8 @@ func (t Transaction) CalculateFee(factoshisPerEC uint64) (uint64, error) {
 // a signed boundry.  Returns false if invalid, and the
 // sum if valid.  Returns 0 and true if nothing is passed in.
 func ValidateAmounts(amts ...uint64) (uint64, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionValidateAmounts.Observe(float64(time.Now().UnixNano() - callTime))	
 	var sum int64
 	for _, amt := range amts {
 		if int64(amt) < 0 {
@@ -182,6 +217,8 @@ func ValidateAmounts(amts ...uint64) (uint64, error) {
 }
 
 func (t Transaction) TotalInputs() (sum uint64, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionTotalInputs.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(t.Inputs) > 255 {
 		return 0, fmt.Errorf("The number of inputs must be less than 255")
 	}
@@ -195,7 +232,9 @@ func (t Transaction) TotalInputs() (sum uint64, err error) {
 }
 
 func (t Transaction) TotalOutputs() (sum uint64, err error) {
-	if len(t.Outputs) > 255 {
+		callTime := time.Now().UnixNano()
+	defer factoidTransactionTotalOutputs.Observe(float64(time.Now().UnixNano() - callTime))	
+if len(t.Outputs) > 255 {
 		return 0, fmt.Errorf("The number of outputs must be less than 255")
 	}
 	for _, output := range t.Outputs {
@@ -208,6 +247,8 @@ func (t Transaction) TotalOutputs() (sum uint64, err error) {
 }
 
 func (t Transaction) TotalECs() (sum uint64, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionTotalECs.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(t.OutECs) > 255 {
 		return 0, fmt.Errorf("The number of Entry Credit outputs must be less than 255")
 	}
@@ -243,6 +284,8 @@ func (t Transaction) TotalECs() (sum uint64, err error) {
 // be used to identify the transaction. Otherwise it simply must be > 0
 // to indicate it isn't a coinbase transaction.
 func (t Transaction) Validate(index int) error {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionValidate.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	// Inputs, outputs, and ecoutputs, must be valid,
 	tInputs, err := t.TotalInputs()
@@ -305,6 +348,8 @@ func (t Transaction) Validate(index int) error {
 // transaction.
 //
 func (t Transaction) ValidateSignatures() error {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionValidateSignatures.Observe(float64(time.Now().UnixNano() - callTime))	
 	if !t.sigValid {
 		missingCnt := 0
 		sigBlks := t.GetSignatureBlocks()
@@ -325,6 +370,8 @@ func (t Transaction) ValidateSignatures() error {
 // in order of the structures.  Largely used to test and debug, but
 // generally useful.
 func (t1 *Transaction) IsEqual(trans interfaces.IBlock) []interfaces.IBlock {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionIsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	t2, ok := trans.(interfaces.ITransaction)
 
@@ -395,12 +442,30 @@ func (t1 *Transaction) IsEqual(trans interfaces.IBlock) []interfaces.IBlock {
 	return nil
 }
 
-func (t Transaction) GetInputs() []interfaces.IInAddress       { return t.Inputs }
-func (t Transaction) GetOutputs() []interfaces.IOutAddress     { return t.Outputs }
-func (t Transaction) GetECOutputs() []interfaces.IOutECAddress { return t.OutECs }
-func (t Transaction) GetRCDs() []interfaces.IRCD               { return t.RCDs }
+func (t Transaction) GetInputs() []interfaces.IInAddress       { 
+		callTime := time.Now().UnixNano()
+	defer factoidTransactionGetInputs.Observe(float64(time.Now().UnixNano() - callTime))	
+return t.Inputs 
+}
+func (t Transaction) GetOutputs() []interfaces.IOutAddress     { 
+		callTime := time.Now().UnixNano()
+	defer factoidTransactionGetOutputs.Observe(float64(time.Now().UnixNano() - callTime))	
+return t.Outputs 
+}
+func (t Transaction) GetECOutputs() []interfaces.IOutECAddress { 
+		callTime := time.Now().UnixNano()
+	defer factoidTransactionGetECOutputs.Observe(float64(time.Now().UnixNano() - callTime))	
+return t.OutECs 
+}
+func (t Transaction) GetRCDs() []interfaces.IRCD               { 
+		callTime := time.Now().UnixNano()
+	defer factoidTransactionGetRCDs.Observe(float64(time.Now().UnixNano() - callTime))	
+return t.RCDs
+ }
 
 func (t *Transaction) GetSignatureBlocks() []interfaces.ISignatureBlock {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetSignatureBlocks.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(t.SigBlocks) > len(t.Inputs) { // If too long, nil out
 		for i := len(t.Inputs); i < len(t.SigBlocks); i++ { // the extra entries, and
 			t.SigBlocks[i] = nil // cut it to length.
@@ -415,6 +480,8 @@ func (t *Transaction) GetSignatureBlocks() []interfaces.ISignatureBlock {
 }
 
 func (t *Transaction) GetInput(i int) (interfaces.IInAddress, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetInput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if i > len(t.Inputs) {
 		return nil, fmt.Errorf("Index out of Range")
 	}
@@ -422,6 +489,8 @@ func (t *Transaction) GetInput(i int) (interfaces.IInAddress, error) {
 }
 
 func (t *Transaction) GetOutput(i int) (interfaces.IOutAddress, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetOutput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if i > len(t.Outputs) {
 		return nil, fmt.Errorf("Index out of Range")
 	}
@@ -429,6 +498,8 @@ func (t *Transaction) GetOutput(i int) (interfaces.IOutAddress, error) {
 }
 
 func (t *Transaction) GetECOutput(i int) (interfaces.IOutECAddress, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetECOutput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if i > len(t.OutECs) {
 		return nil, fmt.Errorf("Index out of Range")
 	}
@@ -436,6 +507,8 @@ func (t *Transaction) GetECOutput(i int) (interfaces.IOutECAddress, error) {
 }
 
 func (t *Transaction) GetRCD(i int) (interfaces.IRCD, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionGetRCD.Observe(float64(time.Now().UnixNano() - callTime))	
 	if i > len(t.RCDs) {
 		return nil, fmt.Errorf("Index out of Range")
 	}
@@ -445,6 +518,8 @@ func (t *Transaction) GetRCD(i int) (interfaces.IRCD, error) {
 // UnmarshalBinary assumes that the Binary is all good.  We do error
 // out if there isn't enough data, or the transaction is too large.
 func (t *Transaction) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	// To catch memory errors, I capture the panic and turn it into
 	// a reported error.
@@ -516,6 +591,8 @@ func (t *Transaction) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (t *Transaction) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionSetUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	data, err = t.UnmarshalBinaryData(data)
 	return err
 }
@@ -523,6 +600,8 @@ func (t *Transaction) UnmarshalBinary(data []byte) (err error) {
 // This is what Gets Signed.  Yet signature blocks are part of the transaction.
 // We don't include them here, and tack them on later.
 func (t *Transaction) MarshalBinarySig() (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionSetBlockHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	primitives.EncodeVarInt(&out, t.GetVersion())
@@ -566,6 +645,8 @@ func (t *Transaction) MarshalBinarySig() (newData []byte, err error) {
 // This just Marshals what gets signed, i.e. MarshalBinarySig(), then
 // Marshals the signatures and the RCDs for this transaction.
 func (t Transaction) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	data, err := t.MarshalBinarySig()
@@ -606,6 +687,8 @@ func (t Transaction) MarshalBinary() ([]byte, error) {
 // will need, so I'll default to 5.  Of course, go will grow
 // past that if needed.
 func (t *Transaction) AddInput(input interfaces.IAddress, amount uint64) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionAddInput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if t.Inputs == nil {
 		t.Inputs = make([]interfaces.IInAddress, 0, 5)
 	}
@@ -619,6 +702,8 @@ func (t *Transaction) AddInput(input interfaces.IAddress, amount uint64) {
 // will need, so I'll default to 5.  Of course, go will grow
 // past that if needed.
 func (t *Transaction) AddOutput(output interfaces.IAddress, amount uint64) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionAddOutput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if t.Outputs == nil {
 		t.Outputs = make([]interfaces.IOutAddress, 0, 5)
 	}
@@ -631,6 +716,8 @@ func (t *Transaction) AddOutput(output interfaces.IAddress, amount uint64) {
 // access to the exchange rate.  This is literally how many entry
 // credits are being added to the specified Entry Credit address.
 func (t *Transaction) AddECOutput(ecoutput interfaces.IAddress, amount uint64) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionAddECOutput.Observe(float64(time.Now().UnixNano() - callTime))	
 	if t.OutECs == nil {
 		t.OutECs = make([]interfaces.IOutECAddress, 0, 5)
 	}
@@ -641,6 +728,8 @@ func (t *Transaction) AddECOutput(ecoutput interfaces.IAddress, amount uint64) {
 
 // Marshal to text.  Largely a debugging thing.
 func (t *Transaction) CustomMarshalText() (text []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))	
 	data, err := t.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -696,6 +785,8 @@ func (t *Transaction) CustomMarshalText() (text []byte, err error) {
 // transaction.  DOES NO VALIDATION.  Not the job of construction.
 // That's why we have a validation call.
 func (t *Transaction) AddAuthorization(auth interfaces.IRCD) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionAddAuthorization.Observe(float64(time.Now().UnixNano() - callTime))	
 	if t.RCDs == nil {
 		t.RCDs = make([]interfaces.IRCD, 0, 5)
 	}
@@ -703,18 +794,26 @@ func (t *Transaction) AddAuthorization(auth interfaces.IRCD) {
 }
 
 func (e *Transaction) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Transaction) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *Transaction) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *Transaction) HasUserAddress(userAddr string) bool {
+	callTime := time.Now().UnixNano()
+	defer factoidTransactionHasUserAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	//  do any of the inputs or outputs of this transaction belong to the inputed user address
 	// Other than a minimal length check, this does not address validation of the requested user address
 	// in some cases, the useraddress is not being filled in the address struct.  if it is blank, convert the address (hash)

@@ -49,62 +49,67 @@ var _ interfaces.Printable = (*AnchorRecord)(nil)
 var _ interfaces.IAnchorRecord = (*AnchorRecord)(nil)
 
 func (e *AnchorRecord) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer anchorJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AnchorRecord) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer anchorJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AnchorRecord) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer anchorJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *AnchorRecord) String() string {
 	callTime := time.Now().UnixNano()
+	defer anchorStringCall.Observe(float64(time.Now().UnixNano() - callTime))
 	str, _ := e.JSONString()
 	runTime := time.Now().UnixNano() - callTime
-	AnchorStringCall.Observe(float64(runTime))
 	return str
 }
 
 func (ar *AnchorRecord) Marshal() ([]byte, error) {
 	callTime := time.Now().UnixNano()
+	defer anchorMarshal.Observe(float64(time.Now().UnixNano() - callTime))
 	data, err := json.Marshal(ar)
 	if err != nil {
 		return nil, err
 	}
 	runTime := time.Now().UnixNano() - callTime
-	AnchorStringCall.Observe(float64(runTime))
 	return data, nil
 }
 
 func (ar *AnchorRecord) MarshalAndSign(priv interfaces.Signer) ([]byte, error) {
 	callTime := time.Now().UnixNano()
+	defer anchorMarshalSign.Observe(float64(time.Now().UnixNano() - callTime))
 	data, err := ar.Marshal()
 	if err != nil {
 		return nil, err
 	}
 	sig := priv.Sign(data)
-	runTime := time.Now().UnixNano() - callTime
-	AnchorMarshalSign.Observe(float64(runTime))
 	return append(data, []byte(fmt.Sprintf("%x", sig.Bytes()))...), nil
 }
 
 func (ar *AnchorRecord) MarshalAndSignV2(priv interfaces.Signer) ([]byte, []byte, error) {
 	callTime := time.Now().UnixNano()
+	defer anchorMarshalSignV2.Observe(float64(time.Now().UnixNano() - callTime))
 	data, err := ar.Marshal()
 	if err != nil {
 		return nil, nil, err
 	}
 	sig := priv.Sign(data)
-	runTime := time.Now().UnixNano() - callTime
-	AnchorMarshalSignV2.Observe(float64(runTime))
 	return data, sig.Bytes(), nil
 }
 
 func (ar *AnchorRecord) Unmarshal(data []byte) error {
 	callTime := time.Now().UnixNano()
+	defer anchorUnMarshal.Observe(float64(time.Now().UnixNano() - callTime))
 	if len(data) == 0 {
 		return fmt.Errorf("Invalid data passed")
 	}
@@ -118,13 +123,13 @@ func (ar *AnchorRecord) Unmarshal(data []byte) error {
 	if err != nil {
 		return err
 	}
-	runTime := time.Now().UnixNano() - callTime
-	AnchorMarshalSignV2.Observe(float64(runTime))
 
 	return nil
 }
 
 func UnmarshalAnchorRecord(data []byte) (*AnchorRecord, error) {
+	callTime := time.Now().UnixNano()
+	defer anchorUnmarshalAnchorRecord.Observe(float64(time.Now().UnixNano() - callTime))	
 	ar := new(AnchorRecord)
 	err := ar.Unmarshal(data)
 	if err != nil {
@@ -134,6 +139,8 @@ func UnmarshalAnchorRecord(data []byte) (*AnchorRecord, error) {
 }
 
 func UnmarshalAndValidateAnchorRecord(data []byte, publicKeys []interfaces.Verifier) (*AnchorRecord, bool, error) {
+	callTime := time.Now().UnixNano()
+	defer anchorUnmarshalAndValidateAnchorRecord.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(data) == 0 {
 		return nil, false, fmt.Errorf("Invalid data passed")
 	}
@@ -175,6 +182,8 @@ func UnmarshalAndValidateAnchorRecord(data []byte, publicKeys []interfaces.Verif
 }
 
 func UnmarshalAndValidateAnchorRecordV2(data []byte, extIDs [][]byte, publicKeys []interfaces.Verifier) (*AnchorRecord, bool, error) {
+	callTime := time.Now().UnixNano()
+	defer anchorUnmarshalAnchorRecordV2.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(data) == 0 {
 		return nil, false, fmt.Errorf("Invalid data passed")
 	}
@@ -209,6 +218,8 @@ func UnmarshalAndValidateAnchorRecordV2(data []byte, extIDs [][]byte, publicKeys
 }
 
 func UnmarshalAndValidateAnchorEntryAnyVersion(entry interfaces.IEBEntry, publicKeys []interfaces.Verifier) (*AnchorRecord, bool, error) {
+	callTime := time.Now().UnixNano()
+	defer anchorUnmarshalAndValidateAnchorEntryAnyVersion.Observe(float64(time.Now().UnixNano() - callTime))	
 	ar, valid, err := UnmarshalAndValidateAnchorRecord(entry.GetContent(), publicKeys)
 	if ar == nil {
 		ar, valid, err = UnmarshalAndValidateAnchorRecordV2(entry.GetContent(), entry.ExternalIDs(), publicKeys)
@@ -218,6 +229,8 @@ func UnmarshalAndValidateAnchorEntryAnyVersion(entry interfaces.IEBEntry, public
 }
 
 func CreateAnchorRecordFromDBlock(dBlock interfaces.IDirectoryBlock) *AnchorRecord {
+	callTime := time.Now().UnixNano()
+	defer anchorCreateAnchorRecordFromDBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	ar := new(AnchorRecord)
 	ar.AnchorRecordVer = 1
 	ar.DBHeight = dBlock.GetHeader().GetDBHeight()

@@ -19,6 +19,8 @@ type InAddress struct {
 var _ interfaces.IInAddress = (*InAddress)(nil)
 
 func (b InAddress) String() string {
+	callTime := time.Now().UnixNano()
+	defer factoidInAddressString.Observe(float64(time.Now().UnixNano() - callTime))	
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -27,6 +29,8 @@ func (b InAddress) String() string {
 }
 
 func (a InAddress) CustomMarshalText() (text []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidInAddressCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))	
 	return a.CustomMarshalText2("input")
 }
 
@@ -35,6 +39,8 @@ func (a InAddress) CustomMarshalText() (text []byte, err error) {
  ******************************/
 
 func NewInAddress(address interfaces.IAddress, amount uint64) interfaces.IInAddress {
+	callTime := time.Now().UnixNano()
+	defer factoidInAddressNewInAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	ta := new(InAddress)
 	ta.Amount = amount
 	ta.Address = address

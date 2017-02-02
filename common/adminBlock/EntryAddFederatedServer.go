@@ -20,6 +20,8 @@ var _ interfaces.IABEntry = (*AddFederatedServer)(nil)
 var _ interfaces.BinaryMarshallable = (*AddFederatedServer)(nil)
 
 func (e *AddFederatedServer) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8d",
 		"AddFedServer",
@@ -30,6 +32,8 @@ func (e *AddFederatedServer) String() string {
 }
 
 func (c *AddFederatedServer) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.AddFedServer(c.DBHeight, c.IdentityChainID)
 	authorityDeltaString := fmt.Sprintf("AdminBlock (AddFedMsg DBHt: %d) \n ^ %s", c.DBHeight, c.IdentityChainID.String()[5:10])
 	state.AddStatus(authorityDeltaString)
@@ -40,6 +44,8 @@ func (c *AddFederatedServer) UpdateState(state interfaces.IState) error {
 
 // Create a new DB Signature Entry
 func NewAddFederatedServer(identityChainID interfaces.IHash, dbheight uint32) (e *AddFederatedServer) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerNewAddFederatedServer.Observe(float64(time.Now().UnixNano() - callTime))	
 	e = new(AddFederatedServer)
 	e.DBHeight = dbheight
 	e.IdentityChainID = primitives.NewHash(identityChainID.Bytes())
@@ -47,10 +53,14 @@ func NewAddFederatedServer(identityChainID interfaces.IHash, dbheight uint32) (e
 }
 
 func (e *AddFederatedServer) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.TYPE_ADD_FED_SERVER
 }
 
 func (e *AddFederatedServer) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -67,6 +77,8 @@ func (e *AddFederatedServer) MarshalBinary() (data []byte, err error) {
 }
 
 func (e *AddFederatedServer) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Add Federated Server Entry: %v", r)
@@ -88,19 +100,27 @@ func (e *AddFederatedServer) UnmarshalBinaryData(data []byte) (newData []byte, e
 }
 
 func (e *AddFederatedServer) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *AddFederatedServer) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AddFederatedServer) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AddFederatedServer) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
@@ -113,6 +133,8 @@ func (e *AddFederatedServer) Interpret() string {
 }
 
 func (e *AddFederatedServer) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryAddFederatedServerHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)

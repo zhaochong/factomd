@@ -8,6 +8,7 @@ package messages
 
 import (
 	"fmt"
+	"time"
 
 	"errors"
 
@@ -16,11 +17,15 @@ import (
 )
 
 func UnmarshalMessage(data []byte) (interfaces.IMsg, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesGeneralUnmarshalMessage.Observe(float64(time.Now().UnixNano() - callTime))
 	_, msg, err := UnmarshalMessageData(data)
 	return msg, err
 }
 
 func UnmarshalMessageData(data []byte) (newdata []byte, msg interfaces.IMsg, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesGeneralUnmarshalMessageData.Observe(float64(time.Now().UnixNano() - callTime))
 	if data == nil {
 		return nil, nil, fmt.Errorf("No data provided")
 	}
@@ -98,6 +103,8 @@ func UnmarshalMessageData(data []byte) (newdata []byte, msg interfaces.IMsg, err
 }
 
 func MessageName(Type byte) string {
+	callTime := time.Now().UnixNano()
+	defer messagesGeneralMessageName.Observe(float64(time.Now().UnixNano() - callTime))
 	switch Type {
 	case constants.EOM_MSG:
 		return "EOM"
@@ -161,6 +168,8 @@ type Signable interface {
 }
 
 func SignSignable(s Signable, key interfaces.Signer) (interfaces.IFullSignature, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesGeneralSignSignable.Observe(float64(time.Now().UnixNano() - callTime))
 	toSign, err := s.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -170,6 +179,8 @@ func SignSignable(s Signable, key interfaces.Signer) (interfaces.IFullSignature,
 }
 
 func VerifyMessage(s Signable) (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesGeneralVerifyMessage.Observe(float64(time.Now().UnixNano() - callTime))
 	if s.IsValid() {
 		return true, nil
 	}

@@ -35,6 +35,8 @@ type MessageBase struct {
 }
 
 func resend(state interfaces.IState, msg interfaces.IMsg, cnt int, delay int) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseresend.Observe(float64(time.Now().UnixNano() - callTime))
 	for i := 0; i < cnt; i++ {
 		state.NetworkOutMsgQueue() <- msg
 		time.Sleep(time.Duration(delay) * time.Second)
@@ -42,6 +44,8 @@ func resend(state interfaces.IState, msg interfaces.IMsg, cnt int, delay int) {
 }
 
 func (m *MessageBase) SendOut(state interfaces.IState, msg interfaces.IMsg) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSendOut.Observe(float64(time.Now().UnixNano() - callTime))
 
 	if m.NoResend {
 		return
@@ -64,33 +68,47 @@ func (m *MessageBase) SendOut(state interfaces.IState, msg interfaces.IMsg) {
 }
 
 func (m *MessageBase) GetNoResend() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseGetNoResend.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.NoResend
 }
 
 func (m *MessageBase) SetNoResend(v bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetNoResend.Observe(float64(time.Now().UnixNano() - callTime))
 	m.NoResend = v
 }
 
 func (m *MessageBase) IsValid() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseIsValid.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Sigvalid
 }
 
 func (m *MessageBase) SetValid() {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetValid.Observe(float64(time.Now().UnixNano() - callTime))
 	m.Sigvalid = true
 }
 
 // To suppress how many messages are sent to the NetworkInvalid Queue, we mark them, and only
 // send them once.
 func (m *MessageBase) MarkSentInvalid(b bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseMarkSentInvalid.Observe(float64(time.Now().UnixNano() - callTime))
 	m.MarkInvalid = b
 }
 
 func (m *MessageBase) SentInvlaid() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSentInvlaid.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.MarkInvalid
 }
 
 // Try and Resend.  Return true if we should keep the message, false if we should give up.
 func (m *MessageBase) Resend(s interfaces.IState) (rtn bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseResend.Observe(float64(time.Now().UnixNano() - callTime))
 	now := s.GetTimestamp().GetTimeMilli()
 	if m.resend == 0 {
 		m.resend = now
@@ -105,6 +123,8 @@ func (m *MessageBase) Resend(s interfaces.IState) (rtn bool) {
 
 // Try and Resend.  Return true if we should keep the message, false if we should give up.
 func (m *MessageBase) Expire(s interfaces.IState) (rtn bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseExpire.Observe(float64(time.Now().UnixNano() - callTime))
 	now := s.GetTimestamp().GetTimeMilli()
 	if m.expire == 0 {
 		m.expire = now
@@ -116,13 +136,19 @@ func (m *MessageBase) Expire(s interfaces.IState) (rtn bool) {
 }
 
 func (m *MessageBase) IsStalled() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseIsStalled.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Stalled
 }
 func (m *MessageBase) SetStall(b bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetStall.Observe(float64(time.Now().UnixNano() - callTime))
 	m.Stalled = b
 }
 
 func (m *MessageBase) GetFullMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseGetFullMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.FullMsgHash == nil {
 		m.FullMsgHash = primitives.NewZeroHash()
 	}
@@ -130,44 +156,64 @@ func (m *MessageBase) GetFullMsgHash() interfaces.IHash {
 }
 
 func (m *MessageBase) SetFullMsgHash(hash interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetFullMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	m.GetFullMsgHash().SetBytes(hash.Bytes())
 }
 
 func (m *MessageBase) GetOrigin() int {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseGetOrigin.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Origin
 }
 
 func (m *MessageBase) SetOrigin(o int) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetOrigin.Observe(float64(time.Now().UnixNano() - callTime))
 	m.Origin = o
 }
 
 func (m *MessageBase) GetNetworkOrigin() string {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseGetNetworkOrigin.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.NetworkOrigin
 }
 
 func (m *MessageBase) SetNetworkOrigin(o string) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetNetworkOrigin.Observe(float64(time.Now().UnixNano() - callTime))
 	m.NetworkOrigin = o
 }
 
 // Returns true if this is a response to a peer to peer
 // request.
 func (m *MessageBase) IsPeer2Peer() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseIsPeer2Peer.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Peer2Peer
 }
 
 func (m *MessageBase) SetPeer2Peer(f bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetPeer2Peer.Observe(float64(time.Now().UnixNano() - callTime))
 	m.Peer2Peer = f
 }
 
 func (m *MessageBase) IsLocal() bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseIsLocal.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.LocalOnly
 }
 
 func (m *MessageBase) SetLocal(v bool) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetLocal.Observe(float64(time.Now().UnixNano() - callTime))
 	m.LocalOnly = v
 }
 
 func (m *MessageBase) GetLeaderChainID() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseGetLeaderChainID.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.LeaderChainID == nil {
 		m.LeaderChainID = primitives.NewZeroHash()
 	}
@@ -175,30 +221,44 @@ func (m *MessageBase) GetLeaderChainID() interfaces.IHash {
 }
 
 func (m *MessageBase) SetLeaderChainID(hash interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetLeaderChainID.Observe(float64(time.Now().UnixNano() - callTime))
 	m.LeaderChainID = hash
 }
 
 func (m *MessageBase) GetVMIndex() (index int) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseGetVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
 	index = m.VMIndex
 	return
 }
 
 func (m *MessageBase) SetVMIndex(index int) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBase.Observe(float64(time.Now().UnixNano() - callTime))
 	m.VMIndex = index
 }
 
 func (m *MessageBase) GetVMHash() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBase.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.VMHash
 }
 
 func (m *MessageBase) SetVMHash(vmhash []byte) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBase.Observe(float64(time.Now().UnixNano() - callTime))
 	m.VMHash = vmhash
 }
 
 func (m *MessageBase) GetMinute() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseGetMinute.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Minute
 }
 
 func (m *MessageBase) SetMinute(minute byte) {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageBaseSetMinute.Observe(float64(time.Now().UnixNano() - callTime))
 	m.Minute = minute
 }

@@ -20,6 +20,8 @@ var _ interfaces.IABEntry = (*RemoveFederatedServer)(nil)
 var _ interfaces.BinaryMarshallable = (*RemoveFederatedServer)(nil)
 
 func (e *RemoveFederatedServer) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8d",
 		"Remove Federated Server",
@@ -31,6 +33,8 @@ func (e *RemoveFederatedServer) String() string {
 }
 
 func (c *RemoveFederatedServer) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(state.GetFedServers(c.DBHeight)) != 0 {
 		state.RemoveFedServer(c.DBHeight, c.IdentityChainID)
 	}
@@ -46,6 +50,8 @@ func (c *RemoveFederatedServer) UpdateState(state interfaces.IState) error {
 
 // Create a new DB Signature Entry
 func NewRemoveFederatedServer(identityChainID interfaces.IHash, dbheight uint32) (e *RemoveFederatedServer) {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerNewRemoveFederatedServer.Observe(float64(time.Now().UnixNano() - callTime))	
 	e = new(RemoveFederatedServer)
 	e.IdentityChainID = primitives.NewHash(identityChainID.Bytes())
 	e.DBHeight = dbheight
@@ -53,10 +59,14 @@ func NewRemoveFederatedServer(identityChainID interfaces.IHash, dbheight uint32)
 }
 
 func (e *RemoveFederatedServer) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.TYPE_REMOVE_FED_SERVER
 }
 
 func (e *RemoveFederatedServer) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -71,6 +81,8 @@ func (e *RemoveFederatedServer) MarshalBinary() (data []byte, err error) {
 }
 
 func (e *RemoveFederatedServer) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Remove Federated Server: %v", r)
@@ -95,19 +107,27 @@ func (e *RemoveFederatedServer) UnmarshalBinaryData(data []byte) (newData []byte
 }
 
 func (e *RemoveFederatedServer) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *RemoveFederatedServer) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RemoveFederatedServer) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *RemoveFederatedServer) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
@@ -120,6 +140,8 @@ func (e *RemoveFederatedServer) Interpret() string {
 }
 
 func (e *RemoveFederatedServer) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryRemoveFederatedServerHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)

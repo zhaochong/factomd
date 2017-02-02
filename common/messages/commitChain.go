@@ -8,6 +8,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/entryCreditBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -30,6 +32,8 @@ var _ interfaces.IMsg = (*CommitChainMsg)(nil)
 var _ Signable = (*CommitChainMsg)(nil)
 
 func (a *CommitChainMsg) IsSameAs(b *CommitChainMsg) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -56,30 +60,44 @@ func (a *CommitChainMsg) IsSameAs(b *CommitChainMsg) bool {
 }
 
 func (m *CommitChainMsg) GetCount() int {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainGetCount.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.count
 }
 
 func (m *CommitChainMsg) IncCount() {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainIncCount.Observe(float64(time.Now().UnixNano() - callTime))
 	m.count += 1
 }
 
 func (m *CommitChainMsg) SetCount(cnt int) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainSetCount.Observe(float64(time.Now().UnixNano() - callTime))
 	m.count = cnt
 }
 
 func (m *CommitChainMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	return state.ProcessCommitChain(dbheight, m)
 }
 
 func (m *CommitChainMsg) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.CommitChain.GetSigHash()
 }
 
 func (m *CommitChainMsg) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *CommitChainMsg) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		m.MsgHash = m.CommitChain.GetSigHash()
 	}
@@ -87,10 +105,14 @@ func (m *CommitChainMsg) GetMsgHash() interfaces.IHash {
 }
 
 func (m *CommitChainMsg) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.CommitChain.GetTimestamp()
 }
 
 func (m *CommitChainMsg) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.COMMIT_CHAIN_MSG
 }
 
@@ -107,6 +129,8 @@ func (m *CommitChainMsg) Bytes() []byte {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *CommitChainMsg) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	if !m.validsig && !m.CommitChain.IsValid() {
 		return -1
 	}
@@ -122,11 +146,15 @@ func (m *CommitChainMsg) Validate(state interfaces.IState) int {
 }
 
 func (m *CommitChainMsg) ComputeVMIndex(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
 	m.VMIndex = state.ComputeVMIndex(constants.EC_CHAINID)
 }
 
 // Execute the leader functions of the given message
 func (m *CommitChainMsg) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	// Check if we have yet to see an entry.  If we have seen one (NoEntryYet == false) then
 	// we can record it.
 	if state.NoEntryYet(m.CommitChain.EntryHash, m.CommitChain.GetTimestamp()) {
@@ -137,22 +165,32 @@ func (m *CommitChainMsg) LeaderExecute(state interfaces.IState) {
 }
 
 func (m *CommitChainMsg) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteMsg(m)
 }
 
 func (e *CommitChainMsg) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *CommitChainMsg) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *CommitChainMsg) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *CommitChainMsg) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -162,14 +200,20 @@ func (m *CommitChainMsg) Sign(key interfaces.Signer) error {
 }
 
 func (m *CommitChainMsg) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *CommitChainMsg) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *CommitChainMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Commit Chain Message: %v", r)
@@ -200,11 +244,15 @@ func (m *CommitChainMsg) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func (m *CommitChainMsg) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *CommitChainMsg) MarshalForSignature() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -219,6 +267,8 @@ func (m *CommitChainMsg) MarshalForSignature() (data []byte, err error) {
 }
 
 func (m *CommitChainMsg) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	resp, err := m.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -236,6 +286,8 @@ func (m *CommitChainMsg) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *CommitChainMsg) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesCommitChainString.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.LeaderChainID == nil {
 		m.LeaderChainID = primitives.NewZeroHash()
 	}

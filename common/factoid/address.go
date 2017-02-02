@@ -37,6 +37,8 @@ func (b *Address) String() string {
 }*/
 
 func (a *Address) CustomMarshalText() (text []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidAddressCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	addr := hex.EncodeToString(a.Bytes())
 	out.WriteString("addr  ")
@@ -45,11 +47,15 @@ func (a *Address) CustomMarshalText() (text []byte, err error) {
 }
 
 func NewAddress(b []byte) interfaces.IAddress {
+	callTime := time.Now().UnixNano()
+	defer factoidAddressNewAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	a := new(Address)
 	a.SetBytes(b)
 	return a
 }
 
 func CreateAddress(hash interfaces.IHash) interfaces.IAddress {
+	callTime := time.Now().UnixNano()
+	defer factoidAddressCreateAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	return NewAddress(hash.Bytes())
 }

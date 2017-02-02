@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -40,6 +41,8 @@ var _ Signable = (*EOM)(nil)
 var _ interfaces.IMsg = (*EOM)(nil)
 
 func (a *EOM) IsSameAs(b *EOM) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -75,18 +78,26 @@ func (a *EOM) IsSameAs(b *EOM) bool {
 }
 
 func (e *EOM) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	return state.ProcessEOM(dbheight, e)
 }
 
 func (m *EOM) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *EOM) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *EOM) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -98,6 +109,8 @@ func (m *EOM) GetMsgHash() interfaces.IHash {
 }
 
 func (m *EOM) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.Timestamp == nil {
 		m.Timestamp = new(primitives.Timestamp)
 	}
@@ -105,15 +118,21 @@ func (m *EOM) GetTimestamp() interfaces.Timestamp {
 }
 
 func (m *EOM) Int() int {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMInt.Observe(float64(time.Now().UnixNano() - callTime))
 	return int(m.Minute)
 }
 
 func (m *EOM) Bytes() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMBytes.Observe(float64(time.Now().UnixNano() - callTime))
 	var ret []byte
 	return append(ret, m.Minute)
 }
 
 func (m *EOM) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.EOM_MSG
 }
 
@@ -122,6 +141,8 @@ func (m *EOM) Type() byte {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *EOM) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.IsLocal() {
 		return 1
 	}
@@ -154,26 +175,38 @@ func (m *EOM) ComputeVMIndex(state interfaces.IState) {
 
 // Execute the leader functions of the given message
 func (m *EOM) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.LeaderExecuteEOM(m)
 }
 
 func (m *EOM) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteEOM(m)
 }
 
 func (e *EOM) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *EOM) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *EOM) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *EOM) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -183,14 +216,20 @@ func (m *EOM) Sign(key interfaces.Signer) error {
 }
 
 func (m *EOM) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *EOM) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *EOM) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling EOM message: %v", r)
@@ -244,11 +283,15 @@ func (m *EOM) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (m *EOM) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *EOM) MarshalForSignature() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 	buf.Write([]byte{m.Type()})
 	if d, err := m.Timestamp.MarshalBinary(); err != nil {
@@ -274,6 +317,8 @@ func (m *EOM) MarshalForSignature() (data []byte, err error) {
 }
 
 func (m *EOM) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesEOM.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 	resp, err := m.MarshalForSignature()
 	if err != nil {
@@ -305,6 +350,8 @@ func (m *EOM) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *EOM) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesEOMString.Observe(float64(time.Now().UnixNano() - callTime))
 	local := ""
 	if m.IsLocal() {
 		local = "local"

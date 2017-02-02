@@ -17,22 +17,30 @@ var _ interfaces.IABEntry = (*IncreaseServerCount)(nil)
 var _ interfaces.BinaryMarshallable = (*IncreaseServerCount)(nil)
 
 // Create a new DB Signature Entry
-func NewIncreaseSererCount(num byte) (e *IncreaseServerCount) {
+func NewIncreaseServerCount(num byte) (e *IncreaseServerCount) {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountNewentryIncreaseServerCount.Observe(float64(time.Now().UnixNano() - callTime))	
 	e = new(IncreaseServerCount)
 	e.Amount = num
 	return
 }
 
 func (c *IncreaseServerCount) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	return nil
 }
 
 func (e *IncreaseServerCount) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.TYPE_ADD_SERVER_COUNT
 }
 
 func (e *IncreaseServerCount) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -42,6 +50,8 @@ func (e *IncreaseServerCount) MarshalBinary() (data []byte, err error) {
 }
 
 func (e *IncreaseServerCount) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Entry Increase Server Count: %v", r)
@@ -56,23 +66,33 @@ func (e *IncreaseServerCount) UnmarshalBinaryData(data []byte) (newData []byte, 
 }
 
 func (e *IncreaseServerCount) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *IncreaseServerCount) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *IncreaseServerCount) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *IncreaseServerCount) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *IncreaseServerCount) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountString.Observe(float64(time.Now().UnixNano() - callTime))	
 	str := fmt.Sprintf("    E: %35s -- by %d", "Increase Server Count", e.Amount)
 	return str
 }
@@ -86,6 +106,8 @@ func (e *IncreaseServerCount) Interpret() string {
 }
 
 func (e *IncreaseServerCount) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryIncreaseServerCountHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)

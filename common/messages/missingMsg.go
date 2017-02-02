@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -33,6 +34,8 @@ type MissingMsg struct {
 var _ interfaces.IMsg = (*MissingMsg)(nil)
 
 func (a *MissingMsg) IsSameAs(b *MissingMsg) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -65,10 +68,14 @@ func (m *MissingMsg) Process(uint32, interfaces.IState) bool {
 }
 
 func (m *MissingMsg) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *MissingMsg) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.hash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -80,6 +87,8 @@ func (m *MissingMsg) GetHash() interfaces.IHash {
 }
 
 func (m *MissingMsg) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -91,10 +100,14 @@ func (m *MissingMsg) GetMsgHash() interfaces.IHash {
 }
 
 func (m *MissingMsg) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *MissingMsg) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.MISSING_MSG
 }
 
@@ -107,6 +120,8 @@ func (m *MissingMsg) Bytes() []byte {
 }
 
 func (m *MissingMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsg.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -148,11 +163,15 @@ func (m *MissingMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error
 }
 
 func (m *MissingMsg) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *MissingMsg) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -188,6 +207,8 @@ func (m *MissingMsg) MarshalBinary() ([]byte, error) {
 }
 
 func (m *MissingMsg) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgString.Observe(float64(time.Now().UnixNano() - callTime))
 	str := ""
 	for _, n := range m.ProcessListHeight {
 		str = fmt.Sprintf("%s%d,", str, n)
@@ -214,6 +235,8 @@ func (m *MissingMsg) ListHeight() int {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *MissingMsg) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsg.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.Asking == nil {
 		return -1
 	}
@@ -228,32 +251,46 @@ func (m *MissingMsg) ComputeVMIndex(state interfaces.IState) {
 }
 
 func (m *MissingMsg) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	m.FollowerExecute(state)
 }
 
 func (m *MissingMsg) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteMissingMsg(m)
 }
 
 func (e *MissingMsg) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *MissingMsg) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *MissingMsg) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 // AddHeight: Add a Missing Message Height to the request
 func (e *MissingMsg) AddHeight(h uint32) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgAddHeight.Observe(float64(time.Now().UnixNano() - callTime))
 	e.ProcessListHeight = append(e.ProcessListHeight, h)
 }
 
 // NewMissingMsg: Build a missing Message request, and add the first Height
 func NewMissingMsg(state interfaces.IState, vm int, dbHeight uint32, processlistHeight uint32) *MissingMsg {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingMsgNewMissingMsg.Observe(float64(time.Now().UnixNano() - callTime))
 
 	msg := new(MissingMsg)
 

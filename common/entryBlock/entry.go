@@ -34,6 +34,8 @@ var _ interfaces.BinaryMarshallable = (*Entry)(nil)
 // to 1K returns 1, everything up to and including 2K returns 2, etc.
 // An error returns 100 (an invalid size)
 func (c *Entry) KSize() int {
+	callTime := time.Now().UnixNano()
+	defer entryKSize.Observe(float64(time.Now().UnixNano() - callTime))	
 	data, err := c.MarshalBinary()
 	if err != nil {
 		return 100
@@ -42,38 +44,54 @@ func (c *Entry) KSize() int {
 }
 
 func (c *Entry) New() interfaces.BinaryMarshallableAndCopyable {
+	callTime := time.Now().UnixNano()
+	defer entryNew.Observe(float64(time.Now().UnixNano() - callTime))	
 	return NewEntry()
 }
 
 func (c *Entry) GetDatabaseHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer entryGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return 0
 }
 
 func (e *Entry) GetWeld() []byte {
+	callTime := time.Now().UnixNano()
+	defer entryGetWeld.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.DoubleSha(append(e.GetHash().Bytes(), e.GetChainID().Bytes()...))
 }
 
 func (e *Entry) GetWeldHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryGetWeldHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	hash := primitives.NewZeroHash()
 	hash.SetBytes(e.GetWeld())
 	return hash
 }
 
 func (c *Entry) GetChainID() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryGetChainID.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.ChainID
 }
 
 func (c *Entry) DatabasePrimaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.GetHash()
 }
 
 func (c *Entry) DatabaseSecondaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	return nil
 }
 
 // NewChainID generates a ChainID from an entry. ChainID = primitives.Sha(Sha(ExtIDs[0]) +
 // Sha(ExtIDs[1] + ... + Sha(ExtIDs[n]))
 func NewChainID(e interfaces.IEBEntry) interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryNewChainID.Observe(float64(time.Now().UnixNano() - callTime))	
 	id := new(primitives.Hash)
 	sum := sha256.New()
 	for _, v := range e.ExternalIDs() {
@@ -86,14 +104,20 @@ func NewChainID(e interfaces.IEBEntry) interfaces.IHash {
 }
 
 func (e *Entry) GetContent() []byte {
+	callTime := time.Now().UnixNano()
+	defer entryGetContent.Observe(float64(time.Now().UnixNano() - callTime))	
 	return e.Content.Bytes
 }
 
 func (e *Entry) GetChainIDHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryGetChainIDHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return e.ChainID
 }
 
 func (e *Entry) ExternalIDs() [][]byte {
+	callTime := time.Now().UnixNano()
+	defer entryExternalIDs.Observe(float64(time.Now().UnixNano() - callTime))	
 	answer := [][]byte{}
 	for _, v := range e.ExtIDs {
 		answer = append(answer, v.Bytes)
@@ -102,7 +126,9 @@ func (e *Entry) ExternalIDs() [][]byte {
 }
 
 func (e *Entry) IsValid() bool {
-
+callTime := time.Now().UnixNano()
+	defer entryIsValid.Observe(float64(time.Now().UnixNano() - callTime))	
+	
 	//double check the version
 	if e.Version != 0 {
 		return false
@@ -112,6 +138,8 @@ func (e *Entry) IsValid() bool {
 }
 
 func (e *Entry) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	if e.hash == nil {
 		h := primitives.NewZeroHash()
 		entry, err := e.MarshalBinary()
@@ -128,6 +156,8 @@ func (e *Entry) GetHash() interfaces.IHash {
 }
 
 func (e *Entry) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	// 1 byte Version
@@ -160,6 +190,8 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 // MarshalExtIDsBinary marshals the ExtIDs into a []byte containing a series of
 // 2 byte size of each ExtID followed by the ExtID.
 func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryMarshalExtIDsBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	for _, x := range e.ExtIDs {
@@ -176,6 +208,8 @@ func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 }
 
 func UnmarshalEntry(data []byte) (interfaces.IEBEntry, error) {
+	callTime := time.Now().UnixNano()
+	defer entryUnmarshalEntry.Observe(float64(time.Now().UnixNano() - callTime))	
 	entry := NewEntry()
 	err := entry.UnmarshalBinary(data)
 	if err != nil {
@@ -185,6 +219,8 @@ func UnmarshalEntry(data []byte) (interfaces.IEBEntry, error) {
 }
 
 func (e *Entry) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -258,23 +294,33 @@ func (e *Entry) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (e *Entry) UnmarshalBinary(data []byte) (err error) {
-	_, err = e.UnmarshalBinaryData(data)
+callTime := time.Now().UnixNano()
+	defer entryUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
+		_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *Entry) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Entry) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *Entry) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *Entry) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryString.Observe(float64(time.Now().UnixNano() - callTime))	
 	str, _ := e.JSONString()
 	return str
 }
@@ -284,6 +330,8 @@ func (e *Entry) String() string {
  ***************************************************************/
 
 func NewEntry() *Entry {
+	callTime := time.Now().UnixNano()
+	defer entryNewEntry.Observe(float64(time.Now().UnixNano() - callTime))	
 	e := new(Entry)
 	e.ChainID = primitives.NewZeroHash()
 	e.ExtIDs = make([]primitives.ByteSlice, 0)

@@ -31,7 +31,9 @@ type DataResponse struct {
 var _ interfaces.IMsg = (*DataResponse)(nil)
 
 func (a *DataResponse) IsSameAs(b *DataResponse) bool {
-	if b == nil {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))	
+		if b == nil {
 		return false
 	}
 	if a.Timestamp.GetTimeMilli() != b.Timestamp.GetTimeMilli() {
@@ -70,14 +72,20 @@ func (a *DataResponse) IsSameAs(b *DataResponse) bool {
 }
 
 func (m *DataResponse) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return m.GetMsgHash()
 }
 
 func (m *DataResponse) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return m.GetMsgHash()
 }
 
 func (m *DataResponse) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -89,6 +97,8 @@ func (m *DataResponse) GetMsgHash() interfaces.IHash {
 }
 
 func (m *DataResponse) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.DATA_RESPONSE
 }
 
@@ -101,6 +111,8 @@ func (m *DataResponse) Bytes() []byte {
 }
 
 func (m *DataResponse) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))	
 	return m.Timestamp
 }
 
@@ -109,6 +121,8 @@ func (m *DataResponse) GetTimestamp() interfaces.Timestamp {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *DataResponse) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseValidate.Observe(float64(time.Now().UnixNano() - callTime))	
 	var dataHash interfaces.IHash
 	var err error
 	switch m.DataType {
@@ -143,10 +157,14 @@ func (m *DataResponse) ComputeVMIndex(state interfaces.IState) {}
 
 // Execute the leader functions of the given message
 func (m *DataResponse) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))	
 	m.FollowerExecute(state)
 }
 
 func (m *DataResponse) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.FollowerExecuteDataResponse(m)
 }
 
@@ -156,18 +174,26 @@ func (e *DataResponse) Process(dbheight uint32, state interfaces.IState) bool {
 }
 
 func (e *DataResponse) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DataResponse) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DataResponse) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *DataResponse) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -217,11 +243,15 @@ func (m *DataResponse) UnmarshalBinaryData(data []byte) (newData []byte, err err
 }
 
 func (m *DataResponse) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func attemptEntryUnmarshal(data []byte) (entry interfaces.IEBEntry, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseattemptEntryUnmarshal.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Bytes do not represent an entry")
@@ -237,6 +267,8 @@ func attemptEntryUnmarshal(data []byte) (entry interfaces.IEBEntry, err error) {
 }
 
 func attemptEBlockUnmarshal(data []byte) (eblock interfaces.IEntryBlock, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponse.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Bytes do not represent an eblock: %v\n", r)
@@ -252,6 +284,8 @@ func attemptEBlockUnmarshal(data []byte) (eblock interfaces.IEntryBlock, err err
 }
 
 func (m *DataResponse) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 	buf.Write([]byte{m.Type()})
 	if d, err := m.Timestamp.MarshalBinary(); err != nil {
@@ -280,6 +314,8 @@ func (m *DataResponse) MarshalBinary() ([]byte, error) {
 }
 
 func (m *DataResponse) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return fmt.Sprintf("DataResponse Type: %v\n Hash: %x\n Object: %v\n",
 		m.DataType,
 		m.DataHash.Bytes()[:5],
@@ -287,6 +323,8 @@ func (m *DataResponse) String() string {
 }
 
 func NewDataResponse(state interfaces.IState, dataObject interfaces.BinaryMarshallable,
+	callTime := time.Now().UnixNano()
+	defer messagesdataResponseNewDataResponse.Observe(float64(time.Now().UnixNano() - callTime))	
 	dataType int,
 	dataHash interfaces.IHash) interfaces.IMsg {
 

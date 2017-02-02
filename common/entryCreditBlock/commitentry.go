@@ -39,6 +39,8 @@ var _ interfaces.IECBlockEntry = (*CommitEntry)(nil)
 var _ interfaces.ISignable = (*CommitEntry)(nil)
 
 func (e *CommitEntry) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf(" %-20s\n", "CommitEntry"))
 	out.WriteString(fmt.Sprintf("   %-20s %d\n", "Version", e.Version))
@@ -52,10 +54,14 @@ func (e *CommitEntry) String() string {
 }
 
 func (a *CommitEntry) GetEntryHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryGetEntryHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return a.EntryHash
 }
 
 func (a *CommitEntry) IsSameAs(b *CommitEntry) bool {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))	
 	if b == nil {
 		return false
 	}
@@ -71,6 +77,8 @@ func (a *CommitEntry) IsSameAs(b *CommitEntry) bool {
 }
 
 func NewCommitEntry() *CommitEntry {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryNewCommitEntry.Observe(float64(time.Now().UnixNano() - callTime))	
 	c := new(CommitEntry)
 	c.Version = 0
 	c.MilliTime = new(primitives.ByteSlice6)
@@ -82,6 +90,8 @@ func NewCommitEntry() *CommitEntry {
 }
 
 func (e *CommitEntry) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -100,6 +110,8 @@ func (b *CommitEntry) Interpret() string {
 // CommitMsg returns the binary marshaled message section of the CommitEntry
 // that is covered by the CommitEntry.Sig.
 func (c *CommitEntry) CommitMsg() []byte {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryCommitMsg.Observe(float64(time.Now().UnixNano() - callTime))	
 	p, err := c.MarshalBinary()
 	if err != nil {
 		return []byte{byte(0)}
@@ -109,6 +121,8 @@ func (c *CommitEntry) CommitMsg() []byte {
 
 // Return the timestamp
 func (c *CommitEntry) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))	
 	a := make([]byte, 2, 8)
 	a = append(a, c.MilliTime[:]...)
 	milli := uint64(binary.BigEndian.Uint64(a))
@@ -118,6 +132,8 @@ func (c *CommitEntry) GetTimestamp() interfaces.Timestamp {
 // InTime checks the CommitEntry.MilliTime and returns true if the timestamp is
 // whitin +/- 12 hours of the current time.
 func (c *CommitEntry) InTime() bool {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryInTime.Observe(float64(time.Now().UnixNano() - callTime))	
 	now := time.Now()
 	sec := c.GetTimestamp().GetTimeSeconds()
 	t := time.Unix(sec, 0)
@@ -126,6 +142,8 @@ func (c *CommitEntry) InTime() bool {
 }
 
 func (c *CommitEntry) IsValid() bool {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryIsValid.Observe(float64(time.Now().UnixNano() - callTime))	
 	//double check the credits in the commit
 	if c.Credits < 1 || c.Version != 0 {
 		return false
@@ -134,11 +152,15 @@ func (c *CommitEntry) IsValid() bool {
 }
 
 func (c *CommitEntry) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	h, _ := c.MarshalBinary()
 	return primitives.Sha(h)
 }
 
 func (c *CommitEntry) GetSigHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryGetSigHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	if c.SigHash == nil {
 		data := c.CommitMsg()
 		c.SigHash = primitives.Sha(data)
@@ -147,6 +169,8 @@ func (c *CommitEntry) GetSigHash() interfaces.IHash {
 }
 
 func (c *CommitEntry) MarshalBinarySig() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryMarshalBinarySig.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	// 1 byte Version
@@ -171,6 +195,8 @@ func (c *CommitEntry) MarshalBinarySig() ([]byte, error) {
 
 // Transaction hash of entry commit. (version through pub key hashed)
 func (c *CommitEntry) MarshalBinaryTransaction() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryMarshalBinaryTransaction.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	b, err := c.MarshalBinarySig()
@@ -187,6 +213,8 @@ func (c *CommitEntry) MarshalBinaryTransaction() ([]byte, error) {
 }
 
 func (c *CommitEntry) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	buf := new(primitives.Buffer)
 
 	b, err := c.MarshalBinaryTransaction()
@@ -206,6 +234,8 @@ func (c *CommitEntry) MarshalBinary() ([]byte, error) {
 }
 
 func (c *CommitEntry) Sign(privateKey []byte) error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntrySign.Observe(float64(time.Now().UnixNano() - callTime))	
 	sig, err := primitives.SignSignable(privateKey, c)
 	if err != nil {
 		return err
@@ -232,6 +262,8 @@ func (c *CommitEntry) Sign(privateKey []byte) error {
 }
 
 func (c *CommitEntry) ValidateSignatures() error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryValidateSignatures.Observe(float64(time.Now().UnixNano() - callTime))	
 	if c.ECPubKey == nil {
 		return fmt.Errorf("No public key present")
 	}
@@ -246,10 +278,14 @@ func (c *CommitEntry) ValidateSignatures() error {
 }
 
 func (c *CommitEntry) ECID() byte {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryECID.Observe(float64(time.Now().UnixNano() - callTime))	
 	return ECIDEntryCommit
 }
 
 func (c *CommitEntry) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling CommitEntry: %v", r)
@@ -338,18 +374,26 @@ func (c *CommitEntry) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (c *CommitEntry) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = c.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *CommitEntry) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *CommitEntry) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *CommitEntry) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryCreditBlockCommitEntryJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }

@@ -7,7 +7,9 @@ import (
 )
 
 func GetGenesisFBlock(netID uint32) interfaces.IFBlock {
-	block := new(FBlock)
+	callTime := time.Now().UnixNano()
+	defer factoidgenesisBlockNewGetGenesisFBlock.Observe(float64(time.Now().UnixNano() - callTime))	
+		block := new(FBlock)
 	var data []byte
 	var err error
 	switch netID {

@@ -10,6 +10,7 @@ package messages
 
 import (
 	"fmt"
+	"time"
 )
 
 // MessageError describes an issue with a message.
@@ -29,6 +30,8 @@ var _ error = (*MessageError)(nil)
 
 // Error satisfies the error interface and prints human-readable errors.
 func (e *MessageError) Error() string {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageErrorError.Observe(float64(time.Now().UnixNano() - callTime))
 	if e.Func != "" {
 		return fmt.Sprintf("%v: %v", e.Func, e.Description)
 	}
@@ -37,5 +40,7 @@ func (e *MessageError) Error() string {
 
 // messageError creates an error for the given function and description.
 func messageError(f string, desc string) *MessageError {
+	callTime := time.Now().UnixNano()
+	defer messagesMessageErrormessageError.Observe(float64(time.Now().UnixNano() - callTime))
 	return &MessageError{Func: f, Description: desc}
 }

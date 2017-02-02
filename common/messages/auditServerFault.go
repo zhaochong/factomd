@@ -7,6 +7,8 @@ package messages
 import (
 	"bytes"
 	"fmt"
+	"time"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -27,10 +29,14 @@ var _ interfaces.IMsg = (*AuditServerFault)(nil)
 var _ Signable = (*AuditServerFault)(nil)
 
 func (m *AuditServerFault) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (a *AuditServerFault) IsSameAs(b *AuditServerFault) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -53,6 +59,8 @@ func (a *AuditServerFault) IsSameAs(b *AuditServerFault) bool {
 }
 
 func (m *AuditServerFault) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -62,27 +70,39 @@ func (m *AuditServerFault) Sign(key interfaces.Signer) error {
 }
 
 func (m *AuditServerFault) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *AuditServerFault) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (e *AuditServerFault) Process(uint32, interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	panic("AuditServerFault object should never have its Process() method called")
 }
 
 func (m *AuditServerFault) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *AuditServerFault) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 
 	return nil
 }
 
 func (m *AuditServerFault) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -94,18 +114,26 @@ func (m *AuditServerFault) GetMsgHash() interfaces.IHash {
 }
 
 func (m *AuditServerFault) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.AUDIT_SERVER_FAULT_MSG
 }
 
 func (m *AuditServerFault) Int() int {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultInt.Observe(float64(time.Now().UnixNano() - callTime))
 	return -1
 }
 
 func (m *AuditServerFault) Bytes() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultBytes.Observe(float64(time.Now().UnixNano() - callTime))
 	return nil
 }
 
 func (m *AuditServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling AuditServerFault: %v", r)
@@ -137,11 +165,15 @@ func (m *AuditServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err
 }
 
 func (m *AuditServerFault) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *AuditServerFault) MarshalForSignature() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 	buf.Write([]byte{m.Type()})
 	if d, err := m.Timestamp.MarshalBinary(); err != nil {
@@ -156,6 +188,8 @@ func (m *AuditServerFault) MarshalForSignature() (data []byte, err error) {
 }
 
 func (m *AuditServerFault) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	resp, err := m.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -173,22 +207,32 @@ func (m *AuditServerFault) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *AuditServerFault) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFault.Observe(float64(time.Now().UnixNano() - callTime))
 	return "AuditFault"
 }
 
 func (m *AuditServerFault) DBHeight() int {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
 	return 0
 }
 
 func (m *AuditServerFault) ChainID() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultChainID.Observe(float64(time.Now().UnixNano() - callTime))
 	return nil
 }
 
 func (m *AuditServerFault) ListHeight() int {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultListHeight.Observe(float64(time.Now().UnixNano() - callTime))
 	return 0
 }
 
 func (m *AuditServerFault) SerialHash() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultSerialHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return nil
 }
 
@@ -197,6 +241,8 @@ func (m *AuditServerFault) SerialHash() []byte {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *AuditServerFault) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	return 0
 }
 
@@ -215,13 +261,19 @@ func (m *AuditServerFault) FollowerExecute(interfaces.IState) {
 }
 
 func (e *AuditServerFault) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AuditServerFault) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AuditServerFault) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAuditServerFaultJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }

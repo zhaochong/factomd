@@ -24,22 +24,32 @@ var _ interfaces.BinaryMarshallable = (*DBEntry)(nil)
 var _ interfaces.IDBEntry = (*DBEntry)(nil)
 
 func (c *DBEntry) GetChainID() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryGetChainID.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.ChainID
 }
 
 func (c *DBEntry) SetChainID(chainID interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntrySetChainID.Observe(float64(time.Now().UnixNano() - callTime))	
 	c.ChainID = chainID
 }
 
 func (c *DBEntry) GetKeyMR() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryGetKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.KeyMR
 }
 
 func (c *DBEntry) SetKeyMR(keyMR interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntrySetKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	c.KeyMR = keyMR
 }
 
 func (e *DBEntry) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	data, err = e.ChainID.MarshalBinary()
@@ -62,6 +72,8 @@ func (e *DBEntry) MarshalBinary() (data []byte, err error) {
 }
 
 func (e *DBEntry) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block Entry: %v", r)
@@ -84,28 +96,40 @@ func (e *DBEntry) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (e *DBEntry) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *DBEntry) ShaHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryShaHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	byteArray, _ := e.MarshalBinary()
 	return primitives.Sha(byteArray)
 }
 
 func (e *DBEntry) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DBEntry) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DBEntry) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *DBEntry) String() string {
+	callTime := time.Now().UnixNano()
+	defer directoryBlockEntryString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString("ChainID: " + e.GetChainID().String() + "\n")
 	out.WriteString("      KeyMR:   " + e.GetKeyMR().String() + "\n")

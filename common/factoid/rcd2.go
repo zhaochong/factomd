@@ -37,14 +37,20 @@ var _ interfaces.IRCD = (*RCD_2)(nil)
  *************************************/
 
 func (b RCD_2) GetAddress() (interfaces.IAddress, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2GetAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	return nil, nil
 }
 
 func (b RCD_2) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2GetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return nil
 }
 
 func (b RCD_2) NumberOfSignatures() int {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2NumberOfSignatures.Observe(float64(time.Now().UnixNano() - callTime))	
 	return 1
 }
 
@@ -53,27 +59,39 @@ func (b RCD_2) NumberOfSignatures() int {
  ***************************************/
 
 func (b RCD_2) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2UnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err := b.UnmarshalBinaryData(data)
 	return err
 }
 
 func (b RCD_2) CheckSig(trans interfaces.ITransaction, sigblk interfaces.ISignatureBlock) bool {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2CheckSig.Observe(float64(time.Now().UnixNano() - callTime))	
 	return false
 }
 
 func (e *RCD_2) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2JSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RCD_2) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2JSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *RCD_2) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2JSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (b RCD_2) String() string {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2String.Observe(float64(time.Now().UnixNano() - callTime))	
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -82,6 +100,8 @@ func (b RCD_2) String() string {
 }
 
 func (w RCD_2) Clone() interfaces.IRCD {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2Clone.Observe(float64(time.Now().UnixNano() - callTime))	
 	c := new(RCD_2)
 	c.M = w.M
 	c.N = w.N
@@ -93,6 +113,8 @@ func (w RCD_2) Clone() interfaces.IRCD {
 }
 
 func (a1 *RCD_2) IsEqual(addr interfaces.IBlock) []interfaces.IBlock {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2IsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
 	a2, ok := addr.(*RCD_2)
 	if !ok || // Not the right kind of interfaces.IBlock
 		a1.N != a2.N || // Size of sig has to match
@@ -113,6 +135,8 @@ func (a1 *RCD_2) IsEqual(addr interfaces.IBlock) []interfaces.IBlock {
 }
 
 func (t *RCD_2) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2UnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	typ := int8(data[0])
 	data = data[1:]
@@ -137,6 +161,8 @@ func (t *RCD_2) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (a RCD_2) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2MarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	binary.Write(&out, binary.BigEndian, uint8(2))
@@ -154,6 +180,8 @@ func (a RCD_2) MarshalBinary() ([]byte, error) {
 }
 
 func (a RCD_2) CustomMarshalText() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidrcd2CustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	primitives.WriteNumber8(&out, uint8(2)) // Type 2 Authorization

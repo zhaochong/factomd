@@ -12,7 +12,9 @@ import (
 /******************************************************************************/
 
 func PublicKeyStringToECAddressString(public string) (string, error) {
-	pubHex, err := hex.DecodeString(public)
+	callTime := time.Now().UnixNano()
+	defer factoidConversionsPublicKeyStringToECAddressString.Observe(float64(time.Now().UnixNano() - callTime))	
+		pubHex, err := hex.DecodeString(public)
 	if err != nil {
 		return "", err
 	}
@@ -26,10 +28,14 @@ func PublicKeyStringToECAddressString(public string) (string, error) {
 }
 
 func PublicKeyToECAddress(public []byte) (interfaces.IAddress, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidConversionsPublicKeyToECAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	return NewAddress(public), nil
 }
 
 func PublicKeyStringToFactoidAddressString(public string) (string, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidConversionsPublicKeyStringToFactoidAddressString.Observe(float64(time.Now().UnixNano() - callTime))	
 	pubHex, err := hex.DecodeString(public)
 	if err != nil {
 		return "", err
@@ -43,6 +49,8 @@ func PublicKeyStringToFactoidAddressString(public string) (string, error) {
 }
 
 func PublicKeyToFactoidAddress(public []byte) (interfaces.IAddress, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidConversionsPublicKeyToFactoidAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	rcd := NewRCD_1(public)
 	add, err := rcd.GetAddress()
 	if err != nil {
@@ -52,6 +60,8 @@ func PublicKeyToFactoidAddress(public []byte) (interfaces.IAddress, error) {
 }
 
 func PublicKeyStringToFactoidAddress(public string) (interfaces.IAddress, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidConversionsPublicKeyStringToFactoidAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	pubHex, err := hex.DecodeString(public)
 	if err != nil {
 		return nil, err
@@ -65,6 +75,8 @@ func PublicKeyStringToFactoidAddress(public string) (interfaces.IAddress, error)
 }
 
 func PublicKeyStringToFactoidRCDAddress(public string) (interfaces.IRCD, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidConversionsPublicKeyStringToFactoidRCDAddress.Observe(float64(time.Now().UnixNano() - callTime))	
 	pubHex, err := hex.DecodeString(public)
 	if err != nil {
 		return nil, err
@@ -78,6 +90,8 @@ func PublicKeyStringToFactoidRCDAddress(public string) (interfaces.IRCD, error) 
 /******************************************************************************/
 
 func HumanReadiblePrivateKeyStringToEverythingString(private string) (string, string, string, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidConversionsHumanReadiblePrivateKeyStringToEverythingString.Observe(float64(time.Now().UnixNano() - callTime))	
 	priv, err := primitives.HumanReadableFactoidPrivateKeyToPrivateKeyString(private)
 	if err != nil {
 		return "", "", "", err
@@ -86,6 +100,8 @@ func HumanReadiblePrivateKeyStringToEverythingString(private string) (string, st
 }
 
 func PrivateKeyStringToEverythingString(private string) (string, string, string, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidConversionsPrivateKeyStringToEverythingString.Observe(float64(time.Now().UnixNano() - callTime))	
 	pub, err := primitives.PrivateKeyStringToPublicKeyString(private)
 	if err != nil {
 		return "", "", "", err

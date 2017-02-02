@@ -7,6 +7,8 @@ package messages
 import (
 	"bytes"
 	"fmt"
+	"time"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -27,6 +29,8 @@ var _ interfaces.IMsg = (*SignatureTimeout)(nil)
 var _ Signable = (*SignatureTimeout)(nil)
 
 func (a *SignatureTimeout) IsSameAs(b *SignatureTimeout) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -50,10 +54,14 @@ func (a *SignatureTimeout) IsSameAs(b *SignatureTimeout) bool {
 func (m *SignatureTimeout) Process(uint32, interfaces.IState) bool { return true }
 
 func (m *SignatureTimeout) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *SignatureTimeout) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.hash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -65,6 +73,8 @@ func (m *SignatureTimeout) GetHash() interfaces.IHash {
 }
 
 func (m *SignatureTimeout) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -76,22 +86,32 @@ func (m *SignatureTimeout) GetMsgHash() interfaces.IHash {
 }
 
 func (m *SignatureTimeout) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *SignatureTimeout) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.SIGNATURE_TIMEOUT_MSG
 }
 
 func (m *SignatureTimeout) Int() int {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutInt.Observe(float64(time.Now().UnixNano() - callTime))
 	return -1
 }
 
 func (m *SignatureTimeout) Bytes() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeout.Observe(float64(time.Now().UnixNano() - callTime))
 	return nil
 }
 
 func (m *SignatureTimeout) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -121,11 +141,15 @@ func (m *SignatureTimeout) UnmarshalBinaryData(data []byte) (newData []byte, err
 }
 
 func (m *SignatureTimeout) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *SignatureTimeout) MarshalForSignature() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 	buf.Write([]byte{m.Type()})
 	if d, err := m.Timestamp.MarshalBinary(); err != nil {
@@ -139,6 +163,8 @@ func (m *SignatureTimeout) MarshalForSignature() (data []byte, err error) {
 	return buf.DeepCopyBytes(), nil
 }
 func (m *SignatureTimeout) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	resp, err := m.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -156,14 +182,20 @@ func (m *SignatureTimeout) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *SignatureTimeout) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *SignatureTimeout) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *SignatureTimeout) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -210,13 +242,19 @@ func (m *SignatureTimeout) FollowerExecute(interfaces.IState) {
 }
 
 func (e *SignatureTimeout) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *SignatureTimeout) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *SignatureTimeout) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesSignatureTimeoutJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }

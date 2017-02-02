@@ -32,6 +32,8 @@ var _ interfaces.BinaryMarshallableAndCopyable = (*AdminBlock)(nil)
 var _ interfaces.DatabaseBatchable = (*AdminBlock)(nil)
 
 func (c *AdminBlock) String() string {
+	callTime := time.Now().UnixNano()
+	defer adminBlockString.Observe(float64(time.Now().UnixNano() - callTime))
 	var out primitives.Buffer
 
 	fh, _ := c.BackReferenceHash()
@@ -51,6 +53,8 @@ func (c *AdminBlock) String() string {
 }
 
 func (c *AdminBlock) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer adminBlockUpdateState.Observe(float64(time.Now().UnixNano() - callTime))
 	dbSigs := []*DBSignatureEntry{}
 	for _, entry := range c.ABEntries {
 		if entry.Type() == constants.TYPE_DB_SIGNATURE {
@@ -74,6 +78,8 @@ func (c *AdminBlock) UpdateState(state interfaces.IState) error {
 }
 
 func (c *AdminBlock) AddDBSig(serverIdentity interfaces.IHash, sig interfaces.IFullSignature) error {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddDBSig.Observe(float64(time.Now().UnixNano() - callTime))
 	entry, err := NewDBSignatureEntry(serverIdentity, sig)
 	if err != nil {
 		return err
@@ -83,26 +89,36 @@ func (c *AdminBlock) AddDBSig(serverIdentity interfaces.IHash, sig interfaces.IF
 }
 
 func (c *AdminBlock) AddFedServer(identityChainID interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddFedServer.Observe(float64(time.Now().UnixNano() - callTime))	
 	entry := NewAddFederatedServer(identityChainID, c.Header.GetDBHeight()+1) // Goes in the NEXT block
 	c.AddEntry(entry)
 }
 
 func (c *AdminBlock) AddAuditServer(identityChainID interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddAuditServer.Observe(float64(time.Now().UnixNano() - callTime))	
 	entry := NewAddAuditServer(identityChainID, c.Header.GetDBHeight()+1) // Goes in the NEXT block
 	c.AddEntry(entry)
 }
 
 func (c *AdminBlock) RemoveFederatedServer(identityChainID interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockRemoveFederatedServer.Observe(float64(time.Now().UnixNano() - callTime))	
 	entry := NewRemoveFederatedServer(identityChainID, c.Header.GetDBHeight()+1) // Goes in the NEXT block
 	c.AddEntry(entry)
 }
 
 func (c *AdminBlock) AddMatryoshkaHash(identityChainID interfaces.IHash, mHash interfaces.IHash) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddMatryoshkaHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	entry := NewAddReplaceMatryoshkaHash(identityChainID, mHash)
 	c.AddEntry(entry)
 }
 
 func (c *AdminBlock) AddFederatedServerSigningKey(identityChainID interfaces.IHash, publicKey *[32]byte) error {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddFederatedServerSigningKey.Observe(float64(time.Now().UnixNano() - callTime))	
 	p := new(primitives.PublicKey)
 	err := p.UnmarshalBinary(publicKey[:])
 	if err != nil {
@@ -114,6 +130,8 @@ func (c *AdminBlock) AddFederatedServerSigningKey(identityChainID interfaces.IHa
 }
 
 func (c *AdminBlock) AddFederatedServerBitcoinAnchorKey(identityChainID interfaces.IHash, keyPriority byte, keyType byte, ecdsaPublicKey *[20]byte) error {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddFederatedServerBitcoinAnchorKey.Observe(float64(time.Now().UnixNano() - callTime))	
 	b := new(primitives.ByteSlice20)
 	err := b.UnmarshalBinary(ecdsaPublicKey[:])
 	if err != nil {
@@ -126,6 +144,8 @@ func (c *AdminBlock) AddFederatedServerBitcoinAnchorKey(identityChainID interfac
 }
 
 func (c *AdminBlock) AddEntry(entry interfaces.IABEntry) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddEntry.Observe(float64(time.Now().UnixNano() - callTime))	
 	for i := range c.ABEntries {
 		if c.ABEntries[i].Type() == constants.TYPE_SERVER_FAULT {
 			c.ABEntries = append(c.ABEntries[:i], append([]interfaces.IABEntry{entry}, c.ABEntries[i:]...)...)
@@ -136,6 +156,8 @@ func (c *AdminBlock) AddEntry(entry interfaces.IABEntry) {
 }
 
 func (c *AdminBlock) AddServerFault(serverFault interfaces.IABEntry) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddServerFault.Observe(float64(time.Now().UnixNano() - callTime))	
 	sf, ok := serverFault.(*ServerFault)
 	if ok == false {
 		return
@@ -153,58 +175,84 @@ func (c *AdminBlock) AddServerFault(serverFault interfaces.IABEntry) {
 }
 
 func (c *AdminBlock) GetHeader() interfaces.IABlockHeader {
+	callTime := time.Now().UnixNano()
+	defer adminBlockGetHeader.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Header
 }
 
 func (c *AdminBlock) SetHeader(header interfaces.IABlockHeader) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockSetHeader.Observe(float64(time.Now().UnixNano() - callTime))	
 	c.Header = header
 }
 
 func (c *AdminBlock) GetABEntries() []interfaces.IABEntry {
+	callTime := time.Now().UnixNano()
+	defer adminBlockGetABEntries.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.ABEntries
 }
 
 func (c *AdminBlock) GetDBHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer adminBlockGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Header.GetDBHeight()
 }
 
 func (c *AdminBlock) SetABEntries(abentries []interfaces.IABEntry) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockSetABEntries.Observe(float64(time.Now().UnixNano() - callTime))	
 	c.ABEntries = abentries
 }
 
 func (c *AdminBlock) New() interfaces.BinaryMarshallableAndCopyable {
+	callTime := time.Now().UnixNano()
+	defer adminBlockNew.Observe(float64(time.Now().UnixNano() - callTime))	
 	return NewAdminBlock(nil)
 }
 
 func (c *AdminBlock) GetDatabaseHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer adminBlockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Header.GetDBHeight()
 }
 
 func (c *AdminBlock) GetChainID() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer adminBlockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.Header.GetAdminChainID()
 }
 
 func (c *AdminBlock) DatabasePrimaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer adminBlockDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	key, _ := c.LookupHash()
 	return key
 }
 
 func (c *AdminBlock) DatabaseSecondaryIndex() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer adminBlockDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	key, _ := c.BackReferenceHash()
 	return key
 }
 
 func (c *AdminBlock) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer adminBlockGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	h, _ := c.GetKeyMR()
 	return h
 }
 
 func (c *AdminBlock) GetKeyMR() (interfaces.IHash, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockGetKeyMR.Observe(float64(time.Now().UnixNano() - callTime))	
 	return c.BackReferenceHash()
 }
 
 // Returns the SHA512Half hash for the admin block
 func (b *AdminBlock) BackReferenceHash() (interfaces.IHash, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockBackReferenceHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	var binaryAB []byte
 	binaryAB, err := b.MarshalBinary()
 	if err != nil {
@@ -215,6 +263,8 @@ func (b *AdminBlock) BackReferenceHash() (interfaces.IHash, error) {
 
 // Returns the SHA256 hash for the admin block
 func (b *AdminBlock) LookupHash() (interfaces.IHash, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockLookupHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	var binaryAB []byte
 	binaryAB, err := b.MarshalBinary()
 	if err != nil {
@@ -225,12 +275,16 @@ func (b *AdminBlock) LookupHash() (interfaces.IHash, error) {
 
 // Add an Admin Block entry to the block
 func (b *AdminBlock) AddABEntry(e interfaces.IABEntry) (err error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddABEntry.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.AddEntry(e)
 	return
 }
 
 // Add an Admin Block entry to the start of the block entries
 func (b *AdminBlock) AddFirstABEntry(e interfaces.IABEntry) (err error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockAddABEntry.Observe(float64(time.Now().UnixNano() - callTime))	
 	b.ABEntries = append(b.ABEntries, nil)
 	copy(b.ABEntries[1:], b.ABEntries[:len(b.ABEntries)-1])
 	b.ABEntries[0] = e
@@ -240,6 +294,8 @@ func (b *AdminBlock) AddFirstABEntry(e interfaces.IABEntry) (err error) {
 // Write out the AdminBlock to binary.
 func (b *AdminBlock) MarshalBinary() ([]byte, error) {
 	// Marshal all the entries into their own thing (need the size)
+	callTime := time.Now().UnixNano()
+	defer adminBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf2 primitives.Buffer
 	for _, v := range b.ABEntries {
 		data, err := v.MarshalBinary()
@@ -267,6 +323,8 @@ func (b *AdminBlock) MarshalBinary() ([]byte, error) {
 }
 
 func UnmarshalABlock(data []byte) (interfaces.IAdminBlock, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockUnmarshalABlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	block := NewAdminBlock(nil)
 	err := block.UnmarshalBinary(data)
 	if err != nil {
@@ -277,6 +335,8 @@ func UnmarshalABlock(data []byte) (interfaces.IAdminBlock, error) {
 }
 
 func (b *AdminBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Admin Block: %v", r)
@@ -329,12 +389,16 @@ func (b *AdminBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error
 
 // Read in the binary into the Admin block.
 func (b *AdminBlock) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
 
 // Read in the binary into the Admin block.
 func (b *AdminBlock) GetDBSignature() interfaces.IABEntry {
+	callTime := time.Now().UnixNano()
+	defer adminBlockGetDBSignature.Observe(float64(time.Now().UnixNano() - callTime))	
 	for i := uint32(0); i < b.Header.GetMessageCount(); i++ {
 		if b.ABEntries[i].Type() == constants.TYPE_DB_SIGNATURE {
 			return b.ABEntries[i]
@@ -345,20 +409,28 @@ func (b *AdminBlock) GetDBSignature() interfaces.IABEntry {
 }
 
 func (e *AdminBlock) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AdminBlock) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AdminBlock) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer adminBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 type ExpandedABlock AdminBlock
 
 func (e AdminBlock) MarshalJSON() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer adminBlockMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))	
 	backRefHash, err := e.BackReferenceHash()
 	if err != nil {
 		return nil, err
@@ -385,6 +457,8 @@ func (e AdminBlock) MarshalJSON() ([]byte, error) {
  *********************************************************************/
 
 func NewAdminBlock(prev interfaces.IAdminBlock) interfaces.IAdminBlock {
+	callTime := time.Now().UnixNano()
+	defer adminBlockNewAdminBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	block := new(AdminBlock)
 	block.Header = new(ABlockHeader)
 	if prev != nil {
@@ -397,6 +471,8 @@ func NewAdminBlock(prev interfaces.IAdminBlock) interfaces.IAdminBlock {
 }
 
 func CheckBlockPairIntegrity(block interfaces.IAdminBlock, prev interfaces.IAdminBlock) error {
+	callTime := time.Now().UnixNano()
+	defer adminBlockCheckBlockPairIntegrity.Observe(float64(time.Now().UnixNano() - callTime))	
 	if block == nil {
 		return fmt.Errorf("No block specified")
 	}

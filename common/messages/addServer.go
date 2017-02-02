@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -29,14 +30,20 @@ var _ interfaces.IMsg = (*AddServerMsg)(nil)
 var _ Signable = (*AddServerMsg)(nil)
 
 func (m *AddServerMsg) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *AddServerMsg) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *AddServerMsg) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -48,22 +55,32 @@ func (m *AddServerMsg) GetMsgHash() interfaces.IHash {
 }
 
 func (m *AddServerMsg) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.ADDSERVER_MSG
 }
 
 func (m *AddServerMsg) Int() int {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgInt.Observe(float64(time.Now().UnixNano() - callTime))
 	return -1
 }
 
 func (m *AddServerMsg) Bytes() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgBytes.Observe(float64(time.Now().UnixNano() - callTime))
 	return nil
 }
 
 func (m *AddServerMsg) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *AddServerMsg) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	//return 1
 	authoritativeKey := state.GetNetworkSkeletonKey().Bytes()
 	if m.GetSignature() == nil || bytes.Compare(m.GetSignature().GetKey(), authoritativeKey) != 0 {
@@ -86,36 +103,52 @@ func (m *AddServerMsg) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *AddServerMsg) ComputeVMIndex(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
 	m.VMIndex = state.ComputeVMIndex(constants.ADMIN_CHAINID)
 }
 
 // Execute the leader functions of the given message
 func (m *AddServerMsg) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.LeaderExecute(m)
 }
 
 func (m *AddServerMsg) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteMsg(m)
 }
 
 // Acknowledgements do not go into the process list.
 func (e *AddServerMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgProcess.Observe(float64(time.Now().UnixNano() - callTime))
 	return state.ProcessAddServer(dbheight, e)
 }
 
 func (e *AddServerMsg) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AddServerMsg) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AddServerMsg) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *AddServerMsg) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -125,14 +158,20 @@ func (m *AddServerMsg) Sign(key interfaces.Signer) error {
 }
 
 func (m *AddServerMsg) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *AddServerMsg) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *AddServerMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		return
 		if r := recover(); r != nil {
@@ -171,11 +210,15 @@ func (m *AddServerMsg) UnmarshalBinaryData(data []byte) (newData []byte, err err
 }
 
 func (m *AddServerMsg) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *AddServerMsg) MarshalForSignature() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -199,6 +242,8 @@ func (m *AddServerMsg) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *AddServerMsg) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	data, err := m.MarshalForSignature()
@@ -219,6 +264,8 @@ func (m *AddServerMsg) MarshalBinary() ([]byte, error) {
 }
 
 func (m *AddServerMsg) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgString.Observe(float64(time.Now().UnixNano() - callTime))
 	var stype string
 	if m.ServerType == 0 {
 		stype = "Federated"
@@ -234,6 +281,8 @@ func (m *AddServerMsg) String() string {
 }
 
 func (m *AddServerMsg) IsSameAs(b *AddServerMsg) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -258,6 +307,8 @@ func (m *AddServerMsg) IsSameAs(b *AddServerMsg) bool {
 }
 
 func NewAddServerMsg(state interfaces.IState, serverType int) interfaces.IMsg {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgNewAddServerMsg.Observe(float64(time.Now().UnixNano() - callTime))
 	msg := new(AddServerMsg)
 	msg.ServerChainID = state.GetIdentityChainID()
 	msg.ServerType = serverType
@@ -268,6 +319,8 @@ func NewAddServerMsg(state interfaces.IState, serverType int) interfaces.IMsg {
 }
 
 func NewAddServerByHashMsg(state interfaces.IState, serverType int, newServerHash interfaces.IHash) interfaces.IMsg {
+	callTime := time.Now().UnixNano()
+	defer messagesAddServerMsgNewAddServerByHashMsg.Observe(float64(time.Now().UnixNano() - callTime))
 	msg := new(AddServerMsg)
 	msg.ServerChainID = newServerHash
 	msg.ServerType = serverType

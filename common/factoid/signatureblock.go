@@ -31,23 +31,33 @@ var _ interfaces.IBlock = (*SignatureBlock)(nil)
 func (b SignatureBlock) GetHash() interfaces.IHash { return nil }
 
 func (b SignatureBlock) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err := b.UnmarshalBinaryData(data)
 	return err
 }
 
 func (e *SignatureBlock) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *SignatureBlock) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *SignatureBlock) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (b SignatureBlock) String() string {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockString.Observe(float64(time.Now().UnixNano() - callTime))	
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -56,6 +66,8 @@ func (b SignatureBlock) String() string {
 }
 
 func (s *SignatureBlock) IsEqual(signatureBlock interfaces.IBlock) []interfaces.IBlock {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockIsEqual.Observe(float64(time.Now().UnixNano() - callTime))	
 
 	sb, ok := signatureBlock.(interfaces.ISignatureBlock)
 
@@ -83,6 +95,8 @@ func (s *SignatureBlock) IsEqual(signatureBlock interfaces.IBlock) []interfaces.
 }
 
 func (s *SignatureBlock) AddSignature(sig interfaces.ISignature) {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockAddSignature.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(s.Signatures) > 0 {
 		s.Signatures[0] = sig
 	} else {
@@ -91,6 +105,8 @@ func (s *SignatureBlock) AddSignature(sig interfaces.ISignature) {
 }
 
 func (s SignatureBlock) GetSignature(index int) interfaces.ISignature {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockGetSignature.Observe(float64(time.Now().UnixNano() - callTime))	
 	if len(s.Signatures) <= index {
 		return nil
 	}
@@ -98,6 +114,8 @@ func (s SignatureBlock) GetSignature(index int) interfaces.ISignature {
 }
 
 func (s SignatureBlock) GetSignatures() []interfaces.ISignature {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockGetSignatures.Observe(float64(time.Now().UnixNano() - callTime))	
 	if s.Signatures == nil {
 		s.Signatures = make([]interfaces.ISignature, 1, 1)
 		s.Signatures[0] = new(FactoidSignature)
@@ -106,6 +124,8 @@ func (s SignatureBlock) GetSignatures() []interfaces.ISignature {
 }
 
 func (a SignatureBlock) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	for _, sig := range a.GetSignatures() {
@@ -121,6 +141,8 @@ func (a SignatureBlock) MarshalBinary() ([]byte, error) {
 }
 
 func (s SignatureBlock) CustomMarshalText() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 
 	out.WriteString("Signature Block: \n")
@@ -140,6 +162,8 @@ func (s SignatureBlock) CustomMarshalText() ([]byte, error) {
 }
 
 func (s *SignatureBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	s.Signatures = make([]interfaces.ISignature, 1)
 	s.Signatures[0] = new(FactoidSignature)
 	data, err = s.Signatures[0].UnmarshalBinaryData(data)
@@ -152,6 +176,8 @@ func (s *SignatureBlock) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func NewSingleSignatureBlock(priv, data []byte) *SignatureBlock {
+	callTime := time.Now().UnixNano()
+	defer factoidSignatureBlockNewSingleSignatureBlock.Observe(float64(time.Now().UnixNano() - callTime))	
 	s := new(SignatureBlock)
 	s.AddSignature(NewED25519Signature(priv, data))
 	return s

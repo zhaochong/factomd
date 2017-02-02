@@ -19,12 +19,16 @@ var _ interfaces.IABEntry = (*DBSignatureEntry)(nil)
 var _ interfaces.BinaryMarshallable = (*DBSignatureEntry)(nil)
 
 func (c *DBSignatureEntry) UpdateState(state interfaces.IState) error {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureUpdateState.Observe(float64(time.Now().UnixNano() - callTime))	
 	return fmt.Errorf("Should not be called alone!")
 	//return nil
 }
 
 // Create a new DB Signature Entry
 func NewDBSignatureEntry(identityAdminChainID interfaces.IHash, sig interfaces.IFullSignature) (*DBSignatureEntry, error) {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureNewDBSignatureEntry.Observe(float64(time.Now().UnixNano() - callTime))	
 	e := new(DBSignatureEntry)
 	e.IdentityAdminChainID = identityAdminChainID
 	bytes, err := sig.MarshalBinary()
@@ -42,10 +46,14 @@ func NewDBSignatureEntry(identityAdminChainID interfaces.IHash, sig interfaces.I
 }
 
 func (e *DBSignatureEntry) Type() byte {
-	return constants.TYPE_DB_SIGNATURE
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureType.Observe(float64(time.Now().UnixNano() - callTime))	
+		return constants.TYPE_DB_SIGNATURE
 }
 
 func (e *DBSignatureEntry) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	buf.Write([]byte{e.Type()})
@@ -70,6 +78,8 @@ func (e *DBSignatureEntry) MarshalBinary() (data []byte, err error) {
 }
 
 func (e *DBSignatureEntry) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshallig DBSignature Entry: %v", r)
@@ -93,23 +103,33 @@ func (e *DBSignatureEntry) UnmarshalBinaryData(data []byte) (newData []byte, err
 }
 
 func (e *DBSignatureEntry) UnmarshalBinary(data []byte) (err error) {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *DBSignatureEntry) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DBSignatureEntry) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DBSignatureEntry) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (e *DBSignatureEntry) String() string {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureUpdateStateString.Observe(float64(time.Now().UnixNano() - callTime))	
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %20s -- %17s %8x %12s %8s %12s %8x",
 		"DB Signature",
@@ -128,6 +148,8 @@ func (e *DBSignatureEntry) Interpret() string {
 }
 
 func (e *DBSignatureEntry) Hash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer entryDBSignatureHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)

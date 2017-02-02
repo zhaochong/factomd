@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -37,15 +38,21 @@ var _ interfaces.IMsg = (*Ack)(nil)
 var _ Signable = (*Ack)(nil)
 
 func (m *Ack) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAckGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 // We have to return the haswh of the underlying message.
 func (m *Ack) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAckGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.MessageHash
 }
 
 func (m *Ack) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesAckGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -57,22 +64,32 @@ func (m *Ack) GetMsgHash() interfaces.IHash {
 }
 
 func (m *Ack) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesAckType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.ACK_MSG
 }
 
 func (m *Ack) Int() int {
+	callTime := time.Now().UnixNano()
+	defer messagesAckInt.Observe(float64(time.Now().UnixNano() - callTime))
 	return -1
 }
 
 func (m *Ack) Bytes() []byte {
+	callTime := time.Now().UnixNano()
+	defer messagesAckBytes.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.MessageHash.Bytes()
 }
 
 func (m *Ack) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesAckGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *Ack) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAckVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
@@ -81,6 +98,8 @@ func (m *Ack) VerifySignature() (bool, error) {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *Ack) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesAckGetValidate.Observe(float64(time.Now().UnixNano() - callTime))
 
 	// If too old, it isn't valid.
 	if m.DBHeight <= state.GetHighestSavedBlk() {
@@ -126,31 +145,45 @@ func (m *Ack) ComputeVMIndex(state interfaces.IState) {
 // Execute the leader functions of the given message
 // Leader, follower, do the same thing.
 func (m *Ack) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesAckLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	m.FollowerExecute(state)
 }
 
 func (m *Ack) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesAckFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteAck(m)
 }
 
 // Acknowledgements do not go into the process list.
 func (e *Ack) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesAckGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	panic("Ack object should never have its Process() method called")
 }
 
 func (e *Ack) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAckJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Ack) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAckJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *Ack) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAckJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *Ack) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAckSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -160,10 +193,14 @@ func (m *Ack) Sign(key interfaces.Signer) error {
 }
 
 func (m *Ack) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesAckGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *Ack) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAckUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -228,11 +265,15 @@ func (m *Ack) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (m *Ack) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesAckUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *Ack) MarshalForSignature() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAckMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -280,6 +321,8 @@ func (m *Ack) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *Ack) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesAckMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	resp, err := m.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -297,6 +340,8 @@ func (m *Ack) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *Ack) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesAckString.Observe(float64(time.Now().UnixNano() - callTime))
 	return fmt.Sprintf("%6s-VM%3d: PL:%5d DBHt:%5d -- Leader[:3]=%x hash[:3]=%x",
 		"ACK",
 		m.VMIndex,
@@ -308,6 +353,8 @@ func (m *Ack) String() string {
 }
 
 func (a *Ack) IsSameAs(b *Ack) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesAckIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if a == nil && b == nil {
 		return true
 	}

@@ -6,6 +6,7 @@ package messages
 
 import (
 	"bytes"
+	"time"
 	//	"encoding/binary"
 	"encoding/binary"
 	"fmt"
@@ -30,6 +31,8 @@ type MissingEntryBlocks struct {
 var _ interfaces.IMsg = (*MissingEntryBlocks)(nil)
 
 func (a *MissingEntryBlocks) IsSameAs(b *MissingEntryBlocks) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -47,14 +50,20 @@ func (a *MissingEntryBlocks) IsSameAs(b *MissingEntryBlocks) bool {
 }
 
 func (m *MissingEntryBlocks) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *MissingEntryBlocks) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *MissingEntryBlocks) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -66,6 +75,8 @@ func (m *MissingEntryBlocks) GetMsgHash() interfaces.IHash {
 }
 
 func (m *MissingEntryBlocks) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.MISSING_ENTRY_BLOCKS
 }
 
@@ -78,6 +89,8 @@ func (m *MissingEntryBlocks) Bytes() []byte {
 }
 
 func (m *MissingEntryBlocks) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
@@ -86,6 +99,8 @@ func (m *MissingEntryBlocks) GetTimestamp() interfaces.Timestamp {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *MissingEntryBlocks) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.DBHeightStart > m.DBHeightEnd {
 		return -1
 	}
@@ -98,10 +113,14 @@ func (m *MissingEntryBlocks) ComputeVMIndex(state interfaces.IState) {
 
 // Execute the leader functions of the given message
 func (m *MissingEntryBlocks) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	m.FollowerExecute(state)
 }
 
 func (m *MissingEntryBlocks) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	if len(state.NetworkOutMsgQueue()) > 1000 {
 		return
 	}
@@ -156,18 +175,26 @@ func (e *MissingEntryBlocks) Process(dbheight uint32, state interfaces.IState) b
 }
 
 func (e *MissingEntryBlocks) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *MissingEntryBlocks) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *MissingEntryBlocks) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (m *MissingEntryBlocks) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block State Missing Message: %v", r)
@@ -194,11 +221,15 @@ func (m *MissingEntryBlocks) UnmarshalBinaryData(data []byte) (newData []byte, e
 }
 
 func (m *MissingEntryBlocks) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *MissingEntryBlocks) MarshalForSignature() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocks.Observe(float64(time.Now().UnixNano() - callTime))
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -217,14 +248,20 @@ func (m *MissingEntryBlocks) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *MissingEntryBlocks) MarshalBinary() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.MarshalForSignature()
 }
 
 func (m *MissingEntryBlocks) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocksString.Observe(float64(time.Now().UnixNano() - callTime))
 	return fmt.Sprintf("MissingEntryBlocks: %d-%d", m.DBHeightStart, m.DBHeightEnd)
 }
 
 func NewMissingEntryBlocks(state interfaces.IState, dbheightStart uint32, dbheightEnd uint32) interfaces.IMsg {
+	callTime := time.Now().UnixNano()
+	defer messagesMissingEntryBlocks.Observe(float64(time.Now().UnixNano() - callTime))
 	msg := new(MissingEntryBlocks)
 
 	msg.Peer2Peer = true // Always a peer2peer request.

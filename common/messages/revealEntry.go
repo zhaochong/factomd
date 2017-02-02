@@ -33,6 +33,8 @@ type RevealEntryMsg struct {
 var _ interfaces.IMsg = (*RevealEntryMsg)(nil)
 
 func (m *RevealEntryMsg) IsSameAs(msg interfaces.IMsg) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))	
 	m2, ok := msg.(*RevealEntryMsg)
 	if !ok {
 		return false
@@ -44,22 +46,32 @@ func (m *RevealEntryMsg) IsSameAs(msg interfaces.IMsg) bool {
 }
 
 func (m *RevealEntryMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgProcess.Observe(float64(time.Now().UnixNano() - callTime))	
 	return state.ProcessRevealEntry(dbheight, m)
 }
 
 func (m *RevealEntryMsg) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return m.Entry.GetHash()
 }
 
 func (m *RevealEntryMsg) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return m.Entry.GetHash()
 }
 
 func (m *RevealEntryMsg) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	return m.Entry.GetHash()
 }
 
 func (m *RevealEntryMsg) GetChainIDHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgGetChainIDHash.Observe(float64(time.Now().UnixNano() - callTime))	
 	if m.chainIDHash == nil {
 		m.chainIDHash = primitives.Sha(m.Entry.GetChainID().Bytes())
 	}
@@ -67,6 +79,8 @@ func (m *RevealEntryMsg) GetChainIDHash() interfaces.IHash {
 }
 
 func (m *RevealEntryMsg) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))	
 	if m.Timestamp == nil {
 		m.Timestamp = new(primitives.Timestamp)
 	}
@@ -74,6 +88,8 @@ func (m *RevealEntryMsg) GetTimestamp() interfaces.Timestamp {
 }
 
 func (m *RevealEntryMsg) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgType.Observe(float64(time.Now().UnixNano() - callTime))	
 	return constants.REVEAL_ENTRY_MSG
 }
 
@@ -83,6 +99,8 @@ func (m *RevealEntryMsg) Type() byte {
 //  1   -- Message is valid
 // Also return the matching commit, if 1 (Don't put it back into the Commit List)
 func (m *RevealEntryMsg) ValidateRTN(state interfaces.IState) (interfaces.IMsg, int) {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgValidateRTN.Observe(float64(time.Now().UnixNano() - callTime))	
 	commit := state.NextCommit(m.Entry.GetHash())
 
 	if commit == nil {
@@ -134,6 +152,8 @@ func (m *RevealEntryMsg) ValidateRTN(state interfaces.IState) (interfaces.IMsg, 
 }
 
 func (m *RevealEntryMsg) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgValidate.Observe(float64(time.Now().UnixNano() - callTime))	
 	commit, rtn := m.ValidateRTN(state)
 	if rtn == 1 {
 		// Don't lose the commit that validates the entry
@@ -145,35 +165,51 @@ func (m *RevealEntryMsg) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *RevealEntryMsg) ComputeVMIndex(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))	
 	m.VMIndex = state.ComputeVMIndex(m.Entry.GetChainID().Bytes())
 }
 
 // Execute the leader functions of the given message
 func (m *RevealEntryMsg) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.LeaderExecuteRevealEntry(m)
 }
 
 func (m *RevealEntryMsg) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))	
 	state.FollowerExecuteRevealEntry(m)
 }
 
 func (e *RevealEntryMsg) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RevealEntryMsg) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *RevealEntryMsg) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))	
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func NewRevealEntryMsg() *RevealEntryMsg {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgNewRevealEntryMsg.Observe(float64(time.Now().UnixNano() - callTime))	
 	return new(RevealEntryMsg)
 }
 
 func (m *RevealEntryMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsg.Observe(float64(time.Now().UnixNano() - callTime))	
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -203,11 +239,15 @@ func (m *RevealEntryMsg) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func (m *RevealEntryMsg) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))	
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *RevealEntryMsg) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsg.Observe(float64(time.Now().UnixNano() - callTime))	
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -229,6 +269,8 @@ func (m *RevealEntryMsg) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *RevealEntryMsg) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesRevealEntryMsg.Observe(float64(time.Now().UnixNano() - callTime))	
 	if m.GetLeaderChainID() == nil {
 		m.SetLeaderChainID(primitives.NewZeroHash())
 	}

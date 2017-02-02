@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -40,14 +41,20 @@ var _ Signable = (*ServerFault)(nil)
 func (m *ServerFault) Process(uint32, interfaces.IState) bool { return true }
 
 func (m *ServerFault) GetRepeatHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *ServerFault) GetHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultGetHash.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.GetMsgHash()
 }
 
 func (m *ServerFault) GetMsgHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -59,6 +66,8 @@ func (m *ServerFault) GetMsgHash() interfaces.IHash {
 }
 
 func (m *ServerFault) GetCoreHash() interfaces.IHash {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultGetCoreHash.Observe(float64(time.Now().UnixNano() - callTime))
 	data, err := m.MarshalForSignature()
 	if err != nil {
 		return nil
@@ -67,14 +76,20 @@ func (m *ServerFault) GetCoreHash() interfaces.IHash {
 }
 
 func (m *ServerFault) GetTimestamp() interfaces.Timestamp {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Timestamp
 }
 
 func (m *ServerFault) Type() byte {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultType.Observe(float64(time.Now().UnixNano() - callTime))
 	return constants.FED_SERVER_FAULT_MSG
 }
 
 func (m *ServerFault) MarshalForSignature() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Server Fault Core: %v", r)
@@ -109,6 +124,8 @@ func (m *ServerFault) MarshalForSignature() (data []byte, err error) {
 }
 
 func (m *ServerFault) PreMarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultPreMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Invalid Server Fault: %v", r)
@@ -143,6 +160,8 @@ func (m *ServerFault) PreMarshalBinary() (data []byte, err error) {
 }
 
 func (m *ServerFault) MarshalBinary() (data []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	resp, err := m.PreMarshalBinary()
 	if err != nil {
 		return nil, err
@@ -161,6 +180,8 @@ func (m *ServerFault) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *ServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling With Signatures Invalid Server Fault: %v", r)
@@ -210,19 +231,27 @@ func (m *ServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (m *ServerFault) UnmarshalBinary(data []byte) error {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *ServerFault) GetSignature() interfaces.IFullSignature {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.Signature
 }
 
 func (m *ServerFault) VerifySignature() (bool, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
 	return VerifyMessage(m)
 }
 
 func (m *ServerFault) Sign(key interfaces.Signer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultSign.Observe(float64(time.Now().UnixNano() - callTime))
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -232,6 +261,8 @@ func (m *ServerFault) Sign(key interfaces.Signer) error {
 }
 
 func (m *ServerFault) String() string {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFault.Observe(float64(time.Now().UnixNano() - callTime))
 
 	var sig [3]byte
 
@@ -253,6 +284,8 @@ func (m *ServerFault) String() string {
 }
 
 func (m *ServerFault) GetDBHeight() uint32 {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFault.Observe(float64(time.Now().UnixNano() - callTime))
 	return m.DBHeight
 }
 
@@ -261,6 +294,8 @@ func (m *ServerFault) GetDBHeight() uint32 {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *ServerFault) Validate(state interfaces.IState) int {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultValidate.Observe(float64(time.Now().UnixNano() - callTime))
 	if m.Signature == nil {
 		return -1
 	}
@@ -280,26 +315,38 @@ func (m *ServerFault) ComputeVMIndex(state interfaces.IState) {
 
 // Execute the leader functions of the given message
 func (m *ServerFault) LeaderExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	m.FollowerExecute(state)
 }
 
 func (m *ServerFault) FollowerExecute(state interfaces.IState) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
 	state.FollowerExecuteSFault(m)
 }
 
 func (e *ServerFault) JSONByte() ([]byte, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ServerFault) JSONString() (string, error) {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ServerFault) JSONBuffer(b *bytes.Buffer) error {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultJSONBuffer.Observe(float64(time.Now().UnixNano() - callTime))
 	return primitives.EncodeJSONToBuffer(e, b)
 }
 
 func (a *ServerFault) IsSameAs(b *ServerFault) bool {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
 	if b == nil {
 		return false
 	}
@@ -325,6 +372,8 @@ func (a *ServerFault) IsSameAs(b *ServerFault) bool {
 //*******************************************************************************
 
 func NewServerFault(serverID interfaces.IHash, auditServerID interfaces.IHash, vmIndex int, dbheight uint32, height uint32, systemHeight int, timeStamp interfaces.Timestamp) *ServerFault {
+	callTime := time.Now().UnixNano()
+	defer messagesServerFaultNewServerFault.Observe(float64(time.Now().UnixNano() - callTime))
 	sf := new(ServerFault)
 	sf.VMIndex = byte(vmIndex)
 	sf.DBHeight = dbheight
