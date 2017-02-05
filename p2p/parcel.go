@@ -29,7 +29,7 @@ func (p *Parcel) SameAs(p2 *Parcel) bool {
 	return p.Header.SameAs(&p2.Header)
 }
 
-func (p *Parcel) xUnmarshalBinaryData(data []byte) (newData []byte, err error) {
+func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block Header: %v", r)
@@ -38,7 +38,7 @@ func (p *Parcel) xUnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	}()
 
 	newData = data
-	newData, err = p.Header.xUnmarshalBinaryData(newData)
+	newData, err = p.Header.UnmarshalBinaryData(newData)
 	if err != nil {
 		return nil, err
 	}
@@ -47,10 +47,10 @@ func (p *Parcel) xUnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	return newData, err
 }
 
-func (p *Parcel) xMarshalBinary() (data []byte, err error) {
+func (p *Parcel) MarshalBinary() (data []byte, err error) {
 	var buf primitives.Buffer
 
-	data, err = p.Header.xMarshalBinary()
+	data, err = p.Header.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +62,8 @@ func (p *Parcel) xMarshalBinary() (data []byte, err error) {
 	return buf.DeepCopyBytes(), err
 }
 
-func (b *Parcel) xUnmarshalBinary(data []byte) (err error) {
-	_, err = b.xUnmarshalBinaryData(data)
+func (b *Parcel) UnmarshalBinary(data []byte) (err error) {
+	_, err = b.UnmarshalBinaryData(data)
 	return
 }
 
@@ -128,7 +128,7 @@ func (p *ParcelHeader) SameAs(p2 *ParcelHeader) bool {
 }
 
 
-func (p *ParcelHeader) xUnmarshalBinaryData(data []byte) (newData []byte, err error) {
+func (p *ParcelHeader) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -168,7 +168,7 @@ func (p *ParcelHeader) xUnmarshalBinaryData(data []byte) (newData []byte, err er
 	return newData, nil
 }
 
-func (p *ParcelHeader) xMarshalBinary() (data []byte, err error) {
+func (p *ParcelHeader) MarshalBinary() (data []byte, err error) {
 	var buf primitives.Buffer
 	binary.Write(&buf, binary.BigEndian, p.Network)
 	binary.Write(&buf, binary.BigEndian, p.Version)
@@ -199,9 +199,9 @@ func (p *ParcelHeader) xMarshalBinary() (data []byte, err error) {
 
 }
 
-func (p *ParcelHeader) xUnmarshalBinary(data []byte) (err error) {
+func (p *ParcelHeader) UnmarshalBinary(data []byte) (err error) {
 
-	_, err = p.xUnmarshalBinaryData(data)
+	_, err = p.UnmarshalBinaryData(data)
 	return
 
 }
