@@ -451,7 +451,7 @@ func (c *Connection) processReceives() {
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
 		message.Trace("Connection.processReceives().c.decoder.Decode(&message)", "G")
 		switch {
-		case nil == err:
+		case nil == err && message != nil :
 			debug(c.peer.PeerIdent(), "Connection.processReceives() RECIEVED FROM NETWORK!  State: %s MessageType: %s", c.ConnectionState(), message.MessageType())
 			c.metrics.BytesReceived += message.Header.Length
 			c.metrics.MessagesReceived += 1

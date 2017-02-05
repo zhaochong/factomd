@@ -346,7 +346,7 @@ func (p *Parcel) MessageType() string {
 
 func (p *Parcel) PrintMessageType() {
 	if p == nil {
-		return 
+		return
 	}
 	fmt.Printf("[%+v]", CommandStrings[p.Header.Type])
 }
