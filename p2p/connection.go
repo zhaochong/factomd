@@ -140,7 +140,7 @@ func (c *Connection) NewWire() {
 		c.Wire.Close()
 		time.Sleep(1 * time.Second)
 	}
-	c.Wire = new(WireGob)
+	c.Wire = new(WireSerializer)
 }
 
 // InitWithConn is called from our accept loop when a peer dials into us and we already have a network conn
