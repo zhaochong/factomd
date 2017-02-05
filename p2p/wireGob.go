@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"net"
 	"time"
+	"fmt"
 )
 
 type WireGob struct {
@@ -21,23 +22,30 @@ func (w *WireGob) Init(connection *Connection, conn net.Conn) {
 	w.Conn = conn
 	w.encoder = gob.NewEncoder(conn)
 	w.decoder = gob.NewDecoder(conn)
+	fmt.Println("**** Adding new encoders")
 }
 
 func (w *WireGob) Close() {
 	w.decoder = nil
 	w.encoder = nil
+	w.Conn = nil
+	w.Connection = nil
+	w.closed = true
+	fmt.Println("**** Closed Wire")
 }
 
 func (w *WireGob) Send(parcel *Parcel) (err error) {
 	w.Conn.SetWriteDeadline(time.Now().Add(NetworkDeadline))
 	parcel.Trace("Connection.sendParcel().encoder.Encode(parcel)", "f")
 	err = w.encoder.Encode(parcel)
-	return
+	fmt.Println("**** Send Parcel error: ",err)
+	return err
 }
 
 func (w *WireGob) Receive() (p *Parcel, err error) {
 	var message Parcel
 	w.Conn.SetReadDeadline(time.Now().Add(NetworkDeadline))
 	err = w.decoder.Decode(&message)
+	fmt.Println("**** Receive Parcel error: ",err)
 	return &message, err
 }

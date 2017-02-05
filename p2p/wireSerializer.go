@@ -18,7 +18,7 @@ type Wire interface {
 	Close()
 }
 
-type WireSerializer struct {
+type Serializer struct {
 	Connection *Connection
 	Conn       net.Conn
 	Incoming   chan *Parcel
@@ -26,14 +26,14 @@ type WireSerializer struct {
 	closed     bool
 }
 
-var _ Wire = (*WireSerializer)(nil)
+var _ Wire = (*Serializer)(nil)
 
-func (m *WireSerializer) Close() {
+func (m *Serializer) Close() {
 	m.Conn.Close()
 	m.closed = true
 }
 
-func (m *WireSerializer) Init(connection *Connection, conn net.Conn) {
+func (m *Serializer) Init(connection *Connection, conn net.Conn) {
 	m.Connection = connection
 	m.Conn = conn
 	if m.Incoming == nil {
@@ -53,7 +53,7 @@ var ReadsErr int
 
 var Deadline time.Duration = time.Duration(100)
 
-func (m *WireSerializer) Send(p *Parcel) (err error) {
+func (m *Serializer) Send(p *Parcel) (err error) {
 	if len(m.Outgoing) > 9900 {
 		for len(m.Outgoing) > 9000 {
 			<-m.Outgoing
@@ -65,7 +65,7 @@ func (m *WireSerializer) Send(p *Parcel) (err error) {
 	return nil
 }
 
-func (m *WireSerializer) Receive() (p *Parcel, err error) {
+func (m *Serializer) Receive() (p *Parcel, err error) {
 	select {
 	case p := <-m.Incoming:
 		fmt.Println("Outgoing messages", len(m.Outgoing))
@@ -78,7 +78,7 @@ func (m *WireSerializer) Receive() (p *Parcel, err error) {
 
 // goWrite pulls from the outgoing queue, and marshals and sends parcels across the wire.
 //
-func (m *WireSerializer) goWrite() {
+func (m *Serializer) goWrite() {
 	fmt.Println("Write Opening!")
 	for !m.closed {
 		select {
@@ -101,7 +101,7 @@ func (m *WireSerializer) goWrite() {
 	fmt.Println("Write Closing")
 }
 
-func (m *WireSerializer) FullRead(buff []byte) error {
+func (m *Serializer) FullRead(buff []byte) error {
 	sum := 0
 	for sum < len(buff) {
 		i, _ := m.Conn.Read(buff[sum:])
@@ -113,7 +113,7 @@ func (m *WireSerializer) FullRead(buff []byte) error {
 	return nil
 }
 
-func (m *WireSerializer) goRead() {
+func (m *Serializer) goRead() {
 	fmt.Println("Read Opening")
 	for !m.closed {
 
@@ -146,7 +146,7 @@ func (m *WireSerializer) goRead() {
 
 var magic = []byte{0x7e, 0xa3, 0x9d, 0xA6}
 
-func (m *WireSerializer) Sync() {
+func (m *Serializer) Sync() {
 	fmt.Println("Syncing")
 	var b = []byte{0}
 loop:

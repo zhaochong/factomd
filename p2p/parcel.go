@@ -23,6 +23,13 @@ type Parcel struct {
 	Payload []byte
 }
 
+func (p *Parcel) SameAs(p2 *Parcel) bool {
+	if bytes.Compare(p.Payload,p2.Payload) != 0 {
+		return false
+	}
+	return p.Header.SameAs(&p2.Header)
+}
+
 func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -78,11 +85,55 @@ type ParcelHeader struct {
 	AppType     string // Application specific message type, for tracing
 }
 
+func (p *ParcelHeader) SameAs(p2 *ParcelHeader) bool {
+	if p.Network != p2.Network {
+		return false
+	}
+	if p.Version != p2.Version {
+		return false
+	}
+	if p.Type != p2.Type {
+		return false
+	}
+	if p.Length != p2.Length {
+		return false
+	}
+	if p.TargetPeer != p2.TargetPeer {
+		return false
+	}
+	if p.Crc32 != p2.Crc32 {
+		return false
+	}
+	if p.PartNo != p2.PartNo {
+		return false
+	}
+	if p.PartsTotal != p2.PartsTotal {
+		return false
+	}
+	if p.NodeID != p2.NodeID {
+		return false
+	}
+	if p.PeerAddress != p2.PeerAddress {
+		return false
+	}
+	if p.PeerPort != p2.PeerPort {
+		return false
+	}
+	if p.AppHash != p2.AppHash {
+		return false
+	}
+	if p.AppType != p2.AppType {
+		return false
+	}
+	return true
+}
+
+
 func (p *ParcelHeader) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("Error unmarshalling Directory Block Header: %v", r)
+			err = fmt.Errorf("Error unmarshalling Parcel Header Block Header: %v", r)
 			newData = data
 		}
 	}()
@@ -125,7 +176,7 @@ func (p *ParcelHeader) MarshalBinary() (data []byte, err error) {
 	binary.Write(&buf, binary.BigEndian, p.Type)
 	binary.Write(&buf, binary.BigEndian, p.Length)
 
-	binary.Write(&buf, binary.BigEndian, len([]byte(p.TargetPeer)))
+	binary.Write(&buf, binary.BigEndian, uint16(len([]byte(p.TargetPeer))))
 	buf.Write([]byte(p.TargetPeer))
 
 	binary.Write(&buf, binary.BigEndian, p.Crc32)
@@ -133,16 +184,16 @@ func (p *ParcelHeader) MarshalBinary() (data []byte, err error) {
 	binary.Write(&buf, binary.BigEndian, p.PartsTotal)
 	binary.Write(&buf, binary.BigEndian, p.NodeID)
 
-	binary.Write(&buf, binary.BigEndian, len([]byte(p.PeerAddress)))
+	binary.Write(&buf, binary.BigEndian, uint16(len([]byte(p.PeerAddress))))
 	buf.Write([]byte(p.PeerAddress))
 
-	binary.Write(&buf, binary.BigEndian, len([]byte(p.PeerPort)))
+	binary.Write(&buf, binary.BigEndian, uint16(len([]byte(p.PeerPort))))
 	buf.Write([]byte(p.PeerPort))
 
-	binary.Write(&buf, binary.BigEndian, len([]byte(p.AppHash)))
+	binary.Write(&buf, binary.BigEndian, uint16(len([]byte(p.AppHash))))
 	buf.Write([]byte(p.AppHash))
 
-	binary.Write(&buf, binary.BigEndian, len([]byte(p.AppType)))
+	binary.Write(&buf, binary.BigEndian, uint16(len([]byte(p.AppType))))
 	buf.Write([]byte(p.AppType))
 
 	return buf.DeepCopyBytes(), err
