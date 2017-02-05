@@ -135,10 +135,18 @@ const (
 //
 //////////////////////////////
 
+func (c *Connection) NewWire() {
+	if c.Wire != nil {
+		c.Wire.Close()
+		time.Sleep(1 * time.Second)
+	}
+	c.Wire = new(WireGob)
+}
+
 // InitWithConn is called from our accept loop when a peer dials into us and we already have a network conn
 func (c *Connection) InitWithConn(conn net.Conn, peer Peer) *Connection {
 	c.conn = conn
-	c.Wire = new(WireSerializer)
+	c.NewWire()
 	c.Wire.Init(c, conn)
 	c.isOutGoing = false // InitWithConn is called by controller's accept() loop
 	c.commonInit(peer)
@@ -336,6 +344,7 @@ func (c *Connection) goOnline() {
 	debug(c.peer.PeerIdent(), "Connection.goOnline() called.")
 	c.state = ConnectionOnline
 	now := time.Now()
+	c.NewWire()
 	c.Wire.Init(c, c.conn)
 	c.attempts = 0
 	c.timeLastPing = now
