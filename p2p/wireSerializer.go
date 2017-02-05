@@ -83,7 +83,7 @@ func (m *Serializer) goWrite() {
 	for !m.closed {
 		select {
 		case p := <-m.Outgoing:
-			data, err := p.MarshalBinary()
+			data, err := p.xMarshalBinary()
 			if err != nil {
 				fmt.Println("Marshal Error")
 				continue
@@ -137,7 +137,7 @@ func (m *Serializer) goRead() {
 
 		p := new(Parcel)
 		fmt.Printf("Getting %x\n", data)
-		err = p.UnmarshalBinary(data)
+		err = p.xUnmarshalBinary(data)
 
 		m.Incoming <- p
 	}

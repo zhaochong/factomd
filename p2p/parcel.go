@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"hash/crc32"
 	"strconv"
@@ -18,7 +17,7 @@ import (
 // Parcel is the atomic level of communication for the p2p network.  It contains within it the necessary info for
 // the networking protocol, plus the message that the Application is sending.
 type Parcel struct {
-	interfaces.BinaryMarshallable
+	//interfaces.BinaryMarshallable
 	Header  ParcelHeader
 	Payload []byte
 }
@@ -30,7 +29,7 @@ func (p *Parcel) SameAs(p2 *Parcel) bool {
 	return p.Header.SameAs(&p2.Header)
 }
 
-func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+func (p *Parcel) xUnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block Header: %v", r)
@@ -39,7 +38,7 @@ func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	}()
 
 	newData = data
-	newData, err = p.Header.UnmarshalBinaryData(newData)
+	newData, err = p.Header.xUnmarshalBinaryData(newData)
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +47,10 @@ func (p *Parcel) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 	return newData, err
 }
 
-func (p *Parcel) MarshalBinary() (data []byte, err error) {
+func (p *Parcel) xMarshalBinary() (data []byte, err error) {
 	var buf primitives.Buffer
 
-	data, err = p.Header.MarshalBinary()
+	data, err = p.Header.xMarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -63,13 +62,13 @@ func (p *Parcel) MarshalBinary() (data []byte, err error) {
 	return buf.DeepCopyBytes(), err
 }
 
-func (b *Parcel) UnmarshalBinary(data []byte) (err error) {
-	_, err = b.UnmarshalBinaryData(data)
+func (b *Parcel) xUnmarshalBinary(data []byte) (err error) {
+	_, err = b.xUnmarshalBinaryData(data)
 	return
 }
 
 type ParcelHeader struct {
-	interfaces.BinaryMarshallable
+	//interfaces.BinaryMarshallable
 	Network     NetworkID         // 4 bytes - the network we are on (eg testnet, main net, etc.)
 	Version     uint16            // 2 bytes - the version of the protocol we are running.
 	Type        ParcelCommandType // 2 bytes - network level commands (eg: ping/pong)
@@ -129,7 +128,7 @@ func (p *ParcelHeader) SameAs(p2 *ParcelHeader) bool {
 }
 
 
-func (p *ParcelHeader) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+func (p *ParcelHeader) xUnmarshalBinaryData(data []byte) (newData []byte, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -169,7 +168,7 @@ func (p *ParcelHeader) UnmarshalBinaryData(data []byte) (newData []byte, err err
 	return newData, nil
 }
 
-func (p *ParcelHeader) MarshalBinary() (data []byte, err error) {
+func (p *ParcelHeader) xMarshalBinary() (data []byte, err error) {
 	var buf primitives.Buffer
 	binary.Write(&buf, binary.BigEndian, p.Network)
 	binary.Write(&buf, binary.BigEndian, p.Version)
@@ -200,9 +199,9 @@ func (p *ParcelHeader) MarshalBinary() (data []byte, err error) {
 
 }
 
-func (p *ParcelHeader) UnmarshalBinary(data []byte) (err error) {
+func (p *ParcelHeader) xUnmarshalBinary(data []byte) (err error) {
 
-	_, err = p.UnmarshalBinaryData(data)
+	_, err = p.xUnmarshalBinaryData(data)
 	return
 
 }
