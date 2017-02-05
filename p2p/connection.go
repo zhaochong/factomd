@@ -457,8 +457,10 @@ func (c *Connection) processReceives() {
 			c.metrics.MessagesReceived += 1
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(*message)
-		default:
+		case err != nil:
 			c.handleNetErrors(err)
+			return
+		default:
 			return
 		}
 	}
