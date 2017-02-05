@@ -5,7 +5,6 @@
 package p2p
 
 import (
-	"encoding/gob"
 	"fmt"
 	"hash/crc32"
 	"io"
@@ -22,11 +21,10 @@ import (
 // (defined below).
 type Connection struct {
 	conn           net.Conn
+	Wire           Wire             // Our wire implementation
 	SendChannel    chan interface{} // Send means "towards the network" Channel sends Parcels and ConnectionCommands
 	ReceiveChannel chan interface{} // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
 	// and as "address" for sending messages to specific nodes.
-	encoder         *gob.Encoder      // Wire format is gobs in this version, may switch to binary
-	decoder         *gob.Decoder      // Wire format is gobs in this version, may switch to binary
 	peer            Peer              // the datastructure representing the peer we are talking to. defined in peer.go
 	attempts        int               // reconnection attempts
 	timeLastAttempt time.Time         // time of last attempt to connect via dial
@@ -140,6 +138,8 @@ const (
 // InitWithConn is called from our accept loop when a peer dials into us and we already have a network conn
 func (c *Connection) InitWithConn(conn net.Conn, peer Peer) *Connection {
 	c.conn = conn
+	c.Wire = new(WireSerializer)
+	c.Wire.Init(c, conn)
 	c.isOutGoing = false // InitWithConn is called by controller's accept() loop
 	c.commonInit(peer)
 	c.isPersistent = false
@@ -336,8 +336,7 @@ func (c *Connection) goOnline() {
 	debug(c.peer.PeerIdent(), "Connection.goOnline() called.")
 	c.state = ConnectionOnline
 	now := time.Now()
-	c.encoder = gob.NewEncoder(c.conn)
-	c.decoder = gob.NewDecoder(c.conn)
+	c.Wire.Init(c, c.conn)
 	c.attempts = 0
 	c.timeLastPing = now
 	c.timeLastAttempt = now
@@ -364,8 +363,7 @@ func (c *Connection) goShutdown() {
 	if nil != c.conn {
 		defer c.conn.Close()
 	}
-	c.decoder = nil
-	c.encoder = nil
+	c.Wire.Close()
 	c.state = ConnectionShuttingDown
 }
 
@@ -422,18 +420,7 @@ func (c *Connection) handleCommand(command ConnectionCommand) {
 func (c *Connection) sendParcel(parcel Parcel) {
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
-	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.SetWriteDeadline(time.Now().Add(NetworkDeadline))
-
-	//deadline := time.Now().Add(NetworkDeadline)
-	//if len(parcel.Payload) > 1000*10 {
-	//	ms := (len(parcel.Payload) * NetworkDeadline.Seconds())/1000
-	//	deadline = time.Now().Add(time.Duration(ms)*time.Millisecond)
-	//}
-	//c.conn.SetWriteDeadline(deadline)
-
-	parcel.Trace("Connection.sendParcel().encoder.Encode(parcel)", "f")
-	err := c.encoder.Encode(parcel)
+	err := c.Wire.Send(&parcel)
 	switch {
 	case nil == err:
 		c.metrics.BytesSent += parcel.Header.Length
@@ -441,6 +428,7 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	default:
 		c.handleNetErrors(err)
 	}
+	return
 }
 
 // processReceives is called as part of runloop. This is essentially an infinite loop that exits
@@ -450,10 +438,8 @@ func (c *Connection) sendParcel(parcel Parcel) {
 // -- we run out of data to recieve (which gives an io.EOF which is handled by handleNetErrors)
 func (c *Connection) processReceives() {
 	for ConnectionOnline == c.state {
-		var message Parcel
+		message, err := c.Wire.Receive()
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
-		c.conn.SetReadDeadline(time.Now().Add(NetworkDeadline))
-		err := c.decoder.Decode(&message)
 		message.Trace("Connection.processReceives().c.decoder.Decode(&message)", "G")
 		switch {
 		case nil == err:
@@ -461,7 +447,7 @@ func (c *Connection) processReceives() {
 			c.metrics.BytesReceived += message.Header.Length
 			c.metrics.MessagesReceived += 1
 			message.Header.PeerAddress = c.peer.Address
-			c.handleParcel(message)
+			c.handleParcel(*message)
 		default:
 			c.handleNetErrors(err)
 			return

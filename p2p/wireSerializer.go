@@ -11,14 +11,31 @@ import (
 	"time"
 )
 
-type Middle struct {
-	Conn     net.Conn
-	Incoming chan *Parcel
-	Outgoing chan *Parcel
-	closed   bool
+type Wire interface {
+	Send(p *Parcel) (err error)
+	Receive() (p *Parcel, err error)
+	Init(*Connection, net.Conn)
+	Close()
 }
 
-func (m *Middle) Init() {
+type WireSerializer struct {
+	Connection *Connection
+	Conn       net.Conn
+	Incoming   chan *Parcel
+	Outgoing   chan *Parcel
+	closed     bool
+}
+
+var _ Wire = (*WireSerializer)(nil)
+
+func (m *WireSerializer) Close() {
+	m.Conn.Close()
+	m.closed = true
+}
+
+func (m *WireSerializer) Init(connection *Connection, conn net.Conn) {
+	m.Connection = connection
+	m.Conn = conn
 	if m.Incoming == nil {
 		fmt.Println("Make Channels")
 		m.Incoming = make(chan *Parcel, 10000)
@@ -36,7 +53,7 @@ var ReadsErr int
 
 var Deadline time.Duration = time.Duration(100)
 
-func (m *Middle) Send(p *Parcel) (err error) {
+func (m *WireSerializer) Send(p *Parcel) (err error) {
 	if len(m.Outgoing) > 9900 {
 		for len(m.Outgoing) > 9000 {
 			<-m.Outgoing
@@ -48,7 +65,7 @@ func (m *Middle) Send(p *Parcel) (err error) {
 	return nil
 }
 
-func (m *Middle) Receive() (p *Parcel, err error) {
+func (m *WireSerializer) Receive() (p *Parcel, err error) {
 	select {
 	case p := <-m.Incoming:
 		fmt.Println("Outgoing messages", len(m.Outgoing))
@@ -61,7 +78,7 @@ func (m *Middle) Receive() (p *Parcel, err error) {
 
 // goWrite pulls from the outgoing queue, and marshals and sends parcels across the wire.
 //
-func (m *Middle) goWrite() {
+func (m *WireSerializer) goWrite() {
 	fmt.Println("Write Opening!")
 	for !m.closed {
 		select {
@@ -84,7 +101,7 @@ func (m *Middle) goWrite() {
 	fmt.Println("Write Closing")
 }
 
-func (m *Middle) FullRead(buff []byte) error {
+func (m *WireSerializer) FullRead(buff []byte) error {
 	sum := 0
 	for sum < len(buff) {
 		i, _ := m.Conn.Read(buff[sum:])
@@ -96,7 +113,7 @@ func (m *Middle) FullRead(buff []byte) error {
 	return nil
 }
 
-func (m *Middle) goRead() {
+func (m *WireSerializer) goRead() {
 	fmt.Println("Read Opening")
 	for !m.closed {
 
@@ -129,7 +146,7 @@ func (m *Middle) goRead() {
 
 var magic = []byte{0x7e, 0xa3, 0x9d, 0xA6}
 
-func (m *Middle) Sync() {
+func (m *WireSerializer) Sync() {
 	fmt.Println("Syncing")
 	var b = []byte{0}
 loop:
