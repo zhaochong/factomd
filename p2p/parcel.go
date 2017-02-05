@@ -328,6 +328,9 @@ func (p *ParcelHeader) Print() {
 }
 
 func (p *Parcel) Print() {
+	if p == nil {
+		return
+	}
 	debug("parcel", "Pretty Printing Parcel:")
 	p.Header.Print()
 	s := strconv.Quote(string(p.Payload))
@@ -335,14 +338,23 @@ func (p *Parcel) Print() {
 }
 
 func (p *Parcel) MessageType() string {
+	if p == nil {
+		return ""
+	}
 	return (fmt.Sprintf("[%s]", CommandStrings[p.Header.Type]))
 }
 
 func (p *Parcel) PrintMessageType() {
+	if p == nil {
+		return 
+	}
 	fmt.Printf("[%+v]", CommandStrings[p.Header.Type])
 }
 
 func (p *Parcel) String() string {
+	if p == nil {
+		return ""
+	}
 	var output string
 	s := strconv.Quote(string(p.Payload))
 	output = fmt.Sprintf("%s\t Network:\t%+v\n", output, p.Header.Network.String())
