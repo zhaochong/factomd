@@ -142,7 +142,7 @@ func (m *DBStateMissing) FollowerExecute(state interfaces.IState) {
 		end = start + 200
 	}
 	sent := 0
-	for dbs := start; dbs <= end && sent < 10240 ; dbs++ {
+	for dbs := start; dbs <= end && sent < 10240; dbs++ {
 		sent += m.send(dbs, state)
 	}
 
