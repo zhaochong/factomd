@@ -5,6 +5,7 @@
 package state
 
 import (
+	"fmt"
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/messages"
 )
@@ -105,6 +106,8 @@ func (s *State) syncEntryBlocks() {
 
 func (s *State) syncEntries(eights bool) {
 
+	alldone := true
+
 	for s.EntryDBHeightProcessing < s.GetHighestCompletedBlk() && len(s.MissingEntries) < 10 {
 		dbstate := s.DBStates.Get(int(s.EntryDBHeightProcessing))
 
@@ -112,8 +115,6 @@ func (s *State) syncEntries(eights bool) {
 			return
 		}
 		db := s.GetDirectoryBlockByHeight(s.EntryDBHeightProcessing)
-
-		alldone := true
 
 		for _, ebKeyMR := range db.GetEntryHashes()[3:] {
 			// The first three entries (0,1,2) in every directory block are blocks we already have by
@@ -125,8 +126,10 @@ func (s *State) syncEntries(eights bool) {
 			// Dont have an eBlock?  Huh. We can go on, but we can't advance
 			if eBlock == nil {
 				alldone = false
-				return
+				continue
 			}
+
+			fmt.Printf("SyncSync eb: %x cnt: %d\n", eBlock.GetHash().Bytes(), len(eBlock.GetEntryHashes()))
 
 			for _, entryhash := range eBlock.GetEntryHashes() {
 				if entryhash.IsMinuteMarker() {
@@ -154,6 +157,8 @@ func (s *State) syncEntries(eights bool) {
 					}
 					// Something missing. stop moving the bookmark.
 					alldone = false
+				} else {
+					fmt.Printf("SyncSync eb: %x e: %x\n", eBlock.GetHash().Bytes(), e.GetHash().Bytes())
 				}
 				// Save the entry hash, and remove from commits IF this hash is valid in this current timeframe.
 				s.Replay.SetHashNow(constants.REVEAL_REPLAY, entryhash.Fixed(), db.GetTimestamp())
