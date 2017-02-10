@@ -61,12 +61,11 @@ func (s *State) syncEntryBlocks() {
 	// review the directory block over again the next time.
 	alldone := true
 	for s.EntryBlockDBHeightProcessing < s.GetHighestCompletedBlk() && len(s.MissingEntryBlocks) < 10 {
-		dbstate := s.DBStates.Get(int(s.EntryBlockDBHeightProcessing))
+		db := s.GetDirectoryBlockByHeight(s.EntryBlockDBHeightProcessing)
 
-		if dbstate == nil {
+		if db == nil {
 			return
 		}
-		db := s.GetDirectoryBlockByHeight(s.EntryBlockDBHeightProcessing)
 
 		for _, ebKeyMR := range db.GetEntryHashes()[3:] {
 			// The first three entries (0,1,2) in every directory block are blocks we already have by
@@ -108,13 +107,22 @@ func (s *State) syncEntries(eights bool) {
 
 	alldone := true
 
-	for s.EntryDBHeightProcessing < s.GetHighestCompletedBlk() && len(s.MissingEntries) < 10 {
-		dbstate := s.DBStates.Get(int(s.EntryDBHeightProcessing))
+	var keep []MissingEntry
+	for _,v := range s.MissingEntries {
+		e, _ := s.DB.FetchEntry(v.entryhash)
+		if e == nil {
+			keep = append(keep,v)
+		}
+	}
+	s.MissingEntries = keep
 
-		if dbstate == nil {
+	for s.EntryDBHeightProcessing < s.GetHighestSavedBlk() && len(s.MissingEntries) < 1000 {
+
+		db := s.GetDirectoryBlockByHeight(s.EntryDBHeightProcessing)
+
+		if db == nil {
 			return
 		}
-		db := s.GetDirectoryBlockByHeight(s.EntryDBHeightProcessing)
 
 		for _, ebKeyMR := range db.GetEntryHashes()[3:] {
 			// The first three entries (0,1,2) in every directory block are blocks we already have by
@@ -129,9 +137,8 @@ func (s *State) syncEntries(eights bool) {
 				continue
 			}
 
-			fmt.Printf("SyncSync eb: %x cnt: %d\n", eBlock.GetHash().Bytes(), len(eBlock.GetEntryHashes()))
 
-			for _, entryhash := range eBlock.GetEntryHashes() {
+			for i, entryhash := range eBlock.GetEntryHashes() {
 				if entryhash.IsMinuteMarker() {
 					continue
 				}
@@ -158,6 +165,12 @@ func (s *State) syncEntries(eights bool) {
 					// Something missing. stop moving the bookmark.
 					alldone = false
 				} else {
+					if i == 0 {
+						fmt.Printf("SyncSync dbht: %8d eb: %x cnt: %d\n",
+							s.EntryDBHeightProcessing,
+							eBlock.GetHash().Bytes(),
+							len(eBlock.GetEntryHashes()))
+					}
 					fmt.Printf("SyncSync eb: %x e: %x\n", eBlock.GetHash().Bytes(), e.GetHash().Bytes())
 				}
 				// Save the entry hash, and remove from commits IF this hash is valid in this current timeframe.
@@ -184,7 +197,6 @@ func (s *State) syncEntries(eights bool) {
 // called.
 
 func (s *State) catchupEBlocks() {
-
 	s.setTimersMakeRequests()
 
 	// If we still have blocks that we are asking for, then let's not add to the list.

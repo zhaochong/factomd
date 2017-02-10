@@ -62,7 +62,6 @@ func LoadDatabase(s *State) {
 					}
 				}
 				s.EntryDBHeightComplete = uint32(i)
-				s.EntryDBHeightProcessing = uint32(i)
 				s.EntryBlockDBHeightComplete = s.EntryDBHeightComplete
 				s.EntryBlockDBHeightProcessing = s.EntryDBHeightProcessing
 			} else {
