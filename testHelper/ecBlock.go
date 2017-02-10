@@ -8,9 +8,15 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/util"
+	"time"
 )
 
 func createECEntriesfromBlocks(fBlock interfaces.IFBlock, eBlocks []*entryBlock.EBlock, height int) []interfaces.IECBlockEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelpercreateECEntriesfromBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ecEntries := []interfaces.IECBlockEntry{}
 	ecEntries = append(ecEntries, entryCreditBlock.NewServerIndexNumber2(uint8(height%10+1)))
 	ecEntries = append(ecEntries, entryCreditBlock.NewMinuteNumber(0))
@@ -48,6 +54,11 @@ func createECEntriesfromBlocks(fBlock interfaces.IFBlock, eBlocks []*entryBlock.
 }
 
 func NewCommitEntry(eBlock *entryBlock.EBlock) *entryCreditBlock.CommitEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperNewCommitEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	commit := entryCreditBlock.NewCommitEntry()
 
 	commit.Version = 1
@@ -73,6 +84,11 @@ func NewCommitEntry(eBlock *entryBlock.EBlock) *entryCreditBlock.CommitEntry {
 }
 
 func NewCommitChain(eBlock *entryBlock.EBlock) *entryCreditBlock.CommitChain {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperNewCommitChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	commit := entryCreditBlock.NewCommitChain()
 
 	commit.Version = 1
@@ -100,6 +116,11 @@ func NewCommitChain(eBlock *entryBlock.EBlock) *entryCreditBlock.CommitChain {
 }
 
 func CreateTestEntryCreditBlock(prev interfaces.IEntryCreditBlock) interfaces.IEntryCreditBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestEntryCreditBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := entryCreditBlock.NextECBlock(prev)
 	if err != nil {
 		panic(err)
@@ -108,6 +129,11 @@ func CreateTestEntryCreditBlock(prev interfaces.IEntryCreditBlock) interfaces.IE
 }
 
 func SignCommit(n uint64, tx interfaces.ISignable) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperSignCommit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	err := tx.Sign(NewPrivKey(n))
 	if err != nil {
 		panic(err)

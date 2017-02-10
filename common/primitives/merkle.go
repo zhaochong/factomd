@@ -9,6 +9,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"math"
+	"time"
 )
 
 var _ = fmt.Println
@@ -17,6 +18,11 @@ var _ = fmt.Println
 // it is not already a power of two.  This is a helper function used during the
 // calculation of a merkle tree.
 func NextPowerOfTwo(n int) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesNextPowerOfTwo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Return the number if it's already a power of 2.
 	if n&(n-1) == 0 {
 		return n
@@ -31,6 +37,11 @@ func NextPowerOfTwo(n int) int {
 // nodes, and returns the hash of their concatenation.  This is a helper
 // function used to aid in the generation of a merkle tree.
 func HashMerkleBranches(left interfaces.IHash, right interfaces.IHash) interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashMerkleBranches.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Concatenate the left and right nodes.
 	var barray []byte = make([]byte, constants.ADDRESS_LENGTH*2)
 	copy(barray[:constants.ADDRESS_LENGTH], left.Bytes())
@@ -42,12 +53,22 @@ func HashMerkleBranches(left interfaces.IHash, right interfaces.IHash) interface
 
 // Give a list of hashes, return the root of the Merkle Tree
 func ComputeMerkleRoot(hashes []interfaces.IHash) interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesComputeMerkleRoot.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	merkles := BuildMerkleTreeStore(hashes)
 	return merkles[len(merkles)-1]
 }
 
 // The root of the Merkle Tree is returned in merkles[len(merkles)-1]
 func BuildMerkleTreeStore(hashes []interfaces.IHash) (merkles []interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesBuildMerkleTreeStore.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(hashes) == 0 {
 		return append(make([]interfaces.IHash, 0, 1), new(Hash))
 	}
@@ -75,6 +96,11 @@ type MerkleNode struct {
 }
 
 func BuildMerkleBranchForEntryHash(hashes []interfaces.IHash, entryHash interfaces.IHash, fullDetail bool) []*MerkleNode {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesBuildMerkleBranchForEntryHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i, h := range hashes {
 		if h.IsSameAs(entryHash) {
 			return BuildMerkleBranch(hashes, i, fullDetail)
@@ -84,6 +110,11 @@ func BuildMerkleBranchForEntryHash(hashes []interfaces.IHash, entryHash interfac
 }
 
 func BuildMerkleBranch(hashes []interfaces.IHash, entryIndex int, fullDetail bool) []*MerkleNode {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesBuildMerkleBranch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(hashes) < entryIndex || len(hashes) == 0 {
 		return nil
 	}

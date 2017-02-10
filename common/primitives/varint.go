@@ -8,9 +8,15 @@ import (
 	"math"
 
 	"github.com/FactomProject/factomd/common/primitives/random"
+	"time"
 )
 
 func RandomVarInt() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesRandomVarInt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	length := random.RandIntBetween(1, 10)
 
 	switch length {
@@ -42,22 +48,42 @@ func RandomVarInt() uint64 {
 }
 
 func VarIntLength(v uint64) uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesVarIntLength.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	buf := new(Buffer)
 	EncodeVarInt(buf, v)
 	return uint64(buf.Len())
 }
 
 func DecodeVarInt(data []byte) (uint64, []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesDecodeVarInt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return DecodeVarIntGo(data)
 }
 
 func EncodeVarInt(out *Buffer, v uint64) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesEncodeVarInt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return EncodeVarIntGo(out, v)
 }
 
 // Decode a varaible integer from the given data buffer.
 // We use the algorithm used by Go, only BigEndian.
 func DecodeVarIntGo(data []byte) (uint64, []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesDecodeVarIntGo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if data == nil || len(data) < 1 {
 		return 0, data
 	}
@@ -76,6 +102,11 @@ func DecodeVarIntGo(data []byte) (uint64, []byte) {
 
 // Encode an integer as a variable int into the given data buffer.
 func EncodeVarIntGo(out *Buffer, v uint64) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesEncodeVarIntGo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if v == 0 {
 		out.WriteByte(0)
 	}

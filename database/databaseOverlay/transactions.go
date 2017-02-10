@@ -4,9 +4,15 @@ import (
 	"fmt"
 
 	"github.com/FactomProject/factomd/common/interfaces"
+	"time"
 )
 
 func (db *Overlay) FetchFactoidTransaction(hash interfaces.IHash) (interfaces.ITransaction, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchFactoidTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	in, err := db.FetchIncludedIn(hash)
 	if err != nil {
 		return nil, err
@@ -34,6 +40,11 @@ func (db *Overlay) FetchFactoidTransaction(hash interfaces.IHash) (interfaces.IT
 }
 
 func (db *Overlay) FetchECTransaction(hash interfaces.IHash) (interfaces.IECBlockEntry, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchECTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	in, err := db.FetchIncludedIn(hash)
 	if err != nil {
 		return nil, err

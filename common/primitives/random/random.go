@@ -8,13 +8,24 @@ import (
 	"crypto/rand"
 	"math"
 	"math/big"
+	"time"
 )
 
 func RandUInt64() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandUInt64.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return RandUInt64Between(0, math.MaxUint64)
 }
 
 func RandUInt64Between(min, max uint64) uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandUInt64Between.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if min >= max {
 		return 0
 	}
@@ -28,12 +39,22 @@ func RandUInt64Between(min, max uint64) uint64 {
 }
 
 func RandInt64() int64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandInt64.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	int64max := big.NewInt(math.MaxInt64)
 	randnum, _ := rand.Int(rand.Reader, int64max)
 	return randnum.Int64()
 }
 
 func RandInt64Between(min, max int64) int64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandInt64Between.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if min >= max {
 		return 0
 	}
@@ -45,14 +66,29 @@ func RandInt64Between(min, max int64) int64 {
 }
 
 func RandInt() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandInt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return int(RandInt64())
 }
 
 func RandIntBetween(min, max int) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandIntBetween.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return int(RandInt64Between(int64(min), int64(max)))
 }
 
 func RandByteSlice() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandByteSlice.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	l := RandInt() % 64
 	answer := make([]byte, l)
 	_, err := rand.Read(answer)
@@ -63,6 +99,11 @@ func RandByteSlice() []byte {
 }
 
 func RandNonEmptyByteSlice() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandNonEmptyByteSlice.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	l := RandInt()%63 + 1
 	answer := make([]byte, l)
 	_, err := rand.Read(answer)
@@ -73,6 +114,11 @@ func RandNonEmptyByteSlice() []byte {
 }
 
 func RandByteSliceOfLen(l int) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandByteSliceOfLen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if l <= 0 {
 		return nil
 	}
@@ -87,6 +133,11 @@ func RandByteSliceOfLen(l int) []byte {
 const StringAlphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()"
 
 func RandomString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdrandomRandomString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	l := RandIntBetween(0, 128)
 	answer := []byte{}
 	for i := 0; i < l; i++ {

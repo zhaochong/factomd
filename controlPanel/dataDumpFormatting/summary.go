@@ -1,10 +1,8 @@
 package dataDumpFormatting
 
-import (
 //"fmt"
 
 //"github.com/FactomProject/factomd/state"
-)
 
 /*func RawSummary(fnodes []*state.State) string {
 	out := ""
@@ -27,6 +25,11 @@ import (
 }
 
 func ShortSummary(fnodes []*state.State) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddataDumpFormattingShortSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	st := fnodes[0]
 	prt := ""
 	for _, f := range fnodes {
@@ -68,6 +71,11 @@ func ShortSummary(fnodes []*state.State) string {
 }
 
 func messageLists(fnodes []*state.State) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddataDumpFormattingmessageLists.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prt := ""
 	list := ""
 	fmtstr := "%22s%s\n"

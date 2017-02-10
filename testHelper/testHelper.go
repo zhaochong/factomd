@@ -26,6 +26,11 @@ var BlockCount int = 10
 var DefaultCoinbaseAmount uint64 = 100000000
 
 func CreateEmptyTestState() *state.State {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateEmptyTestState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s := new(state.State)
 	s.LoadConfig("", "")
 	s.Network = "LOCAL"
@@ -36,6 +41,11 @@ func CreateEmptyTestState() *state.State {
 }
 
 func CreateAndPopulateTestState() *state.State {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateAndPopulateTestState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s := new(state.State)
 	s.SetLeaderTimestamp(primitives.NewTimestampFromMilliseconds(0))
 	s.DB = CreateAndPopulateTestDatabaseOverlay()
@@ -67,6 +77,11 @@ func CreateAndPopulateTestState() *state.State {
 }
 
 func CreateTestDBStateList() []interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestDBStateList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := make([]interfaces.IMsg, BlockCount)
 	var prev *BlockSet = nil
 
@@ -82,6 +97,11 @@ func CreateTestDBStateList() []interfaces.IMsg {
 }
 
 func CreateTestLogFileString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestLogFileString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	messages := CreateTestDBStateList()
 	answer := ""
 	st := CreateEmptyTestState()
@@ -93,6 +113,11 @@ func CreateTestLogFileString() string {
 }
 
 func MakeSureAnchorValidationKeyIsPresent() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperMakeSureAnchorValidationKeyIsPresent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	priv := NewPrimitivesPrivateKey(0)
 	pub := priv.Pub
 	for _, v := range databaseOverlay.AnchorSigPublicKeys {
@@ -104,6 +129,11 @@ func MakeSureAnchorValidationKeyIsPresent() {
 }
 
 func PopulateTestDatabaseOverlay(dbo *databaseOverlay.Overlay) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperPopulateTestDatabaseOverlay.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	MakeSureAnchorValidationKeyIsPresent()
 	var prev *BlockSet = nil
 	var err error
@@ -162,6 +192,11 @@ func PopulateTestDatabaseOverlay(dbo *databaseOverlay.Overlay) {
 }
 
 func CreateAndPopulateTestDatabaseOverlay() *databaseOverlay.Overlay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateAndPopulateTestDatabaseOverlay.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbo := CreateEmptyTestDatabaseOverlay()
 	PopulateTestDatabaseOverlay(dbo)
 	return dbo
@@ -179,6 +214,11 @@ type BlockSet struct {
 }
 
 func newBlockSet() *BlockSet {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelpernewBlockSet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bs := new(BlockSet)
 	bs.DBlock = nil
 	bs.ABlock = nil
@@ -191,6 +231,11 @@ func newBlockSet() *BlockSet {
 }
 
 func CreateFullTestBlockSet() []*BlockSet {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateFullTestBlockSet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := make([]*BlockSet, BlockCount)
 	var prev *BlockSet = nil
 
@@ -203,6 +248,11 @@ func CreateFullTestBlockSet() []*BlockSet {
 }
 
 func CreateTestBlockSet(prev *BlockSet) *BlockSet {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestBlockSet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var err error
 	height := 0
 	if prev != nil {
@@ -285,10 +335,20 @@ func CreateTestBlockSet(prev *BlockSet) *BlockSet {
 }
 
 func CreateEmptyTestDatabaseOverlay() *databaseOverlay.Overlay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateEmptyTestDatabaseOverlay.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return databaseOverlay.NewOverlay(new(mapdb.MapDB))
 }
 
 func CreateTestAdminBlock(prev *adminBlock.AdminBlock) *adminBlock.AdminBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestAdminBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block := new(adminBlock.AdminBlock)
 	block.SetHeader(CreateTestAdminHeader(prev))
 	block.GetHeader().SetMessageCount(uint32(len(block.GetABEntries())))
@@ -296,6 +356,11 @@ func CreateTestAdminBlock(prev *adminBlock.AdminBlock) *adminBlock.AdminBlock {
 }
 
 func CreateTestAdminHeader(prev *adminBlock.AdminBlock) *adminBlock.ABlockHeader {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestAdminHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	header := new(adminBlock.ABlockHeader)
 
 	if prev == nil {
@@ -319,6 +384,11 @@ func CreateTestAdminHeader(prev *adminBlock.AdminBlock) *adminBlock.ABlockHeader
 }
 
 func CreateTestDirectoryBlock(prevBlock *directoryBlock.DirectoryBlock) *directoryBlock.DirectoryBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestDirectoryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dblock := new(directoryBlock.DirectoryBlock)
 
 	dblock.SetHeader(CreateTestDirectoryBlockHeader(prevBlock))
@@ -337,6 +407,11 @@ func CreateTestDirectoryBlock(prevBlock *directoryBlock.DirectoryBlock) *directo
 }
 
 func CreateTestDirectoryBlockHeader(prevBlock *directoryBlock.DirectoryBlock) *directoryBlock.DBlockHeader {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestDirectoryBlockHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	header := new(directoryBlock.DBlockHeader)
 
 	header.SetBodyMR(primitives.Sha(primitives.NewZeroHash().Bytes()))

@@ -6,6 +6,7 @@ package primitives
 
 import (
 	"fmt"
+	"time"
 )
 
 const (
@@ -43,10 +44,20 @@ type Error struct {
 }
 
 func (r *Error) Error() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesErrorError.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fmt.Sprint(r.Name, "\n", r.Description, "\n", r.Message)
 }
 
 func CreateError(code uint, message string) *Error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesCreateError.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	r := new(Error)
 
 	r.APICode = code
@@ -57,6 +68,11 @@ func CreateError(code uint, message string) *Error {
 }
 
 func retreiveErrorParameters(code uint) (int, string, string, string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesretreiveErrorParameters.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch code {
 	case ErrorInternal:
 		return 500, "Internal", "An internal error occured", ""

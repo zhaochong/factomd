@@ -11,6 +11,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 //Structure to request missing messages in a node's process list
@@ -30,6 +31,11 @@ type MissingMsgResponse struct {
 var _ interfaces.IMsg = (*MissingMsgResponse)(nil)
 
 func (a *MissingMsgResponse) IsSameAs(b *MissingMsgResponse) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -51,14 +57,29 @@ func (a *MissingMsgResponse) IsSameAs(b *MissingMsgResponse) bool {
 }
 
 func (m *MissingMsgResponse) Process(uint32, interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return true
 }
 
 func (m *MissingMsgResponse) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *MissingMsgResponse) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.hash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -70,6 +91,11 @@ func (m *MissingMsgResponse) GetHash() interfaces.IHash {
 }
 
 func (m *MissingMsgResponse) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -81,14 +107,29 @@ func (m *MissingMsgResponse) GetMsgHash() interfaces.IHash {
 }
 
 func (m *MissingMsgResponse) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Timestamp
 }
 
 func (m *MissingMsgResponse) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.MISSING_MSG_RESPONSE
 }
 
 func (m *MissingMsgResponse) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -130,11 +171,21 @@ func (m *MissingMsgResponse) UnmarshalBinaryData(data []byte) (newData []byte, e
 }
 
 func (m *MissingMsgResponse) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *MissingMsgResponse) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -178,6 +229,11 @@ func (m *MissingMsgResponse) MarshalBinary() ([]byte, error) {
 }
 
 func (m *MissingMsgResponse) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ack, ok := m.AckResponse.(*Ack)
 	if !ok {
 		return fmt.Sprint("MissingMsgResponse (no Ack) <-- ", m.MsgResponse.String())
@@ -186,10 +242,20 @@ func (m *MissingMsgResponse) String() string {
 }
 
 func (m *MissingMsgResponse) ChainID() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 func (m *MissingMsgResponse) ListHeight() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseListHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return 0
 }
 
@@ -198,6 +264,11 @@ func (m *MissingMsgResponse) ListHeight() int {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *MissingMsgResponse) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.AckResponse == nil {
 		return -1
 	}
@@ -208,27 +279,57 @@ func (m *MissingMsgResponse) Validate(state interfaces.IState) int {
 }
 
 func (m *MissingMsgResponse) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 func (m *MissingMsgResponse) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.FollowerExecute(state)
 }
 
 func (m *MissingMsgResponse) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.FollowerExecuteMMR(m)
 
 	return
 }
 
 func (e *MissingMsgResponse) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *MissingMsgResponse) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingMsgResponseJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func NewMissingMsgResponse(state interfaces.IState, msgResponse interfaces.IMsg, ackResponse interfaces.IMsg) interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesNewMissingMsgResponse.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	msg := new(MissingMsgResponse)
 
 	msg.Peer2Peer = true // Always a peer2peer request.

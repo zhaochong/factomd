@@ -326,6 +326,11 @@ type MissingEntry struct {
 var _ interfaces.IState = (*State)(nil)
 
 func (s *State) Clone(cloneNumber int) interfaces.IState {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateClone.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	newState := new(State)
 	number := fmt.Sprintf("%02d", cloneNumber)
 
@@ -423,98 +428,218 @@ func (s *State) Clone(cloneNumber int) interfaces.IState {
 }
 
 func (s *State) AddPrefix(prefix string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAddPrefix.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.Prefix = prefix
 }
 
 func (s *State) GetFactomNodeName() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetFactomNodeName.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.FactomNodeName
 }
 
 func (s *State) GetDBStatesSent() []*interfaces.DBStateSent {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetDBStatesSent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.DBStatesSent
 }
 
 func (s *State) SetDBStatesSent(sents []*interfaces.DBStateSent) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetDBStatesSent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.DBStatesSent = sents
 }
 
 func (s *State) GetDropRate() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetDropRate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.DropRate
 }
 
 func (s *State) SetDropRate(droprate int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetDropRate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.DropRate = droprate
 }
 
 func (s *State) SetAuthoritySetString(authSet string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetAuthoritySetString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.AuthoritySetString = authSet
 }
 
 func (s *State) GetAuthoritySetString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAuthoritySetString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.AuthoritySetString
 }
 
 func (s *State) AddAuthorityDelta(authSet string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAddAuthorityDelta.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.AuthorityDeltas += fmt.Sprintf("\n%s", authSet)
 }
 
 func (s *State) GetAuthorityDeltas() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAuthorityDeltas.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.AuthorityDeltas
 }
 
 func (s *State) GetNetStateOff() bool { //	If true, all network communications are disabled
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetNetStateOff.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.NetStateOff
 }
 
 func (s *State) SetNetStateOff(net bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetNetStateOff.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.NetStateOff = net
 }
 
 func (s *State) GetRpcUser() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetRpcUser.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.RpcUser
 }
 
 func (s *State) GetRpcPass() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetRpcPass.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.RpcPass
 }
 
 func (s *State) SetRpcAuthHash(authHash []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetRpcAuthHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.RpcAuthHash = authHash
 }
 
 func (s *State) GetRpcAuthHash() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetRpcAuthHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.RpcAuthHash
 }
 
 func (s *State) GetTlsInfo() (bool, string, string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetTlsInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.FactomdTLSEnable, s.factomdTLSKeyFile, s.factomdTLSCertFile
 }
 
 func (s *State) GetFactomdLocations() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetFactomdLocations.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.FactomdLocations
 }
 
 func (s *State) GetCurrentMinute() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetCurrentMinute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.CurrentMinute
 }
 
 func (s *State) IncDBStateAnswerCnt() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIncDBStateAnswerCnt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.DBStateReplyCnt++
 }
 
 func (s *State) IncFCTSubmits() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIncFCTSubmits.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.FCTSubmits++
 }
 
 func (s *State) IncECCommits() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIncECCommits.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.ECCommits++
 }
 
 func (s *State) IncECommits() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIncECommits.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.ECommits++
 }
 
 func (s *State) GetAckChange() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAckChange.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	change, err := util.GetChangeAcksHeight(s.filename)
 	if err != nil {
 		return err
@@ -524,6 +649,11 @@ func (s *State) GetAckChange() error {
 }
 
 func (s *State) LoadConfig(filename string, networkFlag string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateLoadConfig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.FactomNodeName = s.Prefix + "FNode0" // Default Factom Node Name for Simulation
 
 	if len(filename) > 0 {
@@ -647,6 +777,11 @@ func (s *State) LoadConfig(filename string, networkFlag string) {
 }
 
 func (s *State) GetSalt(ts interfaces.Timestamp) uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetSalt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.Salt == nil {
 		b := make([]byte, 32)
 		_, err := rand.Read(b)
@@ -665,6 +800,11 @@ func (s *State) GetSalt(ts interfaces.Timestamp) uint32 {
 }
 
 func (s *State) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.Salt == nil {
 		b := make([]byte, 32)
 		_, err := rand.Read(b)
@@ -813,42 +953,92 @@ func (s *State) Init() {
 }
 
 func (s *State) GetEntryBlockDBHeightComplete() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetEntryBlockDBHeightComplete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.EntryBlockDBHeightComplete
 }
 
 func (s *State) SetEntryBlockDBHeightComplete(newHeight uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetEntryBlockDBHeightComplete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.EntryBlockDBHeightComplete = newHeight
 }
 
 func (s *State) GetEntryBlockDBHeightProcessing() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetEntryBlockDBHeightProcessing.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.EntryBlockDBHeightProcessing
 }
 
 func (s *State) SetEntryBlockDBHeightProcessing(newHeight uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetEntryBlockDBHeightProcessing.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.EntryBlockDBHeightProcessing = newHeight
 }
 
 func (s *State) GetLLeaderHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetLLeaderHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.LLeaderHeight
 }
 
 func (s *State) GetFaultTimeout() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetFaultTimeout.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.FaultTimeout
 }
 
 func (s *State) GetFaultWait() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetFaultWait.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.FaultWait
 }
 
 func (s *State) GetEntryDBHeightComplete() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetEntryDBHeightComplete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.EntryDBHeightComplete
 }
 
 func (s *State) GetMissingEntryCount() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetMissingEntryCount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return uint32(len(s.MissingEntries))
 }
 
 func (s *State) GetEBlockKeyMRFromEntryHash(entryHash interfaces.IHash) interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetEBlockKeyMRFromEntryHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entry, err := s.DB.FetchEntry(entryHash)
 	if err != nil {
 		return nil
@@ -872,14 +1062,29 @@ func (s *State) GetEBlockKeyMRFromEntryHash(entryHash interfaces.IHash) interfac
 }
 
 func (s *State) GetAndLockDB() interfaces.DBOverlay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAndLockDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.DB
 }
 
 func (s *State) UnlockDB() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateUnlockDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 // Checks ChainIDs to determine if we need their entries to process entries and transactions.
 func (s *State) Needed(eb interfaces.IEntryBlock) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateNeeded.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	id := []byte{0x88, 0x88, 0x88}
 	fer := []byte{0x11, 0x11, 0x11}
 
@@ -897,6 +1102,11 @@ func (s *State) Needed(eb interfaces.IEntryBlock) bool {
 }
 
 func (s *State) LoadDBState(dbheight uint32) (interfaces.IMsg, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateLoadDBState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dblk, err := s.DB.FetchDBlockByHeight(dbheight)
 	if err != nil {
 		return nil, err
@@ -1000,6 +1210,11 @@ func (s *State) LoadDBState(dbheight uint32) (interfaces.IMsg, error) {
 }
 
 func (s *State) LoadDataByHash(requestedHash interfaces.IHash) (interfaces.BinaryMarshallable, int, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateLoadDataByHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if requestedHash == nil {
 		return nil, -1, fmt.Errorf("%s", "Requested hash must be non-empty")
 	}
@@ -1023,11 +1238,21 @@ func (s *State) LoadDataByHash(requestedHash interfaces.IHash) (interfaces.Binar
 }
 
 func (s *State) LoadSpecificMsg(dbheight uint32, vm int, plistheight uint32) (interfaces.IMsg, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateLoadSpecificMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	msg, _, err := s.LoadSpecificMsgAndAck(dbheight, vm, plistheight)
 	return msg, err
 }
 
 func (s *State) LoadSpecificMsgAndAck(dbheight uint32, vmIndex int, plistheight uint32) (interfaces.IMsg, interfaces.IMsg, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateLoadSpecificMsgAndAck.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pl := s.ProcessLists.Get(dbheight)
 	if pl == nil {
 		return nil, nil, fmt.Errorf("%s", "Nil Process List")
@@ -1051,6 +1276,11 @@ func (s *State) LoadSpecificMsgAndAck(dbheight uint32, vmIndex int, plistheight 
 }
 
 func (s *State) LoadHoldingMap() map[[32]byte]interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateLoadHoldingMap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// request holding queue from state from outside state scope
 	s.HoldingMutex.Lock()
 	defer s.HoldingMutex.Unlock()
@@ -1077,6 +1307,11 @@ func (s *State) LoadHoldingMap() map[[32]byte]interfaces.IMsg {
 // this is executed in the state maintenance processes where the holding queue is in scope and can be queried
 //  This is what fills the HoldingMap requested in LoadHoldingMap
 func (s *State) fillHoldingMap() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatefillHoldingMap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.HoldingFlag == true {
 		s.HoldingMap = make(map[[32]byte]interfaces.IMsg, len(s.Holding))
 		for i, msg := range s.Holding {
@@ -1088,6 +1323,11 @@ func (s *State) fillHoldingMap() {
 }
 
 func (s *State) LoadAcksMap() map[[32]byte]interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateLoadAcksMap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// request Acks queue from state from outside state scope
 	s.AcksMutex.Lock()
 	defer s.AcksMutex.Unlock()
@@ -1114,6 +1354,11 @@ func (s *State) LoadAcksMap() map[[32]byte]interfaces.IMsg {
 // this is executed in the state maintenance processes where the Acks queue is in scope and can be queried
 //  This is what fills the AcksMap requested in LoadAcksMap
 func (s *State) fillAcksMap() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatefillAcksMap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.AcksFlag == true {
 		s.AcksMap = make(map[[32]byte]interfaces.IMsg, len(s.Acks))
 		for i, msg := range s.Acks {
@@ -1125,6 +1370,11 @@ func (s *State) fillAcksMap() {
 }
 
 func (s *State) GetPendingEntries(params interface{}) []interfaces.IPendingEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetPendingEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Println("GetPendingEntries")
 	resp := make([]interfaces.IPendingEntry, 0)
 	pls := s.ProcessLists.Lists
@@ -1234,6 +1484,11 @@ func (s *State) GetPendingEntries(params interface{}) []interfaces.IPendingEntry
 }
 
 func (s *State) GetPendingTransactions(params interface{}) []interfaces.IPendingTransaction {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetPendingTransactions.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var flgFound bool
 
 	var currentHeightComplete = s.GetDBHeightComplete()
@@ -1314,6 +1569,11 @@ func (s *State) GetPendingTransactions(params interface{}) []interfaces.IPending
 
 // might want to make this search the database at some point to be more generic
 func (s *State) FetchEntryHashFromProcessListsByTxID(txID string) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFetchEntryHashFromProcessListsByTxID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pls := s.ProcessLists.Lists
 	var cc messages.CommitChainMsg
 	var ce messages.CommitEntryMsg
@@ -1381,18 +1641,38 @@ func (s *State) FetchEntryHashFromProcessListsByTxID(txID string) (interfaces.IH
 }
 
 func (s *State) IncFactoidTrans() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIncFactoidTrans.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.FactoidTrans++
 }
 
 func (s *State) IncEntryChains() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIncEntryChains.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.NewEntryChains++
 }
 
 func (s *State) IncEntries() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIncEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.NewEntries++
 }
 
 func (s *State) DatabaseContains(hash interfaces.IHash) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateDatabaseContains.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	result, _, err := s.LoadDataByHash(hash)
 	if result != nil && err == nil {
 		return true
@@ -1401,6 +1681,11 @@ func (s *State) DatabaseContains(hash interfaces.IHash) bool {
 }
 
 func (s *State) MessageToLogString(msg interfaces.IMsg) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateMessageToLogString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bytes, err := msg.MarshalBinary()
 	if err != nil {
 		panic("Failed MarshalBinary: " + err.Error())
@@ -1412,6 +1697,11 @@ func (s *State) MessageToLogString(msg interfaces.IMsg) string {
 }
 
 func (s *State) JournalMessage(msg interfaces.IMsg) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateJournalMessage.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.Journaling && len(s.JournalFile) != 0 {
 		f, err := os.OpenFile(s.JournalFile, os.O_APPEND+os.O_WRONLY, 0666)
 		if err != nil {
@@ -1425,16 +1715,31 @@ func (s *State) JournalMessage(msg interfaces.IMsg) {
 }
 
 func (s *State) GetLeaderVM() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetLeaderVM.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.LeaderVMIndex
 }
 
 func (s *State) GetDBState(height uint32) *DBState {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetDBState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.DBStates.Get(int(height))
 }
 
 // Return the Directory block if it is in memory, or hit the database if it must
 // be loaded.
 func (s *State) GetDirectoryBlockByHeight(height uint32) interfaces.IDirectoryBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetDirectoryBlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbstate := s.DBStates.Get(int(height))
 	if dbstate != nil {
 		return dbstate.DirectoryBlock
@@ -1447,6 +1752,11 @@ func (s *State) GetDirectoryBlockByHeight(height uint32) interfaces.IDirectoryBl
 }
 
 func (s *State) UpdateState() (progress bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateUpdateState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbheight := s.GetHighestSavedBlk()
 	plbase := s.ProcessLists.DBHeightBase
 	if dbheight == 0 {
@@ -1488,39 +1798,79 @@ func (s *State) UpdateState() (progress bool) {
 // Returns true if this hash exists nowhere in the Replay structures.  Returns False if we
 // have already seen this hash before.  Replay is NOT updated yet.
 func (s *State) NoEntryYet(entryhash interfaces.IHash, ts interfaces.Timestamp) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateNoEntryYet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	unique := s.Replay.IsHashUnique(constants.REVEAL_REPLAY, entryhash.Fixed())
 	return unique
 }
 
 func (s *State) AddDBSig(dbheight uint32, chainID interfaces.IHash, sig interfaces.IFullSignature) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAddDBSig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.ProcessLists.Get(dbheight).AddDBSig(chainID, sig)
 }
 
 func (s *State) AddFedServer(dbheight uint32, hash interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAddFedServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.AddStatus(fmt.Sprintf("AddFedServer %x at dbht: %d", hash.Bytes()[2:6], dbheight))
 	return s.ProcessLists.Get(dbheight).AddFedServer(hash)
 }
 
 func (s *State) TrimVMList(dbheight uint32, height uint32, vmIndex int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateTrimVMList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.ProcessLists.Get(dbheight).TrimVMList(height, vmIndex)
 }
 
 func (s *State) RemoveFedServer(dbheight uint32, hash interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateRemoveFedServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.AddStatus(fmt.Sprintf("RemoveFedServer %x at dbht: %d", hash.Bytes()[2:6], dbheight))
 	s.ProcessLists.Get(dbheight).RemoveFedServerHash(hash)
 }
 
 func (s *State) AddAuditServer(dbheight uint32, hash interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAddAuditServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.AddStatus(fmt.Sprintf("AddAuditServer %x at dbht: %d", hash.Bytes()[2:6], dbheight))
 	return s.ProcessLists.Get(dbheight).AddAuditServer(hash)
 }
 
 func (s *State) RemoveAuditServer(dbheight uint32, hash interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateRemoveAuditServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.AddStatus(fmt.Sprintf("RemoveAuditServer %x at dbht: %d", hash.Bytes()[2:6], dbheight))
 	s.ProcessLists.Get(dbheight).RemoveAuditServerHash(hash)
 }
 
 func (s *State) GetFedServers(dbheight uint32) []interfaces.IFctServer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetFedServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pl := s.ProcessLists.Get(dbheight)
 	if pl != nil {
 		return pl.FedServers
@@ -1529,6 +1879,11 @@ func (s *State) GetFedServers(dbheight uint32) []interfaces.IFctServer {
 }
 
 func (s *State) GetAuditServers(dbheight uint32) []interfaces.IFctServer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAuditServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pl := s.ProcessLists.Get(dbheight)
 	if pl != nil {
 		return pl.AuditServers
@@ -1537,6 +1892,11 @@ func (s *State) GetAuditServers(dbheight uint32) []interfaces.IFctServer {
 }
 
 func (s *State) GetOnlineAuditServers(dbheight uint32) []interfaces.IFctServer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetOnlineAuditServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	allAuditServers := s.GetAuditServers(dbheight)
 	var onlineAuditServers []interfaces.IFctServer
 
@@ -1549,71 +1909,156 @@ func (s *State) GetOnlineAuditServers(dbheight uint32) []interfaces.IFctServer {
 }
 
 func (s *State) IsLeader() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIsLeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.Leader
 }
 
 func (s *State) GetVirtualServers(dbheight uint32, minute int, identityChainID interfaces.IHash) (bool, int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetVirtualServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pl := s.ProcessLists.Get(dbheight)
 	return pl.GetVirtualServers(minute, identityChainID)
 }
 
 func (s *State) GetFactoshisPerEC() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetFactoshisPerEC.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.FactoshisPerEC
 }
 
 func (s *State) SetFactoshisPerEC(factoshisPerEC uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetFactoshisPerEC.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.FactoshisPerEC = factoshisPerEC
 }
 
 func (s *State) GetIdentityChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetIdentityChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.IdentityChainID
 }
 
 func (s *State) SetIdentityChainID(chainID interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetIdentityChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.IdentityChainID = chainID
 }
 
 func (s *State) GetDirectoryBlockInSeconds() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetDirectoryBlockInSeconds.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.DirectoryBlockInSeconds
 }
 
 func (s *State) SetDirectoryBlockInSeconds(t int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetDirectoryBlockInSeconds.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.DirectoryBlockInSeconds = t
 }
 
 func (s *State) GetServerPrivateKey() *primitives.PrivateKey {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetServerPrivateKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.serverPrivKey
 }
 
 func (s *State) GetServerPublicKey() *primitives.PublicKey {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetServerPublicKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.serverPubKey
 }
 
 func (s *State) GetAnchor() interfaces.IAnchor {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAnchor.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.Anchor
 }
 
 func (s *State) TallySent(msgType int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateTallySent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.MessageTalliesSent[msgType]++
 }
 
 func (s *State) TallyReceived(msgType int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateTallyReceived.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.MessageTalliesReceived[msgType]++
 }
 
 func (s *State) GetMessageTalliesSent(i int) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetMessageTalliesSent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.MessageTalliesSent[i]
 }
 
 func (s *State) GetMessageTalliesReceived(i int) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetMessageTalliesReceived.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.MessageTalliesReceived[i]
 }
 
 func (s *State) GetFactomdVersion() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetFactomdVersion.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.FactomdVersion
 }
 
 func (s *State) initServerKeys() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateinitServerKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var err error
 	s.serverPrivKey, err = primitives.NewPrivateKeyFromHex(s.LocalServerPrivKey)
 	if err != nil {
@@ -1623,24 +2068,49 @@ func (s *State) initServerKeys() {
 }
 
 func (s *State) LogInfo(args ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateLogInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.Logger.Info(args...)
 }
 
 func (s *State) GetAuditHeartBeats() []interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAuditHeartBeats.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.AuditHeartBeats
 }
 
 func (s *State) SetIsReplaying() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetIsReplaying.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.IsReplaying = true
 }
 
 func (s *State) SetIsDoneReplaying() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetIsDoneReplaying.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.IsReplaying = false
 	s.ReplayTimestamp = nil
 }
 
 // Returns a millisecond timestamp
 func (s *State) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.IsReplaying == true {
 		fmt.Println("^^^^^^^^ IsReplying is true")
 		return s.ReplayTimestamp
@@ -1649,63 +2119,138 @@ func (s *State) GetTimestamp() interfaces.Timestamp {
 }
 
 func (s *State) GetTimeOffset() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetTimeOffset.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.TimeOffset
 }
 
 func (s *State) Sign(b []byte) interfaces.IFullSignature {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.serverPrivKey.Sign(b)
 }
 
 func (s *State) GetFactoidState() interfaces.IFactoidState {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetFactoidState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.FactoidState
 }
 
 func (s *State) SetFactoidState(dbheight uint32, fs interfaces.IFactoidState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetFactoidState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.FactoidState = fs
 }
 
 // Allow us the ability to update the port number at run time....
 func (s *State) SetPort(port int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetPort.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.PortNumber = port
 }
 
 func (s *State) GetPort() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetPort.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.PortNumber
 }
 
 func (s *State) TickerQueue() chan int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateTickerQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.tickerQueue
 }
 
 func (s *State) TimerMsgQueue() chan interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateTimerMsgQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.timerMsgQueue
 }
 
 func (s *State) NetworkInvalidMsgQueue() chan interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateNetworkInvalidMsgQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.networkInvalidMsgQueue
 }
 
 func (s *State) NetworkOutMsgQueue() chan interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateNetworkOutMsgQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.networkOutMsgQueue
 }
 
 func (s *State) InMsgQueue() chan interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateInMsgQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.inMsgQueue
 }
 
 func (s *State) APIQueue() chan interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAPIQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.apiQueue
 }
 
 func (s *State) AckQueue() chan interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAckQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.ackQueue
 }
 
 func (s *State) MsgQueue() chan interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateMsgQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.msgQueue
 }
 
 func (s *State) GetLeaderTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetLeaderTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.LeaderTimestamp == nil {
 		s.LeaderTimestamp = new(primitives.Timestamp)
 	}
@@ -1713,14 +2258,29 @@ func (s *State) GetLeaderTimestamp() interfaces.Timestamp {
 }
 
 func (s *State) SetLeaderTimestamp(ts interfaces.Timestamp) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetLeaderTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.LeaderTimestamp = ts
 }
 
 func (s *State) SetFaultTimeout(timeout int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetFaultTimeout.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.FaultTimeout = timeout
 }
 
 func (s *State) SetFaultWait(wait int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetFaultWait.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.FaultWait = wait
 }
 
@@ -1729,6 +2289,11 @@ func (s *State) SetFaultWait(wait int) {
 // Getting the cfg state for Factom doesn't force a read of the config file unless
 // it hasn't been read yet.
 func (s *State) GetCfg() interfaces.IFactomConfig {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetCfg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.Cfg
 }
 
@@ -1736,15 +2301,30 @@ func (s *State) GetCfg() interfaces.IFactomConfig {
 // state of any cfg object held by other processes... Only what will be returned by
 // future calls to Cfg().(s.Cfg.(*util.FactomdConfig)).String()
 func (s *State) ReadCfg(filename string) interfaces.IFactomConfig {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateReadCfg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.Cfg = util.ReadConfig(filename)
 	return s.Cfg
 }
 
 func (s *State) GetNetworkNumber() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetNetworkNumber.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.NetworkNumber
 }
 
 func (s *State) GetNetworkID() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetNetworkID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch s.NetworkNumber {
 	case constants.NETWORK_MAIN:
 		return constants.MAIN_NETWORK_ID
@@ -1760,6 +2340,11 @@ func (s *State) GetNetworkID() uint32 {
 
 // The inital public key that can sign the first block
 func (s *State) GetNetworkBootStrapKey() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetNetworkBootStrapKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch s.NetworkNumber {
 	case constants.NETWORK_MAIN:
 		key, _ := primitives.HexToHash("0426a802617848d4d16d87830fc521f4d136bb2d0c352850919c2679f189613a")
@@ -1782,6 +2367,11 @@ func (s *State) GetNetworkBootStrapKey() interfaces.IHash {
 
 // The inital identity that can sign the first block
 func (s *State) GetNetworkBootStrapIdentity() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetNetworkBootStrapIdentity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch s.NetworkNumber {
 	case constants.NETWORK_MAIN:
 		return primitives.NewZeroHash()
@@ -1802,6 +2392,11 @@ func (s *State) GetNetworkBootStrapIdentity() interfaces.IHash {
 
 // The identity for validating messages
 func (s *State) GetNetworkSkeletonIdentity() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetNetworkSkeletonIdentity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch s.NetworkNumber {
 	case constants.NETWORK_MAIN:
 		id, _ := primitives.HexToHash("8888882690706d0d45d49538e64e7c76571d9a9b331256b5b69d9fd2d7f1f14a")
@@ -1821,10 +2416,20 @@ func (s *State) GetNetworkSkeletonIdentity() interfaces.IHash {
 }
 
 func (s *State) GetMatryoshka(dbheight uint32) interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetMatryoshka.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 func (s *State) InitLevelDB() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateInitLevelDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.DB != nil {
 		return nil
 	}
@@ -1847,6 +2452,11 @@ func (s *State) InitLevelDB() error {
 }
 
 func (s *State) InitBoltDB() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateInitBoltDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.DB != nil {
 		return nil
 	}
@@ -1861,6 +2471,11 @@ func (s *State) InitBoltDB() error {
 }
 
 func (s *State) InitMapDB() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateInitMapDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.DB != nil {
 		return nil
 	}
@@ -1872,6 +2487,11 @@ func (s *State) InitMapDB() error {
 }
 
 func (s *State) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str := "\n===============================================================\n" + s.serverPrt
 	str = fmt.Sprintf("\n%s\n  Leader Height: %d\n", str, s.LLeaderHeight)
 	str = str + "===============================================================\n"
@@ -1879,10 +2499,20 @@ func (s *State) String() string {
 }
 
 func (s *State) ShortString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateShortString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.serverPrt
 }
 
 func (s *State) SetString() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch s.Status {
 	case 0:
 		return
@@ -1897,6 +2527,11 @@ func (s *State) SetString() {
 }
 
 func (s *State) SummaryHeader() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSummaryHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str := fmt.Sprintf(" %10s %6s %12s %5s %4s %6s %10s %8s %5s %4s %20s %12s %10s %-8s %-9s %15s %9s %s\n",
 		"Node",
 		"ID   ",
@@ -1921,12 +2556,22 @@ func (s *State) SummaryHeader() string {
 }
 
 func (s *State) SetStringConsensus() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetStringConsensus.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str := fmt.Sprintf("%10s[%x_%x] ", s.FactomNodeName, s.IdentityChainID.Bytes()[:2], s.IdentityChainID.Bytes()[2:5])
 
 	s.serverPrt = str
 }
 
 func (s *State) SetStringQueues() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetStringQueues.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	vmi := -1
 	if s.Leader && s.LeaderVMIndex >= 0 {
 		vmi = s.LeaderVMIndex
@@ -2073,6 +2718,11 @@ func (s *State) SetStringQueues() {
 }
 
 func (s *State) ConstructAuthoritySetString() (authSets []string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateConstructAuthoritySetString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	base := s.ProcessLists.DBHeightBase
 	for i, pl := range s.ProcessLists.Lists {
 		// If we don't really have a process list at this height, then say no more.
@@ -2095,6 +2745,11 @@ func (s *State) ConstructAuthoritySetString() (authSets []string) {
 // returns what finished block height this node thinks the leader is at, assuming that the
 // local node has the process list the leader is working on plus an extra empty one on top of it.
 func (s *State) GetTrueLeaderHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetTrueLeaderHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := int(s.ProcessLists.DBHeightBase) + len(s.ProcessLists.Lists) - 3
 	if h < 0 {
 		h = 0
@@ -2103,6 +2758,11 @@ func (s *State) GetTrueLeaderHeight() uint32 {
 }
 
 func (s *State) Print(a ...interface{}) (n int, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatePrint.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.OutputAllowed {
 		str := ""
 		for _, v := range a {
@@ -2123,6 +2783,11 @@ func (s *State) Print(a ...interface{}) (n int, err error) {
 }
 
 func (s *State) Println(a ...interface{}) (n int, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatePrintln.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.OutputAllowed {
 		str := ""
 		for _, v := range a {
@@ -2144,14 +2809,29 @@ func (s *State) Println(a ...interface{}) (n int, err error) {
 }
 
 func (s *State) GetOut() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetOut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.OutputAllowed
 }
 
 func (s *State) SetOut(o bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetOut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.OutputAllowed = o
 }
 
 func (s *State) GetSystemHeight(dbheight uint32) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetSystemHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pl := s.ProcessLists.Get(dbheight)
 	if pl == nil {
 		return -1
@@ -2162,6 +2842,11 @@ func (s *State) GetSystemHeight(dbheight uint32) int {
 // Gets the system message at the given dbheight, and given height in the
 // System list
 func (s *State) GetSystemMsg(dbheight uint32, height uint32) interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetSystemMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pl := s.ProcessLists.Get(dbheight)
 	if pl == nil {
 		return nil
@@ -2173,6 +2858,11 @@ func (s *State) GetSystemMsg(dbheight uint32, height uint32) interfaces.IMsg {
 }
 
 func (s *State) GetInvalidMsg(hash interfaces.IHash) interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetInvalidMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if hash == nil {
 		return nil
 	}
@@ -2184,6 +2874,11 @@ func (s *State) GetInvalidMsg(hash interfaces.IHash) interfaces.IMsg {
 }
 
 func (s *State) ProcessInvalidMsgQueue() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateProcessInvalidMsgQueue.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.InvalidMessagesMutex.Lock()
 	defer s.InvalidMessagesMutex.Unlock()
 	if len(s.InvalidMessages)+len(s.networkInvalidMsgQueue) > 2048 {
@@ -2203,11 +2898,21 @@ func (s *State) ProcessInvalidMsgQueue() {
 }
 
 func (s *State) SetPendingSigningKey(p *primitives.PrivateKey) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSetPendingSigningKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.serverPendingPrivKeys = append(s.serverPendingPrivKeys, p)
 	s.serverPendingPubKeys = append(s.serverPendingPubKeys, p.Pub)
 }
 
 func (s *State) AddStatus(status string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAddStatus.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Don't add duplicates.
 	last := s.GetLastStatus()
 	if last == status {
@@ -2226,6 +2931,11 @@ func (s *State) AddStatus(status string) {
 }
 
 func (s *State) GetStatus() []string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetStatus.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.StatusMutex.Lock()
 	defer s.StatusMutex.Unlock()
 
@@ -2235,6 +2945,11 @@ func (s *State) GetStatus() []string {
 }
 
 func (s *State) GetLastStatus() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetLastStatus.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.StatusMutex.Lock()
 	defer s.StatusMutex.Unlock()
 

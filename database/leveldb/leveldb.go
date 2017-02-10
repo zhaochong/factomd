@@ -14,6 +14,7 @@ import (
 	"github.com/FactomProject/goleveldb/leveldb"
 	"github.com/FactomProject/goleveldb/leveldb/opt"
 	"github.com/FactomProject/goleveldb/leveldb/util"
+	"time"
 )
 
 type LevelDB struct {
@@ -28,6 +29,11 @@ type LevelDB struct {
 var _ interfaces.IDatabase = (*LevelDB)(nil)
 
 func (db *LevelDB) ListAllBuckets() ([][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBListAllBuckets.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//TODO: fix Level to solve this issue
 	return nil, fmt.Errorf("Unable to fetch buckets due to LevelDB design")
 	/*
@@ -54,9 +60,19 @@ func (db *LevelDB) ListAllBuckets() ([][]byte, error) {
 
 // Can't trim a real database
 func (db *LevelDB) Trim() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBTrim.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 func (db *LevelDB) Delete(bucket []byte, key []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBDelete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.dbLock.Lock()
 	defer db.dbLock.Unlock()
 
@@ -66,6 +82,11 @@ func (db *LevelDB) Delete(bucket []byte, key []byte) error {
 }
 
 func (db *LevelDB) Close() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBClose.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.dbLock.Lock()
 	defer db.dbLock.Unlock()
 
@@ -73,16 +94,31 @@ func (db *LevelDB) Close() error {
 }
 
 func ExtendBucket(bucket []byte) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbExtendBucket.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return append(bucket, ';')
 }
 
 func CombineBucketAndKey(bucket []byte, key []byte) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbCombineBucketAndKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ldbKey := ExtendBucket(bucket)
 	ldbKey = append(ldbKey, key...)
 	return ldbKey
 }
 
 func (db *LevelDB) Get(bucket []byte, key []byte, destination interfaces.BinaryMarshallable) (interfaces.BinaryMarshallable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBGet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.dbLock.RLock()
 	defer db.dbLock.RUnlock()
 
@@ -104,6 +140,11 @@ func (db *LevelDB) Get(bucket []byte, key []byte, destination interfaces.BinaryM
 }
 
 func (db *LevelDB) Put(bucket []byte, key []byte, data interfaces.BinaryMarshallable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBPut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if db.lbatch == nil {
 		db.lbatch = new(leveldb.Batch)
 	}
@@ -125,6 +166,11 @@ func (db *LevelDB) Put(bucket []byte, key []byte, data interfaces.BinaryMarshall
 }
 
 func (db *LevelDB) PutInBatch(records []interfaces.Record) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBPutInBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if db.lbatch == nil {
 		db.lbatch = new(leveldb.Batch)
 	}
@@ -148,6 +194,11 @@ func (db *LevelDB) PutInBatch(records []interfaces.Record) error {
 }
 
 func (db *LevelDB) Clear(bucket []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBClear.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	keys, err := db.ListAllKeys(bucket)
 	if err != nil {
 		return err
@@ -175,6 +226,11 @@ func (db *LevelDB) Clear(bucket []byte) error {
 }
 
 func (db *LevelDB) ListAllKeys(bucket []byte) (keys [][]byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBListAllKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.dbLock.RLock()
 	defer db.dbLock.RUnlock()
 
@@ -204,6 +260,11 @@ func (db *LevelDB) ListAllKeys(bucket []byte) (keys [][]byte, err error) {
 }
 
 func (db *LevelDB) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAndCopyable) ([]interfaces.BinaryMarshallableAndCopyable, [][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBGetAll.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.dbLock.RLock()
 	defer db.dbLock.RUnlock()
 
@@ -239,6 +300,11 @@ func (db *LevelDB) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAnd
 }
 
 func NewLevelDB(filename string, create bool) (interfaces.IDatabase, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbNewLevelDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db := new(LevelDB)
 	var err error
 
@@ -271,6 +337,11 @@ func NewLevelDB(filename string, create bool) (interfaces.IDatabase, error) {
 
 // Internal db use only
 func addOneToByteArray(input []byte) (output []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbaddOneToByteArray.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if input == nil {
 		return []byte{byte(1)}
 	}
@@ -286,6 +357,11 @@ func addOneToByteArray(input []byte) (output []byte) {
 }
 
 func (db *LevelDB) DoesKeyExist(bucket, key []byte) (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdleveldbLevelDBDoesKeyExist.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ldbKey := CombineBucketAndKey(bucket, key)
 	return db.lDB.Has(ldbKey, db.ro)
 }

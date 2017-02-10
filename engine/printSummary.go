@@ -9,6 +9,11 @@ import (
 )
 
 func printSummary(summary *int, value int, listenTo *int, wsapiNode *int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineprintSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	out := ""
 
 	if *listenTo < 0 || *listenTo >= len(fnodes) {
@@ -268,6 +273,11 @@ func printSummary(summary *int, value int, listenTo *int, wsapiNode *int) {
 }
 
 func systemFaults(f *FactomNode) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginesystemFaults.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbheight := f.State.LLeaderHeight
 	pl := f.State.ProcessLists.Get(dbheight)
 	if len(pl.System.List) == 0 {
@@ -285,6 +295,11 @@ func systemFaults(f *FactomNode) string {
 }
 
 func faultSummary() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginefaultSummary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prt := ""
 	headerTitle := "Faults"
 	headerLabel := "Fed   "

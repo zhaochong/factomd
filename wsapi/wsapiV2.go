@@ -22,11 +22,17 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/receipts"
 	"github.com/FactomProject/web"
+	"time"
 )
 
 const API_VERSION string = "2.0"
 
 func HandleV2(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	state := ctx.Server.Env["state"].(interfaces.IState)
 	ServersMutex.Unlock()
@@ -64,6 +70,11 @@ func HandleV2(ctx *web.Context) {
 }
 
 func HandleV2Request(state interfaces.IState, j *primitives.JSON2Request) (*primitives.JSON2Response, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2Request.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var resp interface{}
 	var jsonError *primitives.JSONError
 	params := j.Params
@@ -166,6 +177,11 @@ func HandleV2Request(state interfaces.IState, j *primitives.JSON2Request) (*prim
 }
 
 func HandleV2DBlockByHeight(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2DBlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	heightRequest := new(HeightRequest)
 	err := MapToObject(params, heightRequest)
 	if err != nil {
@@ -200,6 +216,11 @@ func HandleV2DBlockByHeight(state interfaces.IState, params interface{}) (interf
 }
 
 func HandleV2ECBlockByHeight(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2ECBlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	heightRequest := new(HeightRequest)
 	err := MapToObject(params, heightRequest)
 	if err != nil {
@@ -234,6 +255,11 @@ func HandleV2ECBlockByHeight(state interfaces.IState, params interface{}) (inter
 }
 
 func HandleV2FBlockByHeight(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2FBlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	heightRequest := new(HeightRequest)
 	err := MapToObject(params, heightRequest)
 	if err != nil {
@@ -268,6 +294,11 @@ func HandleV2FBlockByHeight(state interfaces.IState, params interface{}) (interf
 }
 
 func HandleV2ABlockByHeight(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2ABlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	heightRequest := new(HeightRequest)
 	err := MapToObject(params, heightRequest)
 	if err != nil {
@@ -302,6 +333,11 @@ func HandleV2ABlockByHeight(state interfaces.IState, params interface{}) (interf
 }
 
 func HandleV2Error(ctx *web.Context, j *primitives.JSON2Request, err *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2Error.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	resp := primitives.NewJSON2Response()
 	if j != nil {
 		resp.ID = j.ID
@@ -315,6 +351,11 @@ func HandleV2Error(ctx *web.Context, j *primitives.JSON2Request, err *primitives
 }
 
 func MapToObject(source interface{}, dst interface{}) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiMapToObject.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b, err := json.Marshal(source)
 	if err != nil {
 		return err
@@ -327,15 +368,30 @@ type JStruct struct {
 }
 
 func (e *JStruct) MarshalJSON() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiJStructMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.data, nil
 }
 
 func (e *JStruct) UnmarshalJSON(b []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiJStructUnmarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.data = b
 	return nil
 }
 
 func ObjectToJStruct(source interface{}) (*JStruct, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiObjectToJStruct.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b, err := json.Marshal(source)
 	if err != nil {
 		return nil, err
@@ -346,6 +402,11 @@ func ObjectToJStruct(source interface{}) (*JStruct, error) {
 }
 
 func HandleV2CommitChain(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2CommitChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	commitChainMsg := new(MessageRequest)
 	err := MapToObject(params, commitChainMsg)
 	if err != nil {
@@ -375,10 +436,20 @@ func HandleV2CommitChain(state interfaces.IState, params interface{}) (interface
 }
 
 func HandleV2RevealChain(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2RevealChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return HandleV2RevealEntry(state, params)
 }
 
 func HandleV2CommitEntry(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2CommitEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	commitEntryMsg := new(MessageRequest)
 	err := MapToObject(params, commitEntryMsg)
 	if err != nil {
@@ -408,6 +479,11 @@ func HandleV2CommitEntry(state interfaces.IState, params interface{}) (interface
 }
 
 func HandleV2RevealEntry(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2RevealEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e := new(EntryRequest)
 	err := MapToObject(params, e)
 	if err != nil {
@@ -437,6 +513,11 @@ func HandleV2RevealEntry(state interfaces.IState, params interface{}) (interface
 }
 
 func HandleV2DirectoryBlockHead(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2DirectoryBlockHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := new(DirectoryBlockHeadResponse)
 	d := state.GetDirectoryBlockByHeight(state.GetHighestSavedBlk())
 	h.KeyMR = d.GetKeyMR().String()
@@ -444,6 +525,11 @@ func HandleV2DirectoryBlockHead(state interfaces.IState, params interface{}) (in
 }
 
 func HandleV2RawData(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2RawData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hashkey := new(HashRequest)
 	err := MapToObject(params, hashkey)
 	if err != nil {
@@ -497,6 +583,11 @@ func HandleV2RawData(state interfaces.IState, params interface{}) (interface{}, 
 }
 
 func HandleV2Receipt(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2Receipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hashkey := new(HashRequest)
 	err := MapToObject(params, hashkey)
 	if err != nil {
@@ -522,6 +613,11 @@ func HandleV2Receipt(state interfaces.IState, params interface{}) (interface{}, 
 }
 
 func HandleV2DirectoryBlock(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2DirectoryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	keymr := new(KeyMRRequest)
 	err := MapToObject(params, keymr)
 	if err != nil {
@@ -559,6 +655,11 @@ func HandleV2DirectoryBlock(state interfaces.IState, params interface{}) (interf
 }
 
 func HandleV2EntryBlock(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2EntryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	keymr := new(KeyMRRequest)
 	err := MapToObject(params, keymr)
 	if err != nil {
@@ -628,6 +729,11 @@ func HandleV2EntryBlock(state interfaces.IState, params interface{}) (interface{
 }
 
 func HandleV2Entry(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2Entry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hashkey := new(HashRequest)
 	err := MapToObject(params, hashkey)
 	if err != nil {
@@ -667,6 +773,11 @@ func HandleV2Entry(state interfaces.IState, params interface{}) (interface{}, *p
 }
 
 func HandleV2ChainHead(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2ChainHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	chainid := new(ChainIDRequest)
 	err := MapToObject(params, chainid)
 	if err != nil {
@@ -708,6 +819,11 @@ func HandleV2ChainHead(state interfaces.IState, params interface{}) (interface{}
 }
 
 func HandleV2EntryCreditBalance(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2EntryCreditBalance.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ecadr := new(AddressRequest)
 	err := MapToObject(params, ecadr)
 	if err != nil {
@@ -742,6 +858,11 @@ func HandleV2EntryCreditBalance(state interfaces.IState, params interface{}) (in
 }
 
 func HandleV2EntryCreditRate(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2EntryCreditRate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	resp := new(EntryCreditRateResponse)
 	resp.Rate = int64(state.GetPredictiveFER())
 
@@ -749,6 +870,11 @@ func HandleV2EntryCreditRate(state interfaces.IState, params interface{}) (inter
 }
 
 func HandleV2FactoidSubmit(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2FactoidSubmit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t := new(TransactionRequest)
 	err := MapToObject(params, t)
 	if err != nil {
@@ -779,6 +905,11 @@ func HandleV2FactoidSubmit(state interfaces.IState, params interface{}) (interfa
 }
 
 func HandleV2FactoidBalance(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2FactoidBalance.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fadr := new(AddressRequest)
 	err := MapToObject(params, fadr)
 	if err != nil {
@@ -809,6 +940,11 @@ func HandleV2FactoidBalance(state interfaces.IState, params interface{}) (interf
 }
 
 func HandleV2Heights(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2Heights.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := new(HeightsResponse)
 
 	h.DirectoryBlockHeight = int64(state.GetHighestSavedBlk())
@@ -823,6 +959,11 @@ func HandleV2Heights(state interfaces.IState, params interface{}) (interface{}, 
 }
 
 func HandleV2GetPendingEntries(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2GetPendingEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	chainid := new(ChainIDRequest)
 	err := MapToObject(params, chainid)
 	if err != nil {
@@ -834,6 +975,11 @@ func HandleV2GetPendingEntries(state interfaces.IState, params interface{}) (int
 }
 
 func HandleV2GetPendingTransactions(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2GetPendingTransactions.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fadr := new(AddressRequest)
 	err := MapToObject(params, fadr)
 	if err != nil {
@@ -846,6 +992,11 @@ func HandleV2GetPendingTransactions(state interfaces.IState, params interface{})
 }
 
 func HandleV2Properties(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2Properties.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	vtos := func(f int) string {
 		v0 := f / 1000000000
 		v1 := (f % 1000000000) / 1000000
@@ -862,6 +1013,11 @@ func HandleV2Properties(state interfaces.IState, params interface{}) (interface{
 }
 
 func HandleV2SendRawMessage(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2SendRawMessage.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	r := new(SendRawMessageRequest)
 	err := MapToObject(params, r)
 	if err != nil {
@@ -886,6 +1042,11 @@ func HandleV2SendRawMessage(state interfaces.IState, params interface{}) (interf
 }
 
 func HandleV2GetTranasction(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2GetTranasction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hashkey := new(HashRequest)
 	err := MapToObject(params, hashkey)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/FactomProject/factomd/common/directoryBlock/dbInfo"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 type Receipt struct {
@@ -23,6 +24,11 @@ type Receipt struct {
 }
 
 func (e *Receipt) TrimReceipt() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsReceiptTrimReceipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e == nil {
 		return
 	}
@@ -41,6 +47,11 @@ func (e *Receipt) TrimReceipt() {
 }
 
 func (e *Receipt) Validate() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsReceiptValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e == nil {
 		return fmt.Errorf("No receipt provided")
 	}
@@ -113,6 +124,11 @@ func (e *Receipt) Validate() error {
 }
 
 func (e *Receipt) IsSameAs(r *Receipt) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsReceiptIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.Entry == nil {
 		if r.Entry != nil {
 			return false
@@ -206,19 +222,39 @@ func (e *Receipt) IsSameAs(r *Receipt) bool {
 }
 
 func (e *Receipt) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsReceiptJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Receipt) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsReceiptJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *Receipt) CustomMarshalString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsReceiptCustomMarshalString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
 
 func (e *Receipt) DecodeString(str string) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsReceiptDecodeString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	jsonByte := []byte(str)
 	err := json.Unmarshal(jsonByte, e)
 	if err != nil {
@@ -228,6 +264,11 @@ func (e *Receipt) DecodeString(str string) error {
 }
 
 func DecodeReceiptString(str string) (*Receipt, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsDecodeReceiptString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	receipt := new(Receipt)
 	err := json.Unmarshal([]byte(str), &receipt)
 	if err != nil {
@@ -243,19 +284,39 @@ type JSON struct {
 }
 
 func (e *JSON) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsJSONJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *JSON) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsJSONJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *JSON) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
 
 func (e *JSON) IsSameAs(r *JSON) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsJSONIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if r == nil {
 		return false
 	}
@@ -272,10 +333,20 @@ func (e *JSON) IsSameAs(r *JSON) bool {
 }
 
 func CreateFullReceipt(dbo interfaces.DBOverlay, entryID interfaces.IHash) (*Receipt, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsCreateFullReceipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return CreateReceipt(dbo, entryID)
 }
 
 func CreateMinimalReceipt(dbo interfaces.DBOverlay, entryID interfaces.IHash) (*Receipt, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsCreateMinimalReceipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	receipt, err := CreateReceipt(dbo, entryID)
 	if err != nil {
 		return nil, err
@@ -287,6 +358,11 @@ func CreateMinimalReceipt(dbo interfaces.DBOverlay, entryID interfaces.IHash) (*
 }
 
 func CreateReceipt(dbo interfaces.DBOverlay, entryID interfaces.IHash) (*Receipt, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsCreateReceipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	receipt := new(Receipt)
 	receipt.Entry = new(JSON)
 	receipt.Entry.Key = entryID.String()
@@ -395,6 +471,11 @@ func CreateReceipt(dbo interfaces.DBOverlay, entryID interfaces.IHash) (*Receipt
 }
 
 func VerifyFullReceipt(dbo interfaces.DBOverlay, receiptStr string) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsVerifyFullReceipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	receipt, err := DecodeReceiptString(receiptStr)
 	if err != nil {
 		return err
@@ -420,6 +501,11 @@ func VerifyFullReceipt(dbo interfaces.DBOverlay, receiptStr string) error {
 }
 
 func VerifyMinimalReceipt(dbo interfaces.DBOverlay, receiptStr string) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsVerifyMinimalReceipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	receipt, err := DecodeReceiptString(receiptStr)
 	if err != nil {
 		return err

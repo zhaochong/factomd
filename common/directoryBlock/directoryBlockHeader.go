@@ -11,6 +11,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 var _ = fmt.Print
@@ -33,6 +34,11 @@ var _ interfaces.BinaryMarshallable = (*DBlockHeader)(nil)
 var _ interfaces.IDirectoryBlockHeader = (*DBlockHeader)(nil)
 
 func (h *DBlockHeader) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if h.BodyMR == nil {
 		h.BodyMR = primitives.NewZeroHash()
 	}
@@ -45,78 +51,173 @@ func (h *DBlockHeader) Init() {
 }
 
 func (h *DBlockHeader) GetVersion() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderGetVersion.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.Version
 }
 
 func (h *DBlockHeader) SetVersion(version byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderSetVersion.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h.Version = version
 }
 
 func (h *DBlockHeader) GetNetworkID() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderGetNetworkID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.NetworkID
 }
 
 func (h *DBlockHeader) SetNetworkID(networkID uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderSetNetworkID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h.NetworkID = networkID
 }
 
 func (h *DBlockHeader) GetBodyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderGetBodyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.BodyMR
 }
 
 func (h *DBlockHeader) SetBodyMR(bodyMR interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderSetBodyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h.BodyMR = bodyMR
 }
 
 func (h *DBlockHeader) GetPrevKeyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderGetPrevKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.PrevKeyMR
 }
 
 func (h *DBlockHeader) SetPrevKeyMR(prevKeyMR interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderSetPrevKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h.PrevKeyMR = prevKeyMR
 }
 
 func (h *DBlockHeader) GetPrevFullHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderGetPrevFullHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.PrevFullHash
 }
 
 func (h *DBlockHeader) SetPrevFullHash(PrevFullHash interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderSetPrevFullHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h.PrevFullHash = PrevFullHash
 }
 
 func (h *DBlockHeader) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.NewTimestampFromMinutes(h.Timestamp)
 }
 
 func (h *DBlockHeader) SetTimestamp(timestamp interfaces.Timestamp) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderSetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h.Timestamp = timestamp.GetTimeMinutesUInt32()
 }
 
 func (h *DBlockHeader) GetDBHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.DBHeight
 }
 
 func (h *DBlockHeader) SetDBHeight(dbheight uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h.DBHeight = dbheight
 }
 
 func (h *DBlockHeader) GetBlockCount() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderGetBlockCount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.BlockCount
 }
 
 func (h *DBlockHeader) SetBlockCount(blockcount uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderSetBlockCount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h.BlockCount = blockcount
 }
 
 func (e *DBlockHeader) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DBlockHeader) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DBlockHeader) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("  Version:         %v\n", e.Version))
@@ -133,6 +234,11 @@ func (e *DBlockHeader) String() string {
 }
 
 func (b *DBlockHeader) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.Init()
 	var buf primitives.Buffer
 
@@ -171,6 +277,11 @@ func (b *DBlockHeader) MarshalBinary() ([]byte, error) {
 }
 
 func (b *DBlockHeader) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block Header: %v", r)
@@ -213,6 +324,11 @@ func (b *DBlockHeader) UnmarshalBinaryData(data []byte) (newData []byte, err err
 }
 
 func (b *DBlockHeader) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
@@ -220,6 +336,11 @@ func (b *DBlockHeader) UnmarshalBinary(data []byte) (err error) {
 type ExpandedDBlockHeader DBlockHeader
 
 func (e DBlockHeader) MarshalJSON() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDBlockHeaderMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return json.Marshal(struct {
 		ExpandedDBlockHeader
 		ChainID string
@@ -234,6 +355,11 @@ func (e DBlockHeader) MarshalJSON() ([]byte, error) {
  ************************************************/
 
 func NewDBlockHeader() *DBlockHeader {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockNewDBlockHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	d := new(DBlockHeader)
 
 	d.BodyMR = primitives.NewZeroHash()

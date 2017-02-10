@@ -18,6 +18,11 @@ import (
 // This file contains the global variables and utility functions for the p2p network operation.  The global variables and constants can be tweaked here.
 
 func BlockFreeChannelSend(channel chan interface{}, message interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pBlockFreeChannelSend.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	highWaterMark := int(float64(StandardChannelSize) * 0.90)
 	clen := len(channel)
 	switch {
@@ -97,6 +102,11 @@ const (
 )
 
 func (n *NetworkID) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pNetworkIDString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch *n {
 	case MainNet:
 		return "MainNet"
@@ -131,6 +141,11 @@ var LoggingLevels = map[uint8]string{
 }
 
 func dot(dot string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pdot.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if 4 < CurrentLoggingLevel {
 		switch dot {
 		case "":
@@ -142,29 +157,69 @@ func dot(dot string) {
 }
 
 func silence(component string, format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2psilence.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log(Silence, component, format, v...)
 }
 func significant(component string, format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2psignificant.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log(Significant, component, format, v...)
 }
 func logfatal(component string, format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2plogfatal.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log(Fatal, component, format, v...)
 }
 func logerror(component string, format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2plogerror.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log(Errors, component, format, v...)
 }
 func note(component string, format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pnote.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log(Notes, component, format, v...)
 }
 func debug(component string, format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pdebug.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log(Debugging, component, format, v...)
 }
 func verbose(component string, format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pverbose.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log(Verbose, component, format, v...)
 }
 
 // log is the base log function to produce parsable log output for mass metrics consumption
 func log(level uint8, component string, format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2plog.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	message := strings.Replace(fmt.Sprintf(format, v...), ",", "-", -1) // Make CSV parsable.
 	// levelStr := LoggingLevels[level]
 	// host, _ := os.Hostname()

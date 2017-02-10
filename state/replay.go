@@ -28,6 +28,11 @@ type Replay struct {
 }
 
 func (r *Replay) Save() *Replay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateReplaySave.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()
 	newr := new(Replay)
@@ -47,12 +52,22 @@ func (r *Replay) Save() *Replay {
 // Remember that Unix time is in seconds since 1970.  This code
 // wants to be handed time in seconds.
 func Minutes(unix int64) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateMinutes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return int(unix / 60)
 }
 
 // Returns false if the hash is too old, or is already a
 // member of the set.  Timestamp is in seconds.
 func (r *Replay) Valid(mask int, hash [32]byte, timestamp interfaces.Timestamp, systemtime interfaces.Timestamp) (index int, valid bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateReplayValid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	now := Minutes(systemtime.GetTimeSeconds())
 	t := Minutes(timestamp.GetTimeSeconds())
 
@@ -115,6 +130,11 @@ func (r *Replay) Valid(mask int, hash [32]byte, timestamp interfaces.Timestamp, 
 // this code remembers hashes tested in the past, and rejects the
 // second submission of the same hash.
 func (r *Replay) IsTSValid(mask int, hash interfaces.IHash, timestamp interfaces.Timestamp) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateReplayIsTSValid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return r.IsTSValid_(mask, hash.Fixed(), timestamp, primitives.NewTimestampNow())
 }
 
@@ -122,6 +142,11 @@ func (r *Replay) IsTSValid(mask int, hash interfaces.IHash, timestamp interfaces
 // as a parameter.  This way, the test code can manipulate the clock
 // at will.
 func (r *Replay) IsTSValid_(mask int, hash [32]byte, timestamp interfaces.Timestamp, now interfaces.Timestamp) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateReplayIsTSValid_.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if index, ok := r.Valid(mask, hash, timestamp, now); ok {
 		r.Mutex.Lock()
 		defer r.Mutex.Unlock()
@@ -138,6 +163,11 @@ func (r *Replay) IsTSValid_(mask int, hash [32]byte, timestamp interfaces.Timest
 // Returns True if there is no record of this hash in the Replay structures.
 // Returns false if we have seen this hash before.
 func (r *Replay) IsHashUnique(mask int, hash [32]byte) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateReplayIsHashUnique.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()
 
@@ -150,6 +180,11 @@ func (r *Replay) IsHashUnique(mask int, hash [32]byte) bool {
 }
 
 func (r *Replay) SetHashNow(mask int, hash [32]byte, now interfaces.Timestamp) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateReplaySetHashNow.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if r.IsHashUnique(mask, hash) {
 		index := Minutes(now.GetTimeSeconds()) - r.Basetime
 		if index < 0 || index >= len(r.Buckets) {
@@ -167,6 +202,11 @@ func (r *Replay) SetHashNow(mask int, hash [32]byte, now interfaces.Timestamp) {
 }
 
 func (r *Replay) Clear(mask int, hash [32]byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateReplayClear.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()
 

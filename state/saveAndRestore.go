@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/FactomProject/factomd/common/interfaces"
+	"time"
 )
 
 // Because we have to go back to a previous state should the network be partictoned and we are on a separate
@@ -101,6 +102,11 @@ type SaveState struct {
 }
 
 func SaveFactomdState(state *State, d *DBState) (ss *SaveState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateSaveFactomdState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ss = new(SaveState)
 	ss.DBHeight = d.DirectoryBlock.GetHeader().GetDBHeight()
 	pl := state.ProcessLists.Get(ss.DBHeight)
@@ -202,6 +208,11 @@ func SaveFactomdState(state *State, d *DBState) (ss *SaveState) {
 }
 
 func (ss *SaveState) TrimBack(state *State, d *DBState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateSaveStateTrimBack.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pdbstate := d
 	d = state.DBStates.Get(int(ss.DBHeight + 1))
 	if pdbstate == nil {
@@ -332,6 +343,11 @@ func (ss *SaveState) TrimBack(state *State, d *DBState) {
 }
 
 func (ss *SaveState) RestoreFactomdState(state *State, d *DBState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateSaveStateRestoreFactomdState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// We trim away the ProcessList under construction (and any others) so we can
 	// rebuild afresh.
 	index := int(state.ProcessLists.DBHeightBase) - int(ss.DBHeight)

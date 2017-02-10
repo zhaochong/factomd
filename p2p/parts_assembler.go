@@ -25,12 +25,22 @@ type PartsAssembler struct {
 
 // Initializes the assembler
 func (assembler *PartsAssembler) Init() *PartsAssembler {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPartsAssemblerInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	assembler.messages = make(map[string]*PartialMessage)
 	return assembler
 }
 
 // Handles a single message part, returns either a fully assembled message or nil
 func (assembler *PartsAssembler) handlePart(parcel Parcel) *Parcel {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPartsAssemblerhandlePart.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	debug("PartsAssembler", "Handling message part %s %d/%d", parcel.Header.AppHash, parcel.Header.PartNo, parcel.Header.PartsTotal)
 	partial, exists := assembler.messages[parcel.Header.AppHash]
 
@@ -63,6 +73,11 @@ func (assembler *PartsAssembler) handlePart(parcel Parcel) *Parcel {
 
 // checks if part is valid for assembler to process
 func validateParcelPart(parcel Parcel, partial *PartialMessage) (isValid bool, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pvalidateParcelPart.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error in validateParcelPart")
@@ -97,6 +112,11 @@ func validateParcelPart(parcel Parcel, partial *PartialMessage) (isValid bool, e
 // Checks existing partial messages and if there is anything older than MaxTimeWaitingForReassembly,
 // drops the partial message
 func (assembler *PartsAssembler) cleanupOldPartialMessages() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPartsAssemblercleanupOldPartialMessages.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for appHash, partial := range assembler.messages {
 		timeWaiting := time.Since(partial.mostRecentPartReceived)
 		timeSinceFirst := time.Since(partial.firstPartReceived)
@@ -110,6 +130,11 @@ func (assembler *PartsAssembler) cleanupOldPartialMessages() {
 
 // Creates a new PartialMessage from a given parcel
 func createNewPartialMessage(parcel Parcel) *PartialMessage {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pcreateNewPartialMessage.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	partial := new(PartialMessage)
 	partial.parts = make([]*Parcel, parcel.Header.PartsTotal)
 	partial.firstPartReceived = time.Now()
@@ -119,6 +144,11 @@ func createNewPartialMessage(parcel Parcel) *PartialMessage {
 // Tries reassembling a full Message from existing MessageParts, returns nil if
 // we don't have all the necessary parts yet
 func tryReassemblingMessage(partial *PartialMessage) *Parcel {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2ptryReassemblingMessage.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, part := range partial.parts {
 		if part == nil {
 			return nil

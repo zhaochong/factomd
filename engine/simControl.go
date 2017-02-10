@@ -34,6 +34,11 @@ var lastcmd []string
 var LOCAL_NET_PRIV_KEY string = "4c38c72fc5cdad68f13b74674d3ffb1f3d63a112710868c9b08946553448d26d"
 
 func SimControl(listenTo int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimControl.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var _ = time.Sleep
 	var summary int
 	var watchPL int
@@ -1010,6 +1015,11 @@ func SimControl(listenTo int) {
 	}
 }
 func returnStatString(i int) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginereturnStatString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var stat string
 	switch i {
 	case 0:
@@ -1035,6 +1045,11 @@ func returnStatString(i int) string {
 // Allows us to scatter transactions across all nodes.
 //
 func rotateWSAPI(rotate *int, value int, wsapiNode *int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginerotateWSAPI.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for *rotate == value { // Only if true
 		*wsapiNode = rand.Int() % len(fnodes)
 		fnode := fnodes[*wsapiNode]
@@ -1044,6 +1059,11 @@ func rotateWSAPI(rotate *int, value int, wsapiNode *int) {
 }
 
 func printProcessList(watchPL *int, value int, listenTo *int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineprintProcessList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	out := ""
 	for *watchPL == value {
 		fnode := fnodes[*listenTo]
@@ -1064,6 +1084,11 @@ func printProcessList(watchPL *int, value int, listenTo *int) {
 }
 
 func printMessages(Messages *int, value int, listenTo *int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineprintMessages.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Println("Printing Messages")
 	for *Messages == value {
 		fnode := fnodes[*listenTo]

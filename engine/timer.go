@@ -15,6 +15,11 @@ import (
 var _ = (*s.State)(nil)
 
 func Timer(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineTimer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	time.Sleep(2 * time.Second)
 
 	billion := int64(1000000000)
@@ -70,6 +75,11 @@ func Timer(state interfaces.IState) {
 }
 
 func PrintBusy(state interfaces.IState, i int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginePrintBusy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s := state.(*s.State)
 
 	if len(s.ShutdownChan) == 0 {

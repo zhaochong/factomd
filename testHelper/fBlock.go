@@ -6,9 +6,15 @@ import (
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 func CreateTestFactoidBlock(prev interfaces.IFBlock) interfaces.IFBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestFactoidBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fBlock := CreateTestFactoidBlockWithCoinbase(prev, NewFactoidAddress(0), DefaultCoinbaseAmount)
 
 	ecTx := new(factoid.Transaction)
@@ -37,6 +43,11 @@ func CreateTestFactoidBlock(prev interfaces.IFBlock) interfaces.IFBlock {
 }
 
 func SignFactoidTransaction(n uint64, tx interfaces.ITransaction) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperSignFactoidTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	tx.AddAuthorization(NewFactoidRCDAddress(n))
 	data, err := tx.MarshalBinarySig()
 	if err != nil {
@@ -63,6 +74,11 @@ func SignFactoidTransaction(n uint64, tx interfaces.ITransaction) {
 }
 
 func CreateTestFactoidBlockWithCoinbase(prev interfaces.IFBlock, address interfaces.IAddress, amount uint64) interfaces.IFBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestFactoidBlockWithCoinbase.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block := factoid.NewFBlock(prev)
 	tx := new(factoid.Transaction)
 	tx.AddOutput(address, amount)

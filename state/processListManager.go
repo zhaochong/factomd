@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/FactomProject/factomd/common/interfaces"
+	"time"
 )
 
 var _ = fmt.Print
@@ -23,6 +24,11 @@ type ProcessLists struct {
 }
 
 func (lists *ProcessLists) LastList() *ProcessList {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListsLastList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return lists.Lists[len(lists.Lists)-1]
 }
 
@@ -30,6 +36,11 @@ func (lists *ProcessLists) LastList() *ProcessList {
 // is always the block above the HighestRecordedBlock, but we only care about messages that
 // are at the highest known block, as long as that is above the highest recorded block.
 func (lists *ProcessLists) UpdateState(dbheight uint32) (progress bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListsUpdateState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Look and see if we need to toss some previous blocks under construction.
 	diff := int(dbheight) - int(lists.DBHeightBase)
 	if diff > 1 && len(lists.Lists) > 1 {
@@ -67,6 +78,11 @@ func (lists *ProcessLists) UpdateState(dbheight uint32) (progress bool) {
 }
 
 func (lists *ProcessLists) Get(dbheight uint32) (pl *ProcessList) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListsGet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var i int
 
 	getindex := func() bool {
@@ -107,6 +123,11 @@ func (lists *ProcessLists) Get(dbheight uint32) (pl *ProcessList) {
 }
 
 func (lists *ProcessLists) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListsString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str := "Process Lists"
 	for i, pl := range lists.Lists {
 		if len(lists.Lists)-i > 3 {
@@ -123,6 +144,11 @@ func (lists *ProcessLists) String() string {
  ************************************************/
 
 func NewProcessLists(state interfaces.IState) *ProcessLists {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateNewProcessLists.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pls := new(ProcessLists)
 
 	s, ok := state.(*State)

@@ -16,6 +16,7 @@ import (
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 var _ = debug.PrintStack
@@ -34,6 +35,11 @@ var _ interfaces.IFactoidState = (*FactoidState)(nil)
 // Reset this Factoid state to an empty state at a dbheight following the
 // given dbstate.
 func (fs *FactoidState) Reset(dbstate *DBState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateReset.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ht := dbstate.DirectoryBlock.GetHeader().GetDBHeight()
 	if fs.DBHeight > ht+1 {
 		fs.DBHeight = ht
@@ -61,6 +67,11 @@ func (fs *FactoidState) Reset(dbstate *DBState) {
 }
 
 func (fs *FactoidState) EndOfPeriod(period int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateEndOfPeriod.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if period > 9 || period < 0 {
 		panic(fmt.Sprintf("Minute is out of range: %d", period))
 	}
@@ -68,14 +79,29 @@ func (fs *FactoidState) EndOfPeriod(period int) {
 }
 
 func (fs *FactoidState) GetWallet() interfaces.ISCWallet {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateGetWallet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fs.Wallet
 }
 
 func (fs *FactoidState) SetWallet(w interfaces.ISCWallet) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateSetWallet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fs.Wallet = w
 }
 
 func (fs *FactoidState) GetCurrentBlock() interfaces.IFBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateGetCurrentBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if fs.CurrentBlock == nil {
 		fs.CurrentBlock = factoid.NewFBlock(nil)
 		fs.CurrentBlock.SetExchRate(fs.State.GetFactoshisPerEC())
@@ -93,6 +119,11 @@ func (fs *FactoidState) GetCurrentBlock() interfaces.IFBlock {
 // When we are playing catchup, adding the transaction block is a pretty
 // useful feature.
 func (fs *FactoidState) AddTransactionBlock(blk interfaces.IFBlock) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateAddTransactionBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if err := blk.Validate(); err != nil {
 		return err
 	}
@@ -111,6 +142,11 @@ func (fs *FactoidState) AddTransactionBlock(blk interfaces.IFBlock) error {
 }
 
 func (fs *FactoidState) AddECBlock(blk interfaces.IEntryCreditBlock) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateAddECBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	transactions := blk.GetBody().GetEntries()
 
 	for _, trans := range transactions {
@@ -127,6 +163,11 @@ func (fs *FactoidState) AddECBlock(blk interfaces.IEntryCreditBlock) error {
 // No node has any responsiblity to forward on transactions that do not fall within
 // the timeframe around a block defined by TRANSACTION_PRIOR_LIMIT and TRANSACTION_POST_LIMIT
 func (fs *FactoidState) ValidateTransactionAge(trans interfaces.ITransaction) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateValidateTransactionAge.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	tsblk := fs.GetCurrentBlock().GetCoinbaseTimestamp().GetTimeMilli()
 	if tsblk < 0 {
 		return fmt.Errorf("Block has no coinbase transaction at this time")
@@ -146,6 +187,11 @@ func (fs *FactoidState) ValidateTransactionAge(trans interfaces.ITransaction) er
 
 // Only add valid transactions to the current
 func (fs *FactoidState) AddTransaction(index int, trans interfaces.ITransaction) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateAddTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if err := fs.Validate(index, trans); err != nil {
 		return err
 	}
@@ -193,20 +239,40 @@ func (fs *FactoidState) AddTransaction(index int, trans interfaces.ITransaction)
 }
 
 func (fs *FactoidState) GetFactoidBalance(address [32]byte) int64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateGetFactoidBalance.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fs.State.GetF(true, address)
 }
 
 func (fs *FactoidState) GetECBalance(address [32]byte) int64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateGetECBalance.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fs.State.GetE(true, address)
 }
 
 func (fs *FactoidState) ResetBalances() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateResetBalances.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fs.State.FactoidBalancesP = map[[32]byte]int64{}
 	fs.State.ECBalancesP = map[[32]byte]int64{}
 	fs.State.NumTransactions = 0
 }
 
 func (fs *FactoidState) UpdateECTransaction(rt bool, trans interfaces.IECBlockEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateUpdateECTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch trans.ECID() {
 	case entryCreditBlock.ECIDServerIndexNumber:
 		return nil
@@ -237,6 +303,11 @@ func (fs *FactoidState) UpdateECTransaction(rt bool, trans interfaces.IECBlockEn
 
 // Assumes validation has already been done.
 func (fs *FactoidState) UpdateTransaction(rt bool, trans interfaces.ITransaction) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateUpdateTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, input := range trans.GetInputs() {
 		adr := input.GetAddress().Fixed()
 		oldv := fs.State.GetF(rt, adr)
@@ -258,6 +329,11 @@ func (fs *FactoidState) UpdateTransaction(rt bool, trans interfaces.ITransaction
 // End of Block means packing the current block away, and setting
 // up the next
 func (fs *FactoidState) ProcessEndOfBlock(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateProcessEndOfBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if fs.GetCurrentBlock() == nil {
 		panic("Invalid state on initialization")
 	}
@@ -297,6 +373,11 @@ func (fs *FactoidState) ProcessEndOfBlock(state interfaces.IState) {
 // Returns an error message about what is wrong with the transaction if it is
 // invalid, otherwise you are good to go.
 func (fs *FactoidState) Validate(index int, trans interfaces.ITransaction) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFactoidStateValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var sums = make(map[[32]byte]uint64, 10)  // Look at the sum of an address's inputs
 	for _, input := range trans.GetInputs() { //    to a transaction.
 		bal, err := factoid.ValidateAmounts(sums[input.GetAddress().Fixed()], input.GetAmount())

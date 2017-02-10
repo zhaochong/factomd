@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/common/entryCreditBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 //A placeholder structure for messages
@@ -34,6 +35,11 @@ var _ interfaces.IMsg = (*CommitEntryMsg)(nil)
 var _ Signable = (*CommitEntryMsg)(nil)
 
 func (a *CommitEntryMsg) IsSameAs(b *CommitEntryMsg) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -60,30 +66,65 @@ func (a *CommitEntryMsg) IsSameAs(b *CommitEntryMsg) bool {
 }
 
 func (m *CommitEntryMsg) GetCount() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgGetCount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.count
 }
 
 func (m *CommitEntryMsg) IncCount() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgIncCount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.count += 1
 }
 
 func (m *CommitEntryMsg) SetCount(cnt int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgSetCount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.count = cnt
 }
 
 func (m *CommitEntryMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return state.ProcessCommitEntry(dbheight, m)
 }
 
 func (m *CommitEntryMsg) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.CommitEntry.GetSigHash()
 }
 
 func (m *CommitEntryMsg) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *CommitEntryMsg) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.MsgHash == nil {
 		m.MsgHash = m.CommitEntry.GetSigHash()
 	}
@@ -91,14 +132,29 @@ func (m *CommitEntryMsg) GetMsgHash() interfaces.IHash {
 }
 
 func (m *CommitEntryMsg) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.CommitEntry.GetTimestamp()
 }
 
 func (m *CommitEntryMsg) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.COMMIT_ENTRY_MSG
 }
 
 func (m *CommitEntryMsg) Sign(key interfaces.Signer) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -108,14 +164,29 @@ func (m *CommitEntryMsg) Sign(key interfaces.Signer) error {
 }
 
 func (m *CommitEntryMsg) GetSignature() interfaces.IFullSignature {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Signature
 }
 
 func (m *CommitEntryMsg) VerifySignature() (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return VerifyMessage(m)
 }
 
 func (m *CommitEntryMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Commit entry Message: %v", r)
@@ -146,11 +217,21 @@ func (m *CommitEntryMsg) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func (m *CommitEntryMsg) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *CommitEntryMsg) MarshalForSignature() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -165,6 +246,11 @@ func (m *CommitEntryMsg) MarshalForSignature() (data []byte, err error) {
 }
 
 func (m *CommitEntryMsg) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	resp, err := m.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -182,6 +268,11 @@ func (m *CommitEntryMsg) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *CommitEntryMsg) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.LeaderChainID == nil {
 		m.LeaderChainID = primitives.NewZeroHash()
 	}
@@ -198,6 +289,11 @@ func (m *CommitEntryMsg) String() string {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *CommitEntryMsg) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if !m.validsig && !m.CommitEntry.IsValid() {
 		return -1
 	}
@@ -211,11 +307,21 @@ func (m *CommitEntryMsg) Validate(state interfaces.IState) int {
 }
 
 func (m *CommitEntryMsg) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.VMIndex = state.ComputeVMIndex(constants.EC_CHAINID)
 }
 
 // Execute the leader functions of the given message
 func (m *CommitEntryMsg) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Check if we have yet to see an entry.  If we have seen one (NoEntryYet == false) then
 	// this commit is invalid.
 	if state.NoEntryYet(m.CommitEntry.EntryHash, m.CommitEntry.GetTimestamp()) {
@@ -226,17 +332,37 @@ func (m *CommitEntryMsg) LeaderExecute(state interfaces.IState) {
 }
 
 func (m *CommitEntryMsg) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.FollowerExecuteMsg(m)
 }
 
 func (e *CommitEntryMsg) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *CommitEntryMsg) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesCommitEntryMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func NewCommitEntryMsg() *CommitEntryMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesNewCommitEntryMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return new(CommitEntryMsg)
 }

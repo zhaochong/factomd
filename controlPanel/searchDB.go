@@ -8,6 +8,7 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/state"
 	//"github.com/FactomProject/factomd/wsapi"
+	"time"
 )
 
 type foundItemInterface interface {
@@ -15,6 +16,11 @@ type foundItemInterface interface {
 }
 
 func newSearchResponse(ftype string, found foundItemInterface) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelnewSearchResponse.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	jsonStr := ""
 	if found == nil {
 		jsonStr = `"none"`
@@ -30,6 +36,11 @@ func newSearchResponse(ftype string, found foundItemInterface) string {
 }
 
 func searchDB(searchitem string, st state.State) (bool, string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelsearchDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(searchitem) < 32 {
 		heightInt, err := strconv.Atoi(searchitem)
 		if err != nil {

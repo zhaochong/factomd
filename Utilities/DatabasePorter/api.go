@@ -25,6 +25,11 @@ type DBlockHead struct {
 }
 
 func GetDBlock(keymr string) (interfaces.IDirectoryBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetDBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < 100; i++ {
 		raw, err := GetRaw(keymr)
 		if err != nil {
@@ -41,6 +46,11 @@ func GetDBlock(keymr string) (interfaces.IDirectoryBlock, error) {
 }
 
 func GetABlock(keymr string) (interfaces.IAdminBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetABlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < 100; i++ {
 		raw, err := GetRaw(keymr)
 		if err != nil {
@@ -58,6 +68,11 @@ func GetABlock(keymr string) (interfaces.IAdminBlock, error) {
 }
 
 func GetECBlock(keymr string) (interfaces.IEntryCreditBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetECBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < 100; i++ {
 		raw, err := GetRaw(keymr)
 		if err != nil {
@@ -74,6 +89,11 @@ func GetECBlock(keymr string) (interfaces.IEntryCreditBlock, error) {
 }
 
 func GetFBlock(keymr string) (interfaces.IFBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetFBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < 100; i++ {
 		raw, err := GetRaw(keymr)
 		if err != nil {
@@ -90,6 +110,11 @@ func GetFBlock(keymr string) (interfaces.IFBlock, error) {
 }
 
 func GetEBlock(keymr string) (interfaces.IEntryBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetEBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < 100; i++ {
 		raw, err := GetRaw(keymr)
 		if err != nil {
@@ -106,6 +131,11 @@ func GetEBlock(keymr string) (interfaces.IEntryBlock, error) {
 }
 
 func GetEntry(hash string) (interfaces.IEBEntry, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < 100; i++ {
 		raw, err := GetRaw(hash)
 		if err != nil {
@@ -135,6 +165,11 @@ func GetEntry(hash string) (interfaces.IEBEntry, error) {
 }
 
 func GetDBlockHead() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetDBlockHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//return "3a5ec711a1dc1c6e463b0c0344560f830eb0b56e42def141cb423b0d8487a1dc", nil //10
 	//return "cde346e7ed87957edfd68c432c984f35596f29c7d23de6f279351cddecd5dc66", nil //100
 	//return "d13472838f0156a8773d78af137ca507c91caf7bf3b73124d6b09ebb0a98e4d9", nil //200
@@ -168,6 +203,11 @@ type Data struct {
 }
 
 func GetRaw(keymr string) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetRaw.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < 100; i++ {
 		resp, err := http.Get(fmt.Sprintf("http://%s/v1/get-raw-data/%s", server, keymr))
 		for err != nil {

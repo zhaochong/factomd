@@ -14,6 +14,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/btcsuitereleases/btcutil/base58"
+	"time"
 )
 
 /*********************************
@@ -21,6 +22,11 @@ import (
  ********************************/
 
 func AddCommas(v int64) (ret string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesAddCommas.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pos := true
 	if v < 0 {
 		pos = false
@@ -55,6 +61,11 @@ func AddCommas(v int64) (ret string) {
  *********************************/
 
 func WriteNumber64(out *Buffer, num uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesWriteNumber64.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf Buffer
 
 	binary.Write(&buf, binary.BigEndian, num)
@@ -64,6 +75,11 @@ func WriteNumber64(out *Buffer, num uint64) {
 }
 
 func WriteNumber32(out *Buffer, num uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesWriteNumber32.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf Buffer
 
 	binary.Write(&buf, binary.BigEndian, num)
@@ -73,6 +89,11 @@ func WriteNumber32(out *Buffer, num uint32) {
 }
 
 func WriteNumber16(out *Buffer, num uint16) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesWriteNumber16.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf Buffer
 
 	binary.Write(&buf, binary.BigEndian, num)
@@ -82,6 +103,11 @@ func WriteNumber16(out *Buffer, num uint16) {
 }
 
 func WriteNumber8(out *Buffer, num uint8) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesWriteNumber8.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf Buffer
 
 	binary.Write(&buf, binary.BigEndian, num)
@@ -122,6 +148,11 @@ var EntryCreditPrivatePrefix = []byte{0x5d, 0xb6}
 
 // Converts factoshis to floating point factoids
 func ConvertDecimalToFloat(v uint64) float64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertDecimalToFloat.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f := float64(v)
 	f = f / 100000000.0
 	return f
@@ -129,6 +160,11 @@ func ConvertDecimalToFloat(v uint64) float64 {
 
 // Converts factoshis to floating point string
 func ConvertDecimalToString(v uint64) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertDecimalToString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f := ConvertDecimalToFloat(v)
 	return fmt.Sprintf("%.8f", f)
 }
@@ -136,6 +172,11 @@ func ConvertDecimalToString(v uint64) string {
 // Take fixed point data and produce a nice decimial point
 // sort of output that users can handle.
 func ConvertDecimalToPaddedString(v uint64) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertDecimalToPaddedString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	tv := v / 100000000
 	bv := v - (tv * 100000000)
 	var str string
@@ -159,6 +200,11 @@ func ConvertDecimalToPaddedString(v uint64) string {
 // Convert Decimal point input to FixedPoint (no decimal point)
 // output suitable for Factom to chew on.
 func ConvertFixedPoint(amt string) (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertFixedPoint.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var v int64
 	var err error
 	index := strings.Index(amt, ".")
@@ -202,6 +248,11 @@ func ConvertFixedPoint(amt string) (string, error) {
 //  Creates the binary form.  Just needs the conversion to base58
 //  for display.
 func ConvertAddressToUser(prefix []byte, addr interfaces.IAddress) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertAddressToUser.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dat := prefix
 	dat = append(dat, addr.Bytes()...)
 	sha256d := Sha(Sha(dat).Bytes()).Bytes()
@@ -213,24 +264,44 @@ func ConvertAddressToUser(prefix []byte, addr interfaces.IAddress) []byte {
 
 // Convert Factoid Addresses
 func ConvertFctAddressToUserStr(addr interfaces.IAddress) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertFctAddressToUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	userd := ConvertAddressToUser(FactoidPrefix, addr)
 	return base58.Encode(userd)
 }
 
 // Convert Factoid Private Key
 func ConvertFctPrivateToUserStr(addr interfaces.IAddress) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertFctPrivateToUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	userd := ConvertAddressToUser(FactoidPrivatePrefix, addr)
 	return base58.Encode(userd)
 }
 
 // Convert Entry Credits
 func ConvertECAddressToUserStr(addr interfaces.IAddress) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertECAddressToUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	userd := ConvertAddressToUser(EntryCreditPrefix, addr)
 	return base58.Encode(userd)
 }
 
 // Convert Entry Credit Private key
 func ConvertECPrivateToUserStr(addr interfaces.IAddress) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertECPrivateToUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	userd := ConvertAddressToUser(EntryCreditPrivatePrefix, addr)
 	return base58.Encode(userd)
 }
@@ -244,6 +315,11 @@ func ConvertECPrivateToUserStr(addr interfaces.IAddress) string {
 // Returns false if the checksum is wrong.
 //
 func validateUserStr(prefix []byte, userFAddr string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesvalidateUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(userFAddr) != 52 {
 		return false
 
@@ -262,21 +338,41 @@ func validateUserStr(prefix []byte, userFAddr string) bool {
 
 // Validate Factoids
 func ValidateFUserStr(userFAddr string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesValidateFUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return validateUserStr(FactoidPrefix, userFAddr)
 }
 
 // Validate Factoid Private Key
 func ValidateFPrivateUserStr(userFAddr string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesValidateFPrivateUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return validateUserStr(FactoidPrivatePrefix, userFAddr)
 }
 
 // Validate Entry Credits
 func ValidateECUserStr(userFAddr string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesValidateECUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return validateUserStr(EntryCreditPrefix, userFAddr)
 }
 
 // Validate Entry Credit Private Key
 func ValidateECPrivateUserStr(userFAddr string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesValidateECPrivateUserStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return validateUserStr(EntryCreditPrivatePrefix, userFAddr)
 }
 
@@ -285,6 +381,11 @@ func ValidateECPrivateUserStr(userFAddr string) bool {
 // to the regular form.  Note validation must be done
 // separately!
 func ConvertUserStrToAddress(userFAddr string) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesConvertUserStrToAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	v := base58.Decode(userFAddr)
 	return v[2:34]
 }

@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"sync"
 
+	"time"
+
 	"github.com/FactomProject/bolt"
 	"github.com/FactomProject/factomd/common/interfaces"
 )
@@ -36,6 +38,11 @@ type BoltDB struct {
 var _ interfaces.IDatabase = (*BoltDB)(nil)
 
 func NewBoltDB(bucketList [][]byte, filename string) *BoltDB {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbNewBoltDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db := new(BoltDB)
 	db.Init(bucketList, filename)
 	return db
@@ -46,6 +53,11 @@ func NewBoltDB(bucketList [][]byte, filename string) *BoltDB {
  ***************************************/
 
 func (db *BoltDB) ListAllBuckets() ([][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBListAllBuckets.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 
@@ -68,6 +80,11 @@ func (db *BoltDB) ListAllBuckets() ([][]byte, error) {
 
 // We don't care if delete works or not.  If the key isn't there, that's ok
 func (db *BoltDB) Delete(bucket []byte, key []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBDelete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -85,9 +102,19 @@ func (db *BoltDB) Delete(bucket []byte, key []byte) error {
 
 // Can't trim a real database
 func (db *BoltDB) Trim() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBTrim.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 func (db *BoltDB) Close() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBClose.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -96,6 +123,11 @@ func (db *BoltDB) Close() error {
 }
 
 func (db *BoltDB) Get(bucket []byte, key []byte, destination interfaces.BinaryMarshallable) (interfaces.BinaryMarshallable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBGet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 
@@ -123,6 +155,11 @@ func (db *BoltDB) Get(bucket []byte, key []byte, destination interfaces.BinaryMa
 }
 
 func (db *BoltDB) Put(bucket []byte, key []byte, data interfaces.BinaryMarshallable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBPut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -143,6 +180,11 @@ func (db *BoltDB) Put(bucket []byte, key []byte, data interfaces.BinaryMarshalla
 }
 
 func (db *BoltDB) PutInBatch(records []interfaces.Record) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBPutInBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -171,6 +213,11 @@ func (db *BoltDB) PutInBatch(records []interfaces.Record) error {
 }
 
 func (db *BoltDB) Clear(bucket []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBClear.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -185,6 +232,11 @@ func (db *BoltDB) Clear(bucket []byte) error {
 }
 
 func (db *BoltDB) ListAllKeys(bucket []byte) (keys [][]byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBListAllKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 
@@ -205,6 +257,11 @@ func (db *BoltDB) ListAllKeys(bucket []byte) (keys [][]byte, err error) {
 }
 
 func (db *BoltDB) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAndCopyable) ([]interfaces.BinaryMarshallableAndCopyable, [][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBGetAll.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -241,6 +298,11 @@ func (db *BoltDB) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAndC
 //      Init(bucketList [][]byte, filename string)
 //
 func (db *BoltDB) Init(bucketList [][]byte, filename string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -269,6 +331,11 @@ func (db *BoltDB) Init(bucketList [][]byte, filename string) {
 }
 
 func (db *BoltDB) DoesKeyExist(bucket, key []byte) (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdboltdbBoltDBDoesKeyExist.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 

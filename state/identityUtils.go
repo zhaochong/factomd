@@ -8,6 +8,8 @@ import (
 	"encoding/binary"
 	"errors"
 
+	"time"
+
 	ed "github.com/FactomProject/ed25519"
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
@@ -41,6 +43,11 @@ type Identity struct {
 var _ interfaces.Printable = (*Identity)(nil)
 
 func (id *Identity) FixMissingKeys(s *State) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateIdentityFixMissingKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// This identity will always have blank keys
 	if id.IdentityChainID.IsSameAs(s.GetNetworkBootStrapIdentity()) {
 		return nil
@@ -57,6 +64,11 @@ func (id *Identity) FixMissingKeys(s *State) error {
 }
 
 func (id *Identity) VerifySignature(msg []byte, sig *[constants.SIGNATURE_LENGTH]byte) (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateIdentityVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//return true, nil // Testing
 	var pub [32]byte
 	tmp, err := id.SigningKey.MarshalBinary()
@@ -74,20 +86,40 @@ func (id *Identity) VerifySignature(msg []byte, sig *[constants.SIGNATURE_LENGTH
 }
 
 func (e *Identity) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateIdentityJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Identity) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateIdentityJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *Identity) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateIdentityString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
 
 // Sig is signed message, msg is raw message
 func CheckSig(idKey interfaces.IHash, pub []byte, msg []byte, sig []byte) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateCheckSig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var pubFix [32]byte
 	var sigFix [64]byte
 
@@ -108,6 +140,11 @@ func CheckSig(idKey interfaces.IHash, pub []byte, msg []byte, sig []byte) bool {
 
 // Checking the external ids if they match the needed lengths
 func CheckExternalIDsLength(extIDs [][]byte, lengths []int) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateCheckExternalIDsLength.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(extIDs) != len(lengths) {
 		return false
 	}
@@ -120,6 +157,11 @@ func CheckExternalIDsLength(extIDs [][]byte, lengths []int) bool {
 }
 
 func CheckLength(length int, item []byte) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateCheckLength.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(item) != length {
 		return false
 	} else {
@@ -128,6 +170,11 @@ func CheckLength(length int, item []byte) bool {
 }
 
 func AppendExtIDs(extIDs [][]byte, start int, end int) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateAppendExtIDs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(extIDs) < (end + 1) {
 		return nil, errors.New("Error: Index out of bound exception in AppendExtIDs()")
 	}
@@ -140,18 +187,23 @@ func AppendExtIDs(extIDs [][]byte, start int, end int) ([]byte, error) {
 
 // Makes sure the timestamp is within the designated window to be valid : 12 hours
 // TimeEntered is in seconds
-func CheckTimestamp(time []byte, timeEntered int64) bool {
-	if len(time) < 8 {
+func CheckTimestamp(timeBytes []byte, timeEntered int64) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateCheckTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
+	if len(timeBytes) < 8 {
 		zero := []byte{00}
 		add := make([]byte, 0)
-		for i := len(time); i <= 8; i++ {
+		for i := len(timeBytes); i <= 8; i++ {
 			add = append(add, zero...)
 		}
-		time = append(add, time...)
+		timeBytes = append(add, timeBytes...)
 	}
 
 	// In Seconds
-	ts := binary.BigEndian.Uint64(time)
+	ts := binary.BigEndian.Uint64(timeBytes)
 	var res uint64
 	timeEnteredUint := uint64(timeEntered)
 	if timeEnteredUint > ts {
@@ -167,6 +219,11 @@ func CheckTimestamp(time []byte, timeEntered int64) bool {
 }
 
 func statusIsFedOrAudit(status int) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatestatusIsFedOrAudit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if status == constants.IDENTITY_FEDERATED_SERVER ||
 		status == constants.IDENTITY_AUDIT_SERVER ||
 		status == constants.IDENTITY_PENDING_FEDERATED_SERVER ||
@@ -177,6 +234,11 @@ func statusIsFedOrAudit(status int) bool {
 }
 
 func (id *Identity) IsFull() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateIdentityIsFull.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	zero := primitives.NewZeroHash()
 	if id.IdentityChainID.IsSameAs(zero) {
 		return false

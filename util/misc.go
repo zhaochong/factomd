@@ -11,6 +11,11 @@ import (
 
 // a simple file/line trace function, with optional comment(s)
 func Trace(params ...string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilTrace.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log.Printf("##")
 
 	if 0 < len(params) {
@@ -35,6 +40,11 @@ func Trace(params ...string) {
 
 // Calculate the entry credits needed for the entry
 func EntryCost(b []byte) (uint8, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilEntryCost.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// caulculaate the length exluding the header size 35 for Milestone 1
 	l := len(b) - 35
 
@@ -58,6 +68,11 @@ func EntryCost(b []byte) (uint8, error) {
 }
 
 func IsInPendingEntryList(list []interfaces.IPendingEntry, entry interfaces.IPendingEntry) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilIsInPendingEntryList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(list) == 0 {
 		return false
 	}

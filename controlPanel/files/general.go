@@ -27,6 +27,11 @@ var TemplatesServer http.Handler = templates.Server
 var StaticServer http.Handler = statics.Server
 
 func Open(name string) (io.ReadCloser, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfilesOpen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if strings.Contains(name, "templates/") {
 		return templates.Open(name[10:])
 	} else {
@@ -35,6 +40,11 @@ func Open(name string) (io.ReadCloser, error) {
 }
 
 func ModTime(file string) (t time.Time) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfilesModTime.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if strings.Contains(file, "templates/") {
 		return templates.ModTime(file[10:])
 	} else {
@@ -43,6 +53,11 @@ func ModTime(file string) (t time.Time) {
 }
 
 func Hash(file string) (s string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfilesHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if strings.Contains(file, "templates/") {
 		return templates.Hash(file[10:])
 	} else {
@@ -51,6 +66,11 @@ func Hash(file string) (s string) {
 }
 
 func OpenGlob(name string) ([]io.ReadCloser, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfilesOpenGlob.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if strings.Contains(name, "templates/") {
 		return templates.OpenGlob(name[10:])
 	} else {

@@ -11,6 +11,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // Communicate a Directory Block State
@@ -28,6 +29,11 @@ type DBStateMissing struct {
 var _ interfaces.IMsg = (*DBStateMissing)(nil)
 
 func (a *DBStateMissing) IsSameAs(b *DBStateMissing) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -45,14 +51,29 @@ func (a *DBStateMissing) IsSameAs(b *DBStateMissing) bool {
 }
 
 func (m *DBStateMissing) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *DBStateMissing) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *DBStateMissing) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -64,10 +85,20 @@ func (m *DBStateMissing) GetMsgHash() interfaces.IHash {
 }
 
 func (m *DBStateMissing) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.DBSTATE_MISSING_MSG
 }
 
 func (m *DBStateMissing) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Timestamp
 }
 
@@ -76,6 +107,11 @@ func (m *DBStateMissing) GetTimestamp() interfaces.Timestamp {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *DBStateMissing) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.DBHeightStart > m.DBHeightEnd {
 		return -1
 	}
@@ -83,15 +119,30 @@ func (m *DBStateMissing) Validate(state interfaces.IState) int {
 }
 
 func (m *DBStateMissing) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 // Execute the leader functions of the given message
 func (m *DBStateMissing) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.FollowerExecute(state)
 }
 
 // Only send the same block again after 15 seconds.
 func (m *DBStateMissing) send(dbheight uint32, state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingsend.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	send := true
 
 	now := state.GetTimestamp()
@@ -124,6 +175,11 @@ func (m *DBStateMissing) send(dbheight uint32, state interfaces.IState) {
 }
 
 func (m *DBStateMissing) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(state.NetworkOutMsgQueue()) > 100 {
 		return
 	}
@@ -144,18 +200,38 @@ func (m *DBStateMissing) FollowerExecute(state interfaces.IState) {
 
 // Acknowledgements do not go into the process list.
 func (e *DBStateMissing) Process(dbheight uint32, state interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	panic("Ack object should never have its Process() method called")
 }
 
 func (e *DBStateMissing) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DBStateMissing) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (m *DBStateMissing) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block State Missing Message: %v", r)
@@ -182,11 +258,21 @@ func (m *DBStateMissing) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func (m *DBStateMissing) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *DBStateMissing) MarshalForSignature() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -205,14 +291,29 @@ func (m *DBStateMissing) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *DBStateMissing) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.MarshalForSignature()
 }
 
 func (m *DBStateMissing) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMissingString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fmt.Sprintf("DBStateMissing: %d-%d", m.DBHeightStart, m.DBHeightEnd)
 }
 
 func NewDBStateMissing(state interfaces.IState, dbheightStart uint32, dbheightEnd uint32) interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesNewDBStateMissing.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	msg := new(DBStateMissing)
 
 	msg.Peer2Peer = true // Always a peer2peer request.

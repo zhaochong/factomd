@@ -7,9 +7,15 @@ package state
 import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/messages"
+	"time"
 )
 
 func (s *State) setTimersMakeRequests() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatesetTimersMakeRequests.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	now := s.GetTimestamp()
 
 	// If we have no Entry Blocks in our queue, reset our timer.
@@ -55,6 +61,11 @@ func (s *State) setTimersMakeRequests() {
 }
 
 func (s *State) syncEntryBlocks() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatesyncEntryBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// All done is true, and as long as it says true, we walk our bookmark forward.  Once we find something
 	// missing, we stop moving the bookmark, and rely on caching to keep us from thrashing the disk as we
 	// review the directory block over again the next time.
@@ -104,6 +115,10 @@ func (s *State) syncEntryBlocks() {
 }
 
 func (s *State) syncEntries(eights bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatesyncEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
 
 	for s.EntryDBHeightProcessing < s.GetHighestCompletedBlk() && len(s.MissingEntries) < 10 {
 		dbstate := s.DBStates.Get(int(s.EntryDBHeightProcessing))
@@ -179,6 +194,10 @@ func (s *State) syncEntries(eights bool) {
 // called.
 
 func (s *State) catchupEBlocks() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatecatchupEBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
 
 	s.setTimersMakeRequests()
 

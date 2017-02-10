@@ -199,6 +199,11 @@ var NotFound = http.NotFound
 
 // ServeHTTP serves a request, attempting to reply with an embedded file.
 func ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtemplatesServeHTTP.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f, ok := staticFiles[strings.TrimPrefix(req.URL.Path, "/")]
 	if !ok {
 		NotFound(rw, req)
@@ -245,6 +250,11 @@ var Server http.Handler = http.HandlerFunc(ServeHTTP)
 // Open allows you to read an embedded file directly. It will return a decompressing Reader if the file is embedded in compressed format.
 // You should close the Reader after you're done with it.
 func Open(name string) (io.ReadCloser, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtemplatesOpen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f, ok := staticFiles[name]
 	if !ok {
 		return nil, fmt.Errorf("Asset %s not found", name)
@@ -261,6 +271,11 @@ func Open(name string) (io.ReadCloser, error) {
 // Useful for caching purposes
 // Returns zero time if the file is not in the bundle
 func ModTime(file string) (t time.Time) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtemplatesModTime.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if f, ok := staticFiles[file]; ok {
 		t = f.mtime
 	}
@@ -271,6 +286,11 @@ func ModTime(file string) (t time.Time) {
 // Used for the Etag, and useful for caching
 // Returns an empty string if the file is not in the bundle
 func Hash(file string) (s string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtemplatesHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if f, ok := staticFiles[file]; ok {
 		s = f.hash
 	}
@@ -279,6 +299,11 @@ func Hash(file string) (s string) {
 
 // Slower than Open as it must cycle through every element in map. Open all files that match glob.
 func OpenGlob(name string) ([]io.ReadCloser, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtemplatesOpenGlob.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	readers := make([]io.ReadCloser, 0)
 	for file := range staticFiles {
 		matches, err := path.Match(name, file)

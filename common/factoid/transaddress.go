@@ -18,6 +18,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/common/primitives/random"
+	"time"
 )
 
 type TransAddress struct {
@@ -30,6 +31,11 @@ type TransAddress struct {
 var _ interfaces.ITransAddress = (*TransAddress)(nil)
 
 func RandomTransAddress() interfaces.ITransAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRandomTransAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ta := new(TransAddress)
 	ta.Address = RandomAddress()
 	ta.Amount = random.RandUInt64()
@@ -38,32 +44,67 @@ func RandomTransAddress() interfaces.ITransAddress {
 }
 
 func (t *TransAddress) SetUserAddress(v string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressSetUserAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t.UserAddress = v
 }
 
 func (t *TransAddress) GetUserAddress() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressGetUserAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return t.UserAddress
 }
 
 func (t *TransAddress) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := t.UnmarshalBinaryData(data)
 	return err
 }
 
 func (e *TransAddress) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *TransAddress) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (t *TransAddress) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := t.JSONString()
 	return str
 }
 
 func (t *TransAddress) IsSameAs(add interfaces.ITransAddress) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if t.GetAmount() != add.GetAmount() {
 		return false
 	}
@@ -74,6 +115,11 @@ func (t *TransAddress) IsSameAs(add interfaces.ITransAddress) bool {
 }
 
 func (t *TransAddress) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(data) < 36 {
 		return nil, fmt.Errorf("Data source too short to UnmarshalBinary() an address: %d", len(data))
 	}
@@ -88,6 +134,11 @@ func (t *TransAddress) UnmarshalBinaryData(data []byte) (newData []byte, err err
 
 // MarshalBinary.  'nuff said
 func (a TransAddress) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	err := primitives.EncodeVarInt(&out, a.Amount)
@@ -104,33 +155,63 @@ func (a TransAddress) MarshalBinary() ([]byte, error) {
 // thing for looking out what we have built. Used by
 // CustomMarshalText
 func (ta TransAddress) GetName() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressGetName.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ""
 }
 
 // Accessor.  Get the amount with this address.
 func (ta TransAddress) GetAmount() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressGetAmount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ta.Amount
 }
 
 // Accessor.  Get the amount with this address.
 func (ta *TransAddress) SetAmount(amount uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressSetAmount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ta.Amount = amount
 }
 
 // Accessor.  Get the raw address.  Could be an actual address,
 // or a hash of an authorization block.  See authorization.go
 func (ta TransAddress) GetAddress() interfaces.IAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressGetAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ta.Address
 }
 
 // Accessor.  Get the raw address.  Could be an actual address,
 // or a hash of an authorization block.  See authorization.go
 func (ta *TransAddress) SetAddress(address interfaces.IAddress) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressSetAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ta.Address = address
 }
 
 // Make this into somewhat readable text.
 func (ta TransAddress) CustomMarshalTextAll(fct bool, label string) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressCustomMarshalTextAll.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("   %8s:", label))
 	v := primitives.ConvertDecimalToPaddedString(ta.Amount)
@@ -148,36 +229,76 @@ func (ta TransAddress) CustomMarshalTextAll(fct bool, label string) ([]byte, err
 }
 
 func (ta TransAddress) CustomMarshalText2(label string) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressCustomMarshalText2.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ta.CustomMarshalTextAll(true, label)
 }
 
 func (ta TransAddress) CustomMarshalTextEC2(label string) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressCustomMarshalTextEC2.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ta.CustomMarshalTextAll(false, label)
 }
 
 func (ta TransAddress) CustomMarshalTextInput() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressCustomMarshalTextInput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ta.CustomMarshalText2("input")
 }
 
 func (ta TransAddress) StringInput() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressStringInput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b, _ := ta.CustomMarshalTextInput()
 	return string(b)
 }
 
 func (ta TransAddress) CustomMarshalTextOutput() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressCustomMarshalTextOutput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ta.CustomMarshalText2("output")
 }
 
 func (ta TransAddress) StringOutput() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressStringOutput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b, _ := ta.CustomMarshalTextOutput()
 	return string(b)
 }
 
 func (ta TransAddress) CustomMarshalTextECOutput() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressCustomMarshalTextECOutput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ta.CustomMarshalTextEC2("ecoutput")
 }
 
 func (ta TransAddress) StringECOutput() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransAddressStringECOutput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b, _ := ta.CustomMarshalTextECOutput()
 	return string(b)
 }
@@ -187,6 +308,11 @@ func (ta TransAddress) StringECOutput() string {
  ******************************/
 
 func NewOutECAddress(address interfaces.IAddress, amount uint64) interfaces.ITransAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidNewOutECAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ta := new(TransAddress)
 	ta.Amount = amount
 	ta.Address = address
@@ -195,6 +321,11 @@ func NewOutECAddress(address interfaces.IAddress, amount uint64) interfaces.ITra
 }
 
 func NewOutAddress(address interfaces.IAddress, amount uint64) interfaces.ITransAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidNewOutAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ta := new(TransAddress)
 	ta.Amount = amount
 	ta.Address = address
@@ -203,6 +334,11 @@ func NewOutAddress(address interfaces.IAddress, amount uint64) interfaces.ITrans
 }
 
 func NewInAddress(address interfaces.IAddress, amount uint64) interfaces.ITransAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidNewInAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ta := new(TransAddress)
 	ta.Amount = amount
 	ta.Address = address

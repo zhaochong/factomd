@@ -9,9 +9,15 @@ import (
 	"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 func CreateTestEntryBlock(p interfaces.IEntryBlock) (*entryBlock.EBlock, []*entryBlock.Entry) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestEntryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prev, ok := p.(*entryBlock.EBlock)
 	if ok == false {
 		prev = nil
@@ -52,6 +58,11 @@ func CreateTestEntryBlock(p interfaces.IEntryBlock) (*entryBlock.EBlock, []*entr
 }
 
 func CreateTestEntryBlockWithContentN(p interfaces.IEntryBlock, content uint32) (*entryBlock.EBlock, []*entryBlock.Entry) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestEntryBlockWithContentN.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prev, ok := p.(*entryBlock.EBlock)
 	if ok == false {
 		prev = nil
@@ -92,6 +103,11 @@ func CreateTestEntryBlockWithContentN(p interfaces.IEntryBlock, content uint32) 
 }
 
 func CreateTestAnchorEntryBlock(p interfaces.IEntryBlock, prevDBlock *directoryBlock.DirectoryBlock) (*entryBlock.EBlock, []*entryBlock.Entry) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestAnchorEntryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prev, ok := p.(*entryBlock.EBlock)
 	if ok == false {
 		prev = nil
@@ -135,14 +151,29 @@ func CreateTestAnchorEntryBlock(p interfaces.IEntryBlock, prevDBlock *directoryB
 }
 
 func GetChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperGetChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return CreateFirstTestEntry().GetChainIDHash()
 }
 
 func GetAnchorChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperGetAnchorChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return CreateFirstAnchorEntry().GetChainIDHash()
 }
 
 func CreateFirstTestEntry() *entryBlock.Entry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateFirstTestEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := new(entryBlock.Entry)
 
 	answer.Version = 1
@@ -154,6 +185,11 @@ func CreateFirstTestEntry() *entryBlock.Entry {
 }
 
 func CreateFirstAnchorEntry() *entryBlock.Entry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateFirstAnchorEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := new(entryBlock.Entry)
 
 	answer.Version = 0
@@ -165,6 +201,11 @@ func CreateFirstAnchorEntry() *entryBlock.Entry {
 }
 
 func CreateTestEntry(n uint32) *entryBlock.Entry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := entryBlock.NewEntry()
 
 	answer.ChainID = GetChainID()
@@ -176,6 +217,11 @@ func CreateTestEntry(n uint32) *entryBlock.Entry {
 }
 
 func CreateTestAnchorEnry(dBlock *directoryBlock.DirectoryBlock) *entryBlock.Entry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateTestAnchorEnry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := entryBlock.NewEntry()
 
 	answer.ChainID = GetAnchorChainID()

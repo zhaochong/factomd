@@ -9,13 +9,24 @@ package state
 // identitiy to properly test identities/authorities
 import (
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 func (s *State) SimSetNewKeys(p *primitives.PrivateKey) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSimSetNewKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.serverPrivKey = p
 	s.serverPubKey = p.Pub
 }
 
 func (s *State) SimGetSigKey() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateSimGetSigKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.serverPrivKey.Pub.String()
 }

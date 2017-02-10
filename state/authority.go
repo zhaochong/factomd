@@ -14,6 +14,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/log"
+	"time"
 )
 
 type Authority struct {
@@ -32,6 +33,11 @@ type Authority struct {
 
 // 1 if fed, 0 if audit, -1 if neither
 func (auth *Authority) Type() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateAuthorityType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if auth.Status == constants.IDENTITY_FEDERATED_SERVER {
 		return 1
 	} else if auth.Status == constants.IDENTITY_AUDIT_SERVER {
@@ -41,6 +47,11 @@ func (auth *Authority) Type() int {
 }
 
 func (auth *Authority) VerifySignature(msg []byte, sig *[constants.SIGNATURE_LENGTH]byte) (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateAuthorityVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//return true, nil // Testing
 	var pub [32]byte
 	tmp, err := auth.SigningKey.MarshalBinary()
@@ -72,6 +83,11 @@ func (auth *Authority) VerifySignature(msg []byte, sig *[constants.SIGNATURE_LEN
 //			0  -> Audit Signature
 //			-1 -> Neither Fed or Audit Signature
 func (st *State) VerifyAuthoritySignature(msg []byte, sig *[constants.SIGNATURE_LENGTH]byte, dbheight uint32) (int, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateVerifyAuthoritySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	feds := st.GetFedServers(dbheight)
 	if feds == nil {
 		return 0, fmt.Errorf("Federated Servers are unknown at directory block hieght %d", dbheight)
@@ -109,6 +125,11 @@ func (st *State) VerifyAuthoritySignature(msg []byte, sig *[constants.SIGNATURE_
 //			0  -> Audit Signature
 //			-1 -> Neither Fed or Audit Signature
 func (st *State) FastVerifyAuthoritySignature(msg []byte, sig interfaces.IFullSignature, dbheight uint32) (int, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFastVerifyAuthoritySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	feds := st.GetFedServers(dbheight)
 	if feds == nil {
 		return 0, fmt.Errorf("Federated Servers are unknown at directory block hieght %d", dbheight)
@@ -152,6 +173,11 @@ func (st *State) FastVerifyAuthoritySignature(msg []byte, sig interfaces.IFullSi
 }
 
 func pkEq(a, b []byte) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatepkEq.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if a == nil && b == nil {
 		return true
 	}
@@ -180,6 +206,11 @@ func pkEq(a, b []byte) bool {
 // 		-1 ->  Not fed or audit
 //		-2 -> Not found
 func (st *State) GetAuthority(serverID interfaces.IHash) (*Authority, int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAuthority.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, auth := range st.Authorities {
 		if serverID.IsSameAs(auth.AuthorityChainID) {
 			return auth, auth.Type()
@@ -190,6 +221,11 @@ func (st *State) GetAuthority(serverID interfaces.IHash) (*Authority, int) {
 
 // We keep a 1 block history of their keys, this is so if we change their
 func (st *State) UpdateAuthSigningKeys(height uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateUpdateAuthSigningKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	/*for index, auth := range st.Authorities {
 		for _, key := range auth.KeyHistory {
 			if key.ActiveDBHeight <= height {
@@ -205,6 +241,11 @@ func (st *State) UpdateAuthSigningKeys(height uint32) {
 }
 
 func (st *State) UpdateAuthorityFromABEntry(entry interfaces.IABEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateUpdateAuthorityFromABEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var AuthorityIndex int
 	data, err := entry.MarshalBinary()
 	if err != nil {
@@ -314,6 +355,11 @@ func (st *State) UpdateAuthorityFromABEntry(entry interfaces.IABEntry) error {
 }
 
 func (st *State) GetAuthorityServerType(chainID interfaces.IHash) int { // 0 = Federated, 1 = Audit
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetAuthorityServerType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	index := st.isAuthorityChain(chainID)
 	if index == -1 {
 		return -1
@@ -331,6 +377,11 @@ func (st *State) GetAuthorityServerType(chainID interfaces.IHash) int { // 0 = F
 }
 
 func (st *State) AddAuthorityFromChainID(chainID interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAddAuthorityFromChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	IdentityIndex := st.isIdentityChain(chainID)
 	if IdentityIndex == -1 {
 		st.AddIdentityFromChainID(chainID)
@@ -343,6 +394,11 @@ func (st *State) AddAuthorityFromChainID(chainID interfaces.IHash) int {
 }
 
 func (st *State) RemoveAuthority(chainID interfaces.IHash) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateRemoveAuthority.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	i := st.isAuthorityChain(chainID)
 	if i == -1 {
 		return false
@@ -356,6 +412,11 @@ func (st *State) RemoveAuthority(chainID interfaces.IHash) bool {
 }
 
 func (st *State) isAuthorityChain(cid interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateisAuthorityChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i, authorityChain := range st.Authorities {
 		if authorityChain.AuthorityChainID.IsSameAs(cid) {
 			return i
@@ -365,6 +426,11 @@ func (st *State) isAuthorityChain(cid interfaces.IHash) int {
 }
 
 func (st *State) createAuthority(chainID interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatecreateAuthority.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	newAuth := new(Authority)
 	newAuth.AuthorityChainID = chainID
 
@@ -380,6 +446,11 @@ func (st *State) createAuthority(chainID interfaces.IHash) int {
 
 // If the Identity failed to create, it will be fixed here
 func (s *State) RepairAuthorities() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateRepairAuthorities.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Fix any missing management chains
 	for i, auth := range s.Authorities {
 		if s.Authorities[i].ManagementChainID == nil {
@@ -407,6 +478,11 @@ func (s *State) RepairAuthorities() {
 }
 
 func registerAuthAnchor(chainID interfaces.IHash, signingKey []byte, keyType byte, keyLevel byte, st *State, BlockChain string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateregisterAuthAnchor.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	AuthorityIndex := st.AddAuthorityFromChainID(chainID)
 	var oneASK AnchorSigningKey
 
@@ -427,6 +503,11 @@ func registerAuthAnchor(chainID interfaces.IHash, signingKey []byte, keyType byt
 }
 
 func addServerSigningKey(chainID interfaces.IHash, key interfaces.IHash, height uint32, st *State) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateaddServerSigningKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	AuthorityIndex := st.AddAuthorityFromChainID(chainID)
 	if st.IdentityChainID.IsSameAs(chainID) && len(st.serverPendingPrivKeys) > 0 {
 		for i, pubKey := range st.serverPendingPubKeys {

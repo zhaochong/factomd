@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"time"
 )
 
 type BlockExtractor struct {
@@ -21,6 +22,11 @@ type BlockExtractor struct {
 }
 
 func FileNotExists(name string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorFileNotExists.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := os.Stat(name)
 	if os.IsNotExist(err) {
 		return true
@@ -29,6 +35,11 @@ func FileNotExists(name string) bool {
 }
 
 func (be *BlockExtractor) SaveBinary(block interfaces.DatabaseBatchable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorSaveBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := block.MarshalBinary()
 	if err != nil {
 		return err
@@ -53,6 +64,11 @@ func (be *BlockExtractor) SaveBinary(block interfaces.DatabaseBatchable) error {
 }
 
 func (be *BlockExtractor) SaveEntryBinary(entry interfaces.DatabaseBatchable, blockHeight uint32) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorSaveEntryBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := entry.MarshalBinary()
 	if err != nil {
 		return err
@@ -77,6 +93,11 @@ func (be *BlockExtractor) SaveEntryBinary(entry interfaces.DatabaseBatchable, bl
 }
 
 func (be *BlockExtractor) SaveJSON(block interfaces.DatabaseBatchable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorSaveJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := block.(interfaces.Printable).JSONByte()
 	if err != nil {
 		return err
@@ -105,6 +126,11 @@ func (be *BlockExtractor) SaveJSON(block interfaces.DatabaseBatchable) error {
 }
 
 func (be *BlockExtractor) SaveEntryJSON(entry interfaces.DatabaseBatchable, blockHeight uint32) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorSaveEntryJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := entry.(interfaces.Printable).JSONByte()
 	if err != nil {
 		return err
@@ -133,6 +159,11 @@ func (be *BlockExtractor) SaveEntryJSON(entry interfaces.DatabaseBatchable, bloc
 }
 
 func (be *BlockExtractor) ExportEChain(chainID string, db interfaces.DBOverlay) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorExportEChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("ExportEChain %v\n", chainID)
 	id, err := primitives.NewShaHashFromStr(chainID)
 	if err != nil {
@@ -165,6 +196,11 @@ func (be *BlockExtractor) ExportEChain(chainID string, db interfaces.DBOverlay) 
 }
 
 func (be *BlockExtractor) ExportDChain(db interfaces.DBOverlay) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorExportDChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("ExportDChain\n")
 	// get all ecBlocks from db
 	dBlocks, err := db.FetchAllDBlocks()
@@ -186,6 +222,11 @@ func (be *BlockExtractor) ExportDChain(db interfaces.DBOverlay) error {
 }
 
 func (be *BlockExtractor) ExportECChain(db interfaces.DBOverlay) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorExportECChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("ExportECChain\n")
 	// get all ecBlocks from db
 	ecBlocks, err := db.FetchAllECBlocks()
@@ -204,6 +245,11 @@ func (be *BlockExtractor) ExportECChain(db interfaces.DBOverlay) error {
 }
 
 func (be *BlockExtractor) ExportAChain(db interfaces.DBOverlay) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorExportAChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("ExportAChain\n")
 	// get all aBlocks from db
 	aBlocks, err := db.FetchAllABlocks()
@@ -222,6 +268,11 @@ func (be *BlockExtractor) ExportAChain(db interfaces.DBOverlay) error {
 }
 
 func (be *BlockExtractor) ExportFctChain(db interfaces.DBOverlay) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorExportFctChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("ExportFctChain\n")
 	// get all aBlocks from db
 	fBlocks, err := db.FetchAllFBlocks()
@@ -240,6 +291,11 @@ func (be *BlockExtractor) ExportFctChain(db interfaces.DBOverlay) error {
 }
 
 func (be *BlockExtractor) ExportDirBlockInfo(db interfaces.DBOverlay) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorExportDirBlockInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("ExportDirBlockInfo\n")
 	// get all aBlocks from db
 	dbi, err := db.FetchAllDirBlockInfos()
@@ -259,6 +315,11 @@ func (be *BlockExtractor) ExportDirBlockInfo(db interfaces.DBOverlay) error {
 }
 
 func (be *BlockExtractor) ExportBlock(block interfaces.DatabaseBatchable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorExportBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	err := be.SaveBinary(block)
 	if err != nil {
 		return err
@@ -271,6 +332,11 @@ func (be *BlockExtractor) ExportBlock(block interfaces.DatabaseBatchable) error 
 }
 
 func (be *BlockExtractor) ExportEntry(entry interfaces.DatabaseBatchable, height uint32) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorBlockExtractorExportEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	err := be.SaveEntryBinary(entry, height)
 	if err != nil {
 		return err
@@ -289,6 +355,11 @@ var dchain *DChain
 
 // to export individual block once at a time - for debugging ------------------------
 func exportDBlock(block *DirectoryBlock, db interfaces.DBOverlay) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorexportDBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		//log.Println("no blocks to save for chain: " + string (*chain.ChainID))
 		return
@@ -316,6 +387,11 @@ func exportDBlock(block *DirectoryBlock, db interfaces.DBOverlay) {
 }
 
 func exportEBlock(block *EBlock, db interfaces.DBOverlay) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorexportEBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return
 	}
@@ -343,6 +419,11 @@ func exportEBlock(block *EBlock, db interfaces.DBOverlay) {
 }
 
 func exportECBlock(block *ECBlock, db interfaces.DBOverlay) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorexportECBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return
 	}
@@ -369,6 +450,11 @@ func exportECBlock(block *ECBlock, db interfaces.DBOverlay) {
 }
 
 func exportABlock(block *AdminBlock, db interfaces.DBOverlay) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorexportABlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return
 	}
@@ -395,6 +481,11 @@ func exportABlock(block *AdminBlock, db interfaces.DBOverlay) {
 }
 
 func exportFctBlock(block interfaces.IFBlock, db interfaces.DBOverlay) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdblockExtractorexportFctBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return
 	}

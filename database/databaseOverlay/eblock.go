@@ -8,10 +8,16 @@ import (
 	//"github.com/FactomProject/factomd/util"
 	//"sort"
 	"strings"
+	"time"
 )
 
 // ProcessEBlockBatche inserts the EBlock and update all it's ebentries in DB
 func (db *Overlay) ProcessEBlockBatch(eblock interfaces.DatabaseBlockWithEntries, checkForDuplicateEntries bool) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessEBlockBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//Each chain has its own number bucket, otherwise we would have conflicts
 	numberBucket := append(ENTRYBLOCK_CHAIN_NUMBER, eblock.GetChainID().Bytes()...)
 	err := db.ProcessBlockBatch(ENTRYBLOCK, numberBucket, ENTRYBLOCK_SECONDARYINDEX, eblock)
@@ -22,6 +28,11 @@ func (db *Overlay) ProcessEBlockBatch(eblock interfaces.DatabaseBlockWithEntries
 }
 
 func (db *Overlay) ProcessEBlockBatchWithoutHead(eblock interfaces.DatabaseBlockWithEntries, checkForDuplicateEntries bool) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessEBlockBatchWithoutHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//Each chain has its own number bucket, otherwise we would have conflicts
 	numberBucket := append(ENTRYBLOCK_CHAIN_NUMBER, eblock.GetChainID().Bytes()...)
 	err := db.ProcessBlockBatchWithoutHead(ENTRYBLOCK, numberBucket, ENTRYBLOCK_SECONDARYINDEX, eblock)
@@ -32,6 +43,11 @@ func (db *Overlay) ProcessEBlockBatchWithoutHead(eblock interfaces.DatabaseBlock
 }
 
 func (db *Overlay) ProcessEBlockMultiBatch(eblock interfaces.DatabaseBlockWithEntries, checkForDuplicateEntries bool) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessEBlockMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//Each chain has its own number bucket, otherwise we would have conflicts
 	numberBucket := append(ENTRYBLOCK_CHAIN_NUMBER, eblock.GetChainID().Bytes()...)
 	err := db.ProcessBlockMultiBatch(ENTRYBLOCK, numberBucket, ENTRYBLOCK_SECONDARYINDEX, eblock)
@@ -42,6 +58,11 @@ func (db *Overlay) ProcessEBlockMultiBatch(eblock interfaces.DatabaseBlockWithEn
 }
 
 func (db *Overlay) FetchEBlock(hash interfaces.IHash) (interfaces.IEntryBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchEBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.FetchEBlockByPrimary(hash)
 	if err != nil {
 		return nil, err
@@ -54,6 +75,11 @@ func (db *Overlay) FetchEBlock(hash interfaces.IHash) (interfaces.IEntryBlock, e
 
 // FetchEBlockByHash gets an entry block by merkle root from the database.
 func (db *Overlay) FetchEBlockBySecondary(hash interfaces.IHash) (interfaces.IEntryBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchEBlockBySecondary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.FetchBlockBySecondaryIndex(ENTRYBLOCK_SECONDARYINDEX, ENTRYBLOCK, hash, entryBlock.NewEBlock())
 	if err != nil {
 		return nil, err
@@ -66,6 +92,11 @@ func (db *Overlay) FetchEBlockBySecondary(hash interfaces.IHash) (interfaces.IEn
 
 // FetchEBlockByKeyMR gets an entry by hash from the database.
 func (db *Overlay) FetchEBlockByPrimary(hash interfaces.IHash) (interfaces.IEntryBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchEBlockByPrimary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.FetchBlock(ENTRYBLOCK, hash, entryBlock.NewEBlock())
 	if err != nil {
 		return nil, err
@@ -78,11 +109,21 @@ func (db *Overlay) FetchEBlockByPrimary(hash interfaces.IHash) (interfaces.IEntr
 
 // FetchEBKeyMRByHash gets an entry by hash from the database.
 func (db *Overlay) FetchEBKeyMRByHash(hash interfaces.IHash) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchEBKeyMRByHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.FetchPrimaryIndexBySecondaryIndex(ENTRYBLOCK_SECONDARYINDEX, hash)
 }
 
 // FetchAllEBlocksByChain gets all of the blocks by chain id
 func (db *Overlay) FetchAllEBlocksByChain(chainID interfaces.IHash) ([]interfaces.IEntryBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllEBlocksByChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bucket := append(ENTRYBLOCK_CHAIN_NUMBER, chainID.Bytes()...)
 	keyList, err := db.FetchAllBlocksFromBucket(bucket, new(primitives.Hash))
 	if err != nil {
@@ -103,10 +144,20 @@ func (db *Overlay) FetchAllEBlocksByChain(chainID interfaces.IHash) ([]interface
 }
 
 func (db *Overlay) SaveEBlockHead(block interfaces.DatabaseBlockWithEntries, checkForDuplicateEntries bool) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySaveEBlockHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.ProcessEBlockBatch(block, checkForDuplicateEntries)
 }
 
 func (db *Overlay) FetchEBlockHead(chainID interfaces.IHash) (interfaces.IEntryBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchEBlockHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.FetchChainHeadByChainID(ENTRYBLOCK, chainID, entryBlock.NewEBlock())
 	if err != nil {
 		return nil, err
@@ -118,6 +169,11 @@ func (db *Overlay) FetchEBlockHead(chainID interfaces.IHash) (interfaces.IEntryB
 }
 
 func (db *Overlay) FetchAllEBlockChainIDs() ([]interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllEBlockChainIDs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ids, err := db.ListAllKeys(ENTRYBLOCK)
 	if err != nil {
 		return nil, err

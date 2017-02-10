@@ -15,10 +15,16 @@ import (
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // Go through the factoid exchange rate chain and determine if an FER change should be scheduled
 func (this *State) ProcessRecentFERChainEntries() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateProcessRecentFERChainEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Find the FER entry chain
 	FERChainHash, err := primitives.HexToHash(this.FERChainId)
 	if err != nil {
@@ -139,6 +145,11 @@ func (this *State) ProcessRecentFERChainEntries() {
 }
 
 func (this *State) ExchangeRateAuthorityIsValid(e interfaces.IEBEntry) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateExchangeRateAuthorityIsValid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pubStr, err := factoid.PublicKeyStringToECAddressString(this.ExchangeRateAuthorityPublicKey)
 	if err != nil {
 		return false
@@ -177,6 +188,11 @@ func (this *State) ExchangeRateAuthorityIsValid(e interfaces.IEBEntry) bool {
 }
 
 func (this *State) FerEntryIsValid(passedFEREntry interfaces.IFEREntry) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFerEntryIsValid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// fail if expired
 	if passedFEREntry.GetExpirationHeight() < passedFEREntry.GetResidentHeight() {
 		fmt.Println("FER Failed-fail if expired")
@@ -204,6 +220,11 @@ func (this *State) FerEntryIsValid(passedFEREntry interfaces.IFEREntry) bool {
 
 // Returns the higher of the current factoid exchange rate and what it knows will change in the future
 func (this *State) GetPredictiveFER() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetPredictiveFER.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	currentFER := this.GetFactoshisPerEC()
 
 	if (this.FERChangeHeight == 0) || // Check to see if no change has been registered

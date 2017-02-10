@@ -5,6 +5,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 type DirBlockInfo struct {
@@ -33,6 +34,11 @@ var _ interfaces.DatabaseBatchable = (*DirBlockInfo)(nil)
 var _ interfaces.IDirBlockInfo = (*DirBlockInfo)(nil)
 
 func (e *DirBlockInfo) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.DBHash == nil {
 		e.DBHash = primitives.NewZeroHash()
 	}
@@ -48,6 +54,11 @@ func (e *DirBlockInfo) Init() {
 }
 
 func NewDirBlockInfo() *DirBlockInfo {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoNewDirBlockInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbi := new(DirBlockInfo)
 	dbi.DBHash = primitives.NewZeroHash()
 	dbi.BTCTxHash = primitives.NewZeroHash()
@@ -57,69 +68,144 @@ func NewDirBlockInfo() *DirBlockInfo {
 }
 
 func (e *DirBlockInfo) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
 
 func (e *DirBlockInfo) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DirBlockInfo) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (c *DirBlockInfo) New() interfaces.BinaryMarshallableAndCopyable {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoNew.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return NewDirBlockInfo()
 }
 
 func (c *DirBlockInfo) GetDatabaseHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.DBHeight
 }
 
 func (c *DirBlockInfo) GetDBHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.DBHeight
 }
 
 func (c *DirBlockInfo) GetBTCConfirmed() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoGetBTCConfirmed.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.BTCConfirmed
 }
 
 func (c *DirBlockInfo) GetChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoGetChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	id := make([]byte, 32)
 	copy(id, []byte("DirBlockInfo"))
 	return primitives.NewHash(id)
 }
 
 func (c *DirBlockInfo) DatabasePrimaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	return c.DBMerkleRoot
 }
 
 func (c *DirBlockInfo) DatabaseSecondaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	return c.DBHash
 }
 
 func (e *DirBlockInfo) GetDBMerkleRoot() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoGetDBMerkleRoot.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	return e.DBMerkleRoot
 }
 
 func (e *DirBlockInfo) GetBTCTxHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoGetBTCTxHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	return e.BTCTxHash
 }
 
 func (e *DirBlockInfo) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.NewTimestampFromMilliseconds(uint64(e.Timestamp))
 }
 
 func (e *DirBlockInfo) GetBTCBlockHeight() int32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoGetBTCBlockHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.BTCBlockHeight
 }
 
 func (e *DirBlockInfo) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var data primitives.Buffer
 
@@ -133,6 +219,11 @@ func (e *DirBlockInfo) MarshalBinary() ([]byte, error) {
 }
 
 func (e *DirBlockInfo) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dec := gob.NewDecoder(primitives.NewBuffer(data))
 	dbic := newDirBlockInfoCopy()
 	err = dec.Decode(dbic)
@@ -144,11 +235,21 @@ func (e *DirBlockInfo) UnmarshalBinaryData(data []byte) (newData []byte, err err
 }
 
 func (e *DirBlockInfo) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *DirBlockInfo) SetTimestamp(timestamp interfaces.Timestamp) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoSetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Timestamp = timestamp.GetTimeMilli()
 }
 
@@ -173,6 +274,11 @@ type dirBlockInfoCopy struct {
 }
 
 func newDirBlockInfoCopyFromDBI(dbi *DirBlockInfo) *dirBlockInfoCopy {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfonewDirBlockInfoCopyFromDBI.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbic := new(dirBlockInfoCopy)
 	dbic.DBHash = dbi.DBHash
 	dbic.DBHeight = dbi.DBHeight
@@ -187,6 +293,11 @@ func newDirBlockInfoCopyFromDBI(dbi *DirBlockInfo) *dirBlockInfoCopy {
 }
 
 func newDirBlockInfoCopy() *dirBlockInfoCopy {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfonewDirBlockInfoCopy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbi := new(dirBlockInfoCopy)
 	dbi.DBHash = primitives.NewZeroHash()
 	dbi.BTCTxHash = primitives.NewZeroHash()
@@ -196,6 +307,11 @@ func newDirBlockInfoCopy() *dirBlockInfoCopy {
 }
 
 func (dbic *DirBlockInfo) parseDirBlockInfoCopy(dbi *dirBlockInfoCopy) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoDirBlockInfoparseDirBlockInfoCopy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbic.DBHash = dbi.DBHash
 	dbic.DBHeight = dbi.DBHeight
 	dbic.Timestamp = dbi.Timestamp
@@ -209,6 +325,11 @@ func (dbic *DirBlockInfo) parseDirBlockInfoCopy(dbi *dirBlockInfoCopy) {
 
 // NewDirBlockInfoFromDirBlock creates a DirDirBlockInfo from DirectoryBlock
 func NewDirBlockInfoFromDirBlock(dirBlock interfaces.IDirectoryBlock) *DirBlockInfo {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddbInfoNewDirBlockInfoFromDirBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbi := new(DirBlockInfo)
 	dbi.DBHash = dirBlock.GetHash()
 	dbi.DBHeight = dirBlock.GetDatabaseHeight()

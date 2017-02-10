@@ -8,6 +8,7 @@ import (
 	"github.com/FactomProject/factomd/database/boltdb"
 	"github.com/FactomProject/factomd/database/leveldb"
 	"github.com/FactomProject/factomd/database/mapdb"
+	"time"
 )
 
 type HybridDB struct {
@@ -19,12 +20,22 @@ type HybridDB struct {
 var _ interfaces.IDatabase = (*HybridDB)(nil)
 
 func (db *HybridDB) ListAllBuckets() ([][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBListAllBuckets.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 	return db.persistentStorage.ListAllBuckets()
 }
 
 func (db *HybridDB) Trim() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBTrim.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -34,6 +45,11 @@ func (db *HybridDB) Trim() {
 }
 
 func (db *HybridDB) Close() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBClose.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -46,6 +62,11 @@ func (db *HybridDB) Close() error {
 }
 
 func NewLevelMapHybridDB(filename string, create bool) (*HybridDB, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBNewLevelMapHybridDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := new(HybridDB)
 
 	m := new(mapdb.MapDB)
@@ -62,6 +83,11 @@ func NewLevelMapHybridDB(filename string, create bool) (*HybridDB, error) {
 }
 
 func NewBoltMapHybridDB(bucketList [][]byte, filename string) *HybridDB {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBNewBoltMapHybridDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := new(HybridDB)
 
 	m := new(mapdb.MapDB)
@@ -76,6 +102,11 @@ func NewBoltMapHybridDB(bucketList [][]byte, filename string) *HybridDB {
 }
 
 func (db *HybridDB) Put(bucket, key []byte, data interfaces.BinaryMarshallable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBPut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -93,6 +124,11 @@ func (db *HybridDB) Put(bucket, key []byte, data interfaces.BinaryMarshallable) 
 }
 
 func (db *HybridDB) PutInBatch(records []interfaces.Record) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBPutInBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -108,6 +144,11 @@ func (db *HybridDB) PutInBatch(records []interfaces.Record) error {
 }
 
 func (db *HybridDB) Get(bucket, key []byte, destination interfaces.BinaryMarshallable) (interfaces.BinaryMarshallable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBGet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 
@@ -129,6 +170,11 @@ func (db *HybridDB) Get(bucket, key []byte, destination interfaces.BinaryMarshal
 }
 
 func (db *HybridDB) Delete(bucket, key []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBDelete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -145,6 +191,11 @@ func (db *HybridDB) Delete(bucket, key []byte) error {
 }
 
 func (db *HybridDB) ListAllKeys(bucket []byte) ([][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBListAllKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 
@@ -152,6 +203,11 @@ func (db *HybridDB) ListAllKeys(bucket []byte) ([][]byte, error) {
 }
 
 func (db *HybridDB) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAndCopyable) ([]interfaces.BinaryMarshallableAndCopyable, [][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBGetAll.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 
@@ -159,6 +215,11 @@ func (db *HybridDB) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAn
 }
 
 func (db *HybridDB) Clear(bucket []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBClear.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -175,6 +236,11 @@ func (db *HybridDB) Clear(bucket []byte) error {
 }
 
 func (db *HybridDB) DoesKeyExist(bucket, key []byte) (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdhybridDBHybridDBDoesKeyExist.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.RLock()
 	defer db.Sem.RUnlock()
 	exist, err := db.temporaryStorage.DoesKeyExist(bucket, key)

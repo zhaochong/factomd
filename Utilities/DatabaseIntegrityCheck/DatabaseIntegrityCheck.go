@@ -11,12 +11,18 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/database/hybridDB"
+	"time"
 )
 
 const level string = "level"
 const bolt string = "bolt"
 
 func main() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainmain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Println("Usage:")
 	fmt.Println("DatabaseIntegrityCheck level/bolt DBFileLocation")
 	fmt.Println("Database will be analysed for integrity errors")
@@ -53,6 +59,11 @@ func main() {
 }
 
 func CheckDatabase(db interfaces.IDatabase) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainCheckDatabase.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if db == nil {
 		return
 	}
@@ -181,6 +192,11 @@ type BlockSet struct {
 }
 
 func FetchBlockSet(dbo interfaces.DBOverlay, dBlockHash interfaces.IHash) *BlockSet {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainFetchBlockSet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bs := new(BlockSet)
 
 	dBlock, err := dbo.FetchDBlock(dBlockHash)

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"bytes"
+
 	"github.com/FactomProject/factomd/common/adminBlock"
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/factoid"
@@ -72,6 +73,11 @@ type DBStateList struct {
 // Return a -1 on failure.
 //
 func (d *DBState) ValidNext(state *State, next *messages.DBStateMsg) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateValidNext.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dirblk := next.DirectoryBlock
 	dbheight := dirblk.GetHeader().GetDBHeight()
 
@@ -119,6 +125,11 @@ func (d *DBState) ValidNext(state *State, next *messages.DBStateMsg) int {
 }
 
 func (list *DBStateList) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str := "\n========DBStates Start=======\nddddd DBStates\n"
 	str = fmt.Sprintf("dddd %s  Base      = %d\n", str, list.Base)
 	ts := "-nil-"
@@ -168,6 +179,11 @@ func (list *DBStateList) String() string {
 }
 
 func (ds *DBState) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str := ""
 	if ds == nil {
 		str = "  DBState = <nil>\n"
@@ -185,6 +201,11 @@ func (ds *DBState) String() string {
 }
 
 func (list *DBStateList) GetHighestCompletedBlk() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListGetHighestCompletedBlk.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ht := list.Base
 	for i, dbstate := range list.DBStates {
 		if dbstate != nil && dbstate.Locked {
@@ -199,6 +220,11 @@ func (list *DBStateList) GetHighestCompletedBlk() uint32 {
 }
 
 func (list *DBStateList) GetHighestSignedBlk() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListGetHighestSignedBlk.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ht := list.Base
 	for i, dbstate := range list.DBStates {
 		if dbstate != nil && dbstate.Signed {
@@ -213,6 +239,11 @@ func (list *DBStateList) GetHighestSignedBlk() uint32 {
 }
 
 func (list *DBStateList) GetHighestSavedBlk() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListGetHighestSavedBlk.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ht := list.Base
 	for i, dbstate := range list.DBStates {
 		if dbstate != nil && dbstate.Saved {
@@ -228,6 +259,11 @@ func (list *DBStateList) GetHighestSavedBlk() uint32 {
 
 // Once a second at most, we check to see if we need to pull down some blocks to catch up.
 func (list *DBStateList) Catchup(justDoIt bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListCatchup.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// We only check if we need updates once every so often.
 
 	if len(list.State.inMsgQueue) > 1000 {
@@ -313,6 +349,11 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 
 // a contains b, returns true
 func containsServer(haystack []interfaces.IFctServer, needle interfaces.IFctServer) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatecontainsServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, hay := range haystack {
 		if needle.GetChainID().IsSameAs(hay.GetChainID()) {
 			return true
@@ -323,6 +364,11 @@ func containsServer(haystack []interfaces.IFctServer, needle interfaces.IFctServ
 
 // p is previous, d is current
 func (list *DBStateList) FixupLinks(p *DBState, d *DBState) (progress bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListFixupLinks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// If this block is new, then make sure all hashes are fully computed.
 	if !d.IsNew || p == nil {
 		return
@@ -466,6 +512,11 @@ func (list *DBStateList) FixupLinks(p *DBState, d *DBState) (progress bool) {
 }
 
 func (list *DBStateList) ProcessBlocks(d *DBState) (progress bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListProcessBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbht := d.DirectoryBlock.GetHeader().GetDBHeight()
 
 	if d.Locked || d.IsNew {
@@ -634,6 +685,11 @@ func (list *DBStateList) ProcessBlocks(d *DBState) (progress bool) {
 // We don't really do the signing here, but just check that we have all the signatures.
 // If we do, we count that as progress.
 func (list *DBStateList) SignDB(d *DBState) (process bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListSignDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbheight := d.DirectoryBlock.GetHeader().GetDBHeight()
 
 	// If we have the next dbstate in the list, then all the signatures for this dbstate
@@ -670,6 +726,11 @@ func (list *DBStateList) SignDB(d *DBState) (process bool) {
 }
 
 func (list *DBStateList) SaveDBStateToDB(d *DBState) (progress bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListSaveDBStateToDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbheight := int(d.DirectoryBlock.GetHeader().GetDBHeight())
 	// Take the height, and some function of the identity chain, and use that to decide to trim.  That
 	// way, not all nodes in a simulation Trim() at the same time.
@@ -764,6 +825,11 @@ func (list *DBStateList) SaveDBStateToDB(d *DBState) (progress bool) {
 }
 
 func (list *DBStateList) UpdateState() (progress bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListUpdateState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	list.Catchup(false)
 
 	saved := 0
@@ -797,6 +863,11 @@ func (list *DBStateList) UpdateState() (progress bool) {
 }
 
 func (list *DBStateList) Last() *DBState {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListLast.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	last := (*DBState)(nil)
 	for _, ds := range list.DBStates {
 		if ds == nil || ds.DirectoryBlock == nil {
@@ -808,6 +879,11 @@ func (list *DBStateList) Last() *DBState {
 }
 
 func (list *DBStateList) Highest() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListHighest.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	high := list.Base + uint32(len(list.DBStates)) - 1
 	if high == 0 && len(list.DBStates) == 1 {
 		return 1
@@ -817,6 +893,11 @@ func (list *DBStateList) Highest() uint32 {
 
 // Return true if we actually added the dbstate to the list
 func (list *DBStateList) Put(dbState *DBState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListPut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dblk := dbState.DirectoryBlock
 	dbheight := dblk.GetHeader().GetDBHeight()
 
@@ -860,6 +941,11 @@ searchLoop:
 }
 
 func (list *DBStateList) Get(height int) *DBState {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListGet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if height < 0 {
 		return nil
 	}
@@ -877,6 +963,11 @@ func (list *DBStateList) NewDBState(isNew bool,
 	entryCreditBlock interfaces.IEntryCreditBlock,
 	eBlocks []interfaces.IEntryBlock,
 	entries []interfaces.IEBEntry) *DBState {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDBStateListNewDBState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbState := new(DBState)
 
 	dbState.DBHash = directoryBlock.DatabasePrimaryIndex()

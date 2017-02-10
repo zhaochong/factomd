@@ -5,9 +5,15 @@ import (
 	"fmt"
 
 	"github.com/FactomProject/factomd/state"
+	"time"
 )
 
 func Identities(copyDS state.DisplayState) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddataDumpFormattingIdentities.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prt := ""
 	prt = prt + fmt.Sprintf("=== Identity List ===   Total: %d Displaying: All\n", len(copyDS.Identities))
 	for c, i := range copyDS.Identities {
@@ -31,6 +37,11 @@ func Identities(copyDS state.DisplayState) string {
 }
 
 func Authorities(copyDS state.DisplayState) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddataDumpFormattingAuthorities.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prt := ""
 	prt = prt + fmt.Sprintf("=== Authority List ===   Total: %d Displaying: All\n", len(copyDS.Authorities))
 	for c, i := range copyDS.Authorities {
@@ -50,6 +61,11 @@ func Authorities(copyDS state.DisplayState) string {
 }
 
 func MyNodeInfo(copyDS state.DisplayState) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddataDumpFormattingMyNodeInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prt := ""
 	prt = prt + fmt.Sprintf("My Node: %s\n", copyDS.NodeName)
 	if copyDS.IdentityChainID == nil {
@@ -69,6 +85,11 @@ func MyNodeInfo(copyDS state.DisplayState) string {
 }
 
 func returnStatString(i int) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddataDumpFormattingreturnStatString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var stat string
 	switch i {
 	case 0:

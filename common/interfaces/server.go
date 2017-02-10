@@ -6,6 +6,7 @@ package interfaces
 
 import (
 	"fmt"
+	"time"
 )
 
 // This object will hold the public keys for servers that are not
@@ -30,29 +31,64 @@ type Server struct {
 var _ IServer = (*Server)(nil)
 
 func (s *Server) GetName() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdinterfacesServerGetName.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.Name
 }
 
 func (s *Server) GetChainID() IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdinterfacesServerGetChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.ChainID
 }
 
 func (s *Server) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdinterfacesServerString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fmt.Sprintf("%s %s", "Server:", s.GetChainID().String())
 }
 
 func (s *Server) IsOnline() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdinterfacesServerIsOnline.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.Online
 }
 
 func (s *Server) SetOnline(o bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdinterfacesServerSetOnline.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.Online = o
 }
 
 func (s *Server) LeaderToReplace() IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdinterfacesServerLeaderToReplace.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return s.Replace
 }
 
 func (s *Server) SetReplace(h IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdinterfacesServerSetReplace.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.Replace = h
 }

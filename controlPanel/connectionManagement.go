@@ -21,6 +21,11 @@ type AllConnectionsTotals struct {
 }
 
 func NewAllConnectionTotals() *AllConnectionsTotals {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelNewAllConnectionTotals.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	a := new(AllConnectionsTotals)
 	a.PeerQualityAvg = 0
 	a.BytesSentTotal = 0
@@ -40,6 +45,11 @@ type ConnectionsMap struct {
 }
 
 func NewConnectionsMap() *ConnectionsMap {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelNewConnectionsMap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	newCM := new(ConnectionsMap)
 	newCM.Lock.Lock()
 	defer newCM.Lock.Unlock()
@@ -50,6 +60,11 @@ func NewConnectionsMap() *ConnectionsMap {
 }
 
 func (cm *ConnectionsMap) TallyTotals() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapTallyTotals.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cons := cm.GetConnectedCopy()
 	dis := cm.GetDisconnectedCopy()
 	totals := NewAllConnectionTotals()
@@ -83,18 +98,33 @@ func (cm *ConnectionsMap) TallyTotals() {
 }
 
 func (cm *ConnectionsMap) UpdateConnections(connections map[string]p2p.ConnectionMetrics) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapUpdateConnections.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	cm.connected = connections
 }
 
 func hashPeerAddress(addr string) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelhashPeerAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hash := sha256.Sum256([]byte(addr))
 	hashStr := fmt.Sprintf("%x", hash)
 	return hashStr
 }
 
 func (cm *ConnectionsMap) AddConnection(key string, val p2p.ConnectionMetrics) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapAddConnection.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	if _, ok := cm.disconnected[key]; ok {
@@ -104,6 +134,11 @@ func (cm *ConnectionsMap) AddConnection(key string, val p2p.ConnectionMetrics) {
 }
 
 func (cm *ConnectionsMap) RemoveConnection(key string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapRemoveConnection.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	delete(cm.disconnected, key)
@@ -111,6 +146,11 @@ func (cm *ConnectionsMap) RemoveConnection(key string) {
 }
 
 func (cm *ConnectionsMap) Connect(key string, val *p2p.ConnectionMetrics) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapConnect.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	disVal, ok := cm.disconnected[key]
@@ -126,6 +166,11 @@ func (cm *ConnectionsMap) Connect(key string, val *p2p.ConnectionMetrics) bool {
 }
 
 func (cm *ConnectionsMap) GetConnection(key string) *p2p.ConnectionMetrics {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapGetConnection.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	var ok bool
@@ -142,6 +187,11 @@ func (cm *ConnectionsMap) GetConnection(key string) *p2p.ConnectionMetrics {
 }
 
 func (cm *ConnectionsMap) GetConnectedCopy() map[string]p2p.ConnectionMetrics {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapGetConnectedCopy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	newMap := map[string]p2p.ConnectionMetrics{}
@@ -152,6 +202,11 @@ func (cm *ConnectionsMap) GetConnectedCopy() map[string]p2p.ConnectionMetrics {
 }
 
 func (cm *ConnectionsMap) GetDisconnectedCopy() map[string]p2p.ConnectionMetrics {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapGetDisconnectedCopy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	newMap := map[string]p2p.ConnectionMetrics{}
@@ -162,6 +217,11 @@ func (cm *ConnectionsMap) GetDisconnectedCopy() map[string]p2p.ConnectionMetrics
 }
 
 func (cm *ConnectionsMap) Disconnect(key string, val *p2p.ConnectionMetrics) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapDisconnect.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	conVal, ok := cm.connected[key]
@@ -177,6 +237,11 @@ func (cm *ConnectionsMap) Disconnect(key string, val *p2p.ConnectionMetrics) boo
 }
 
 func (cm *ConnectionsMap) CleanDisconnected() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapCleanDisconnected.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cm.Lock.Lock()
 	defer cm.Lock.Unlock()
 	count := 0
@@ -191,10 +256,20 @@ func (cm *ConnectionsMap) CleanDisconnected() int {
 type ConnectionInfoArray []ConnectionInfo
 
 func (slice ConnectionInfoArray) Len() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionInfoArrayLen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return len(slice)
 }
 
 func (slice ConnectionInfoArray) Less(i, j int) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionInfoArrayLess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if slice[i].Connection.MomentConnected.Before(slice[j].Connection.MomentConnected) {
 		return true
 	}
@@ -202,6 +277,11 @@ func (slice ConnectionInfoArray) Less(i, j int) bool {
 }
 
 func (slice ConnectionInfoArray) Swap(i, j int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionInfoArraySwap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
@@ -215,6 +295,11 @@ type ConnectionInfo struct {
 
 // Used to send to front ent
 func (cm *ConnectionsMap) SortedConnections() ConnectionInfoArray {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelConnectionsMapSortedConnections.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	list := make([]ConnectionInfo, 0)
 	cmCopy := cm.GetConnectedCopy()
 	for key := range cmCopy {
@@ -254,6 +339,11 @@ func (cm *ConnectionsMap) SortedConnections() ConnectionInfoArray {
 }
 
 func FormatDuration(initial time.Time) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelFormatDuration.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dif := time.Since(initial)
 	if dif.Hours() > 24 {
 		if int(dif.Hours()/24) == 1 {
@@ -277,6 +367,11 @@ func FormatDuration(initial time.Time) string {
 
 // map[string]p2p.ConnectionMetrics
 func manageConnections(connections chan interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelmanageConnections.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for {
 		select {
 		case connectionsMessage := <-connections:

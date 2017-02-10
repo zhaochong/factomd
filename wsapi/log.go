@@ -6,6 +6,7 @@ package wsapi
 
 import (
 	"github.com/FactomProject/factomd/logger"
+	"time"
 )
 
 // setup subsystem loggers
@@ -16,6 +17,11 @@ var (
 )
 
 func InitLogs(logPath, logLevel string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiInitLogs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	rpcLog = logger.NewLogFromConfig(logPath, logLevel, "RPC")
 	serverLog = logger.NewLogFromConfig(logPath, logLevel, "SERV")
 	wsLog = logger.NewLogFromConfig(logPath, logLevel, "WSAPI")

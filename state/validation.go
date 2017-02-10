@@ -12,6 +12,11 @@ import (
 )
 
 func (state *State) ValidatorLoop() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateValidatorLoop.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	timeStruct := new(Timer)
 	for {
 		// Check if we should shut down.
@@ -79,6 +84,11 @@ type Timer struct {
 }
 
 func (t *Timer) timer(state *State, min int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateTimertimer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t.lastMin = min
 
 	eom := new(messages.EOM)

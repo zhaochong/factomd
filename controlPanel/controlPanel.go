@@ -57,6 +57,11 @@ var (
 )
 
 func directoryExists(path string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPaneldirectoryExists.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return false
@@ -68,6 +73,11 @@ func directoryExists(path string) bool {
 }
 
 func DisplayStateDrain(channel chan state.DisplayState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelDisplayStateDrain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for {
 		select {
 		case ds := <-channel:
@@ -83,6 +93,11 @@ func DisplayStateDrain(channel chan state.DisplayState) {
 
 // Main function. This intiates appropriate variables and starts the control panel serving
 func ServeControlPanel(displayStateChannel chan state.DisplayState, statePointer *state.State, connections chan interface{}, controller *p2p.Controller, gitBuild string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelServeControlPanel.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			// The following recover string indicates an overwrite of existing http.ListenAndServe goroutine
@@ -167,6 +182,11 @@ func ServeControlPanel(displayStateChannel chan state.DisplayState, statePointer
 }
 
 func noStaticFilesFoundHandler(w http.ResponseWriter, r *http.Request) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelnoStaticFilesFoundHandler.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	DisplayStateMutex.RLock()
 	DisplayStateMutex.RUnlock()
 	fmt.Fprintf(w, "The control panel was not able to be correctly loaded because the Web files were not found. \n")
@@ -174,6 +194,11 @@ func noStaticFilesFoundHandler(w http.ResponseWriter, r *http.Request) {
 
 // For all static files. (CSS, JS, IMG, etc...)
 func static(h http.HandlerFunc) http.HandlerFunc {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelstatic.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		if false == checkControlPanelPassword(w, r) {
 			return
@@ -187,6 +212,11 @@ func static(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelindexHandler.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Control Panel has encountered a panic in IndexHandler.\n", r)
@@ -211,6 +241,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func postHandler(w http.ResponseWriter, r *http.Request) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelpostHandler.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Control Panel has encountered a panic in PostHandler.\n", r)
@@ -248,6 +283,11 @@ type SearchedStruct struct {
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelsearchHandler.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Control Panel has encountered a panic in SearchHandler.\n", r)
@@ -271,6 +311,11 @@ var batchQueried = false
 
 // Batches Json in []byte form to an array of json []byte objects
 func factomdBatchHandler(w http.ResponseWriter, r *http.Request) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelfactomdBatchHandler.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if false == checkControlPanelPassword(w, r) {
 		return
 	}
@@ -298,6 +343,11 @@ func factomdBatchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func factomdHandler(w http.ResponseWriter, r *http.Request) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelfactomdHandler.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Control Panel has encountered a panic in FactomdHandler.\n", r)
@@ -319,6 +369,11 @@ func factomdHandler(w http.ResponseWriter, r *http.Request) {
 var requestMutex bool = false
 
 func requestData() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelrequestData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if requestMutex {
 		return
 	}
@@ -333,6 +388,11 @@ func requestData() {
 }
 
 func factomdQuery(item string, value string) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelfactomdQuery.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if !batchQueried {
 		requestData()
 	}
@@ -422,6 +482,11 @@ func factomdQuery(item string, value string) []byte {
 }
 
 func disconnectPeer(hash string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPaneldisconnectPeer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if Controller != nil {
 		fmt.Println("ControlPanel: Sent a disconnect signal.")
 		Controller.Disconnect(hash)
@@ -429,6 +494,11 @@ func disconnectPeer(hash string) {
 }
 
 func getPeers() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetPeers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := json.Marshal(AllConnections.SortedConnections())
 	if err != nil {
 		return []byte(`error`)
@@ -438,6 +508,11 @@ func getPeers() []byte {
 
 // Returns the total and average statistics for the peer table
 func getPeetTotals() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetPeetTotals.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	AllConnections.Lock.Lock()
 	data, err := json.Marshal(AllConnections.Totals)
 	AllConnections.Lock.Unlock()
@@ -472,6 +547,11 @@ type LastDirectoryBlockTransactions struct {
 }
 
 func (d *LastDirectoryBlockTransactions) ContainsEntry(hash interfaces.IHash) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelLastDirectoryBlockTransactionsContainsEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, entry := range d.Entries {
 		if entry.Hash == hash.String() {
 			return true
@@ -481,6 +561,11 @@ func (d *LastDirectoryBlockTransactions) ContainsEntry(hash interfaces.IHash) bo
 }
 
 func (d *LastDirectoryBlockTransactions) ContainsTrans(txid interfaces.IHash) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelLastDirectoryBlockTransactionsContainsTrans.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, trans := range d.FactoidTransactions {
 		if trans.TxID == txid.String() {
 			return true
@@ -496,6 +581,11 @@ var DoingRecentTransactions bool
 var RecentTransactionsMutex sync.Mutex
 
 func toggleDCT() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPaneltoggleDCT.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if DoingRecentTransactions {
 		DoingRecentTransactions = false
 	} else {
@@ -505,6 +595,11 @@ func toggleDCT() {
 
 // Gets all the recent transctions. Will only keep the most recent 100.
 func getRecentTransactions(time.Time) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetRecentTransactions.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	/*defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Control Panel has encountered a panic in GetRecentTransactions.\n", r)
@@ -722,6 +817,11 @@ func getRecentTransactions(time.Time) {
 // currently have 100 of each transaction type. A checkpoint is set each time we check a new height, so we will
 // not check a directory block in the past twice.
 func getPastEntries(last interfaces.IDirectoryBlock, eNeeded int, fNeeded int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetPastEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	height := last.GetHeader().GetDBHeight()
 
 	next := last.GetHeader().GetPrevKeyMR()
@@ -812,12 +912,22 @@ func getPastEntries(last interfaces.IDirectoryBlock, eNeeded int, fNeeded int) {
 
 // For go routines. Calls function once each duration.
 func doEvery(d time.Duration, f func(time.Time)) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPaneldoEvery.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for x := range time.Tick(d) {
 		f(x)
 	}
 }
 
 func checkControlPanelPassword(response http.ResponseWriter, request *http.Request) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelcheckControlPanelPassword.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if false == checkAuthHeader(request) {
 		remoteIP := ""
 		remoteIP += strings.Split(request.RemoteAddr, ":")[0]
@@ -830,6 +940,11 @@ func checkControlPanelPassword(response http.ResponseWriter, request *http.Reque
 }
 
 func checkAuthHeader(r *http.Request) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelcheckAuthHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if "" == StatePointer.GetRpcUser() {
 		//no username was specified in the config file or command line, meaning factomd control panel is open access
 		return true

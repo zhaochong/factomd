@@ -9,6 +9,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"time"
+
 	"github.com/FactomProject/factomd/common/adminBlock"
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/directoryBlock"
@@ -44,6 +46,11 @@ type DBStateMsg struct {
 var _ interfaces.IMsg = (*DBStateMsg)(nil)
 
 func (a *DBStateMsg) IsSameAs(b *DBStateMsg) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			return
@@ -100,10 +107,20 @@ func (a *DBStateMsg) IsSameAs(b *DBStateMsg) bool {
 }
 
 func (m *DBStateMsg) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.DirectoryBlock.GetHash()
 }
 
 func (m *DBStateMsg) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//	data, _ := m.MarshalBinary()
 	//	return primitives.Sha(data)
 
@@ -112,6 +129,11 @@ func (m *DBStateMsg) GetHash() interfaces.IHash {
 }
 
 func (m *DBStateMsg) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -123,10 +145,20 @@ func (m *DBStateMsg) GetMsgHash() interfaces.IHash {
 }
 
 func (m *DBStateMsg) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.DBSTATE_MSG
 }
 
 func (m *DBStateMsg) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Timestamp
 }
 
@@ -135,6 +167,11 @@ func (m *DBStateMsg) GetTimestamp() interfaces.Timestamp {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *DBStateMsg) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// No matter what, a block has to have what a block has to have.
 	if m.DirectoryBlock == nil || m.AdminBlock == nil || m.FactoidBlock == nil || m.EntryCreditBlock == nil {
 		state.AddStatus(fmt.Sprintf("DBStateMsg.Validate() Fail  Doesn't have all the blocks ht: %d", m.DirectoryBlock.GetHeader().GetDBHeight()))
@@ -185,6 +222,11 @@ func (m *DBStateMsg) Validate(state interfaces.IState) int {
 }
 
 func (m *DBStateMsg) SigTally(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgSigTally.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbheight := m.DirectoryBlock.GetHeader().GetDBHeight()
 
 	validSigCount := 0
@@ -215,31 +257,66 @@ func (m *DBStateMsg) SigTally(state interfaces.IState) int {
 	return validSigCount
 }
 
-func (m *DBStateMsg) ComputeVMIndex(state interfaces.IState) {}
+func (m *DBStateMsg) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+}
 
 // Execute the leader functions of the given message
 func (m *DBStateMsg) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.FollowerExecute(state)
 }
 
 func (m *DBStateMsg) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.FollowerExecuteDBState(m)
 }
 
 // Acknowledgements do not go into the process list.
 func (e *DBStateMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	panic("DBStatemsg should never have its Process() method called")
 }
 
 func (e *DBStateMsg) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DBStateMsg) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (m *DBStateMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block State Message: %v", r)
@@ -317,11 +394,21 @@ func (m *DBStateMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error
 }
 
 func (m *DBStateMsg) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *DBStateMsg) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -389,6 +476,11 @@ func (m *DBStateMsg) MarshalBinary() ([]byte, error) {
 }
 
 func (m *DBStateMsg) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDBStateMsgString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, _ := m.MarshalBinary()
 	return fmt.Sprintf("DBState: dbht:%3d [size: %11s] dblock %6x admin %6x fb %6x ec %6x hash %6x",
 		m.DirectoryBlock.GetHeader().GetDBHeight(),
@@ -408,6 +500,11 @@ func NewDBStateMsg(timestamp interfaces.Timestamp,
 	eBlocks []interfaces.IEntryBlock,
 	entries []interfaces.IEBEntry,
 	sigList []interfaces.IFullSignature) interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesNewDBStateMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	msg := new(DBStateMsg)
 	msg.NoResend = true
 

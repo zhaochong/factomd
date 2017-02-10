@@ -14,6 +14,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 //AnchorRecord is used to construct anchor chain
@@ -47,19 +48,39 @@ var _ interfaces.Printable = (*AnchorRecord)(nil)
 var _ interfaces.IAnchorRecord = (*AnchorRecord)(nil)
 
 func (e *AnchorRecord) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorAnchorRecordJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AnchorRecord) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorAnchorRecordJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AnchorRecord) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorAnchorRecordString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
 
 func (ar *AnchorRecord) Marshal() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorAnchorRecordMarshal.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := json.Marshal(ar)
 	if err != nil {
 		return nil, err
@@ -68,6 +89,11 @@ func (ar *AnchorRecord) Marshal() ([]byte, error) {
 }
 
 func (ar *AnchorRecord) MarshalAndSign(priv interfaces.Signer) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorAnchorRecordMarshalAndSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := ar.Marshal()
 	if err != nil {
 		return nil, err
@@ -77,6 +103,11 @@ func (ar *AnchorRecord) MarshalAndSign(priv interfaces.Signer) ([]byte, error) {
 }
 
 func (ar *AnchorRecord) MarshalAndSignV2(priv interfaces.Signer) ([]byte, []byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorAnchorRecordMarshalAndSignV2.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := ar.Marshal()
 	if err != nil {
 		return nil, nil, err
@@ -86,6 +117,11 @@ func (ar *AnchorRecord) MarshalAndSignV2(priv interfaces.Signer) ([]byte, []byte
 }
 
 func (ar *AnchorRecord) Unmarshal(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorAnchorRecordUnmarshal.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(data) == 0 {
 		return fmt.Errorf("Invalid data passed")
 	}
@@ -104,6 +140,11 @@ func (ar *AnchorRecord) Unmarshal(data []byte) error {
 }
 
 func UnmarshalAnchorRecord(data []byte) (*AnchorRecord, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorUnmarshalAnchorRecord.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ar := new(AnchorRecord)
 	err := ar.Unmarshal(data)
 	if err != nil {
@@ -113,6 +154,11 @@ func UnmarshalAnchorRecord(data []byte) (*AnchorRecord, error) {
 }
 
 func UnmarshalAndValidateAnchorRecord(data []byte, publicKeys []interfaces.Verifier) (*AnchorRecord, bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorUnmarshalAndValidateAnchorRecord.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(data) == 0 {
 		return nil, false, fmt.Errorf("Invalid data passed")
 	}
@@ -154,6 +200,11 @@ func UnmarshalAndValidateAnchorRecord(data []byte, publicKeys []interfaces.Verif
 }
 
 func UnmarshalAndValidateAnchorRecordV2(data []byte, extIDs [][]byte, publicKeys []interfaces.Verifier) (*AnchorRecord, bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorUnmarshalAndValidateAnchorRecordV2.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(data) == 0 {
 		return nil, false, fmt.Errorf("Invalid data passed")
 	}
@@ -188,6 +239,11 @@ func UnmarshalAndValidateAnchorRecordV2(data []byte, extIDs [][]byte, publicKeys
 }
 
 func UnmarshalAndValidateAnchorEntryAnyVersion(entry interfaces.IEBEntry, publicKeys []interfaces.Verifier) (*AnchorRecord, bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorUnmarshalAndValidateAnchorEntryAnyVersion.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ar, valid, err := UnmarshalAndValidateAnchorRecord(entry.GetContent(), publicKeys)
 	if ar == nil {
 		ar, valid, err = UnmarshalAndValidateAnchorRecordV2(entry.GetContent(), entry.ExternalIDs(), publicKeys)
@@ -197,6 +253,11 @@ func UnmarshalAndValidateAnchorEntryAnyVersion(entry interfaces.IEBEntry, public
 }
 
 func CreateAnchorRecordFromDBlock(dBlock interfaces.IDirectoryBlock) *AnchorRecord {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdanchorCreateAnchorRecordFromDBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ar := new(AnchorRecord)
 	ar.AnchorRecordVer = 1
 	ar.DBHeight = dBlock.GetHeader().GetDBHeight()

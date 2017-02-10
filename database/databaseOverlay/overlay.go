@@ -16,6 +16,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/database/blockExtractor"
+	"time"
 )
 
 // the "table" prefix
@@ -70,6 +71,11 @@ var (
 var ConstantNamesMap map[string]string
 
 func init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayinit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ConstantNamesMap = map[string]string{}
 	ConstantNamesMap[string(DIRECTORYBLOCK)] = "DirectoryBlock"
 	ConstantNamesMap[string(DIRECTORYBLOCK_NUMBER)] = "DirectoryBlockNumber"
@@ -120,25 +126,50 @@ var _ interfaces.IDatabase = (*Overlay)(nil)
 var _ interfaces.DBOverlay = (*Overlay)(nil)
 
 func (db *Overlay) ListAllBuckets() ([][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayListAllBuckets.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.ListAllBuckets()
 }
 
 func (db *Overlay) SetExportData(path string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySetExportData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.ExportData = true
 	db.ExportDataPath = path
 	db.BlockExtractor.DataStorePath = path
 }
 
 func (db *Overlay) StartMultiBatch() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayStartMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.BatchSemaphore.Lock()
 	db.MultiBatch = make([]interfaces.Record, 0, 128)
 }
 
 func (db *Overlay) PutInMultiBatch(records []interfaces.Record) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayPutInMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.MultiBatch = append(db.MultiBatch, records...)
 }
 
 func (db *Overlay) ExecuteMultiBatch() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayExecuteMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		db.MultiBatch = nil
 		db.BatchSemaphore.Unlock()
@@ -147,49 +178,104 @@ func (db *Overlay) ExecuteMultiBatch() error {
 }
 
 func (db *Overlay) PutInBatch(records []interfaces.Record) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayPutInBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.PutInBatch(records)
 }
 
 func (db *Overlay) Put(bucket, key []byte, data interfaces.BinaryMarshallable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayPut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.Put(bucket, key, data)
 }
 
 func (db *Overlay) ListAllKeys(bucket []byte) ([][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayListAllKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.ListAllKeys(bucket)
 }
 
 func (db *Overlay) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAndCopyable) ([]interfaces.BinaryMarshallableAndCopyable, [][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayGetAll.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.GetAll(bucket, sample)
 }
 
 func (db *Overlay) Get(bucket, key []byte, destination interfaces.BinaryMarshallable) (interfaces.BinaryMarshallable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayGet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.Get(bucket, key, destination)
 }
 
 func (db *Overlay) Clear(bucket []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayClear.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.Clear(bucket)
 }
 
 func (db *Overlay) Close() (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayClose.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.Close()
 }
 
 // Tell the underlying database to Trim itself
 func (db *Overlay) Trim() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayTrim.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.DB.Trim()
 }
 
 func (db *Overlay) Delete(bucket, key []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayDelete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.Delete(bucket, key)
 }
 
 func NewOverlay(db interfaces.IDatabase) *Overlay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayNewOverlay.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := new(Overlay)
 	answer.DB = db
 	return answer
 }
 
 func (db *Overlay) FetchBlockByHeight(heightBucket []byte, blockBucket []byte, blockHeight uint32, dst interfaces.DatabaseBatchable) (interfaces.DatabaseBatchable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchBlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	index, err := db.FetchBlockIndexByHeight(heightBucket, blockHeight)
 	if err != nil {
 		return nil, err
@@ -201,6 +287,11 @@ func (db *Overlay) FetchBlockByHeight(heightBucket []byte, blockBucket []byte, b
 }
 
 func (db *Overlay) FetchBlockIndexByHeight(bucket []byte, blockHeight uint32) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchBlockIndexByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	key := make([]byte, 4)
 	binary.BigEndian.PutUint32(key, blockHeight)
 
@@ -215,6 +306,11 @@ func (db *Overlay) FetchBlockIndexByHeight(bucket []byte, blockHeight uint32) (i
 }
 
 func (db *Overlay) FetchPrimaryIndexBySecondaryIndex(secondaryIndexBucket []byte, key interfaces.IHash) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchPrimaryIndexBySecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.Get(secondaryIndexBucket, key.Bytes(), new(primitives.Hash))
 	if err != nil {
 		return nil, err
@@ -226,6 +322,11 @@ func (db *Overlay) FetchPrimaryIndexBySecondaryIndex(secondaryIndexBucket []byte
 }
 
 func (db *Overlay) FetchBlockBySecondaryIndex(secondaryIndexBucket, blockBucket []byte, index interfaces.IHash, dst interfaces.DatabaseBatchable) (interfaces.DatabaseBatchable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchBlockBySecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hash, err := db.FetchPrimaryIndexBySecondaryIndex(secondaryIndexBucket, index)
 	if err != nil {
 		return nil, err
@@ -237,6 +338,11 @@ func (db *Overlay) FetchBlockBySecondaryIndex(secondaryIndexBucket, blockBucket 
 }
 
 func (db *Overlay) FetchBlock(bucket []byte, key interfaces.IHash, dst interfaces.DatabaseBatchable) (interfaces.DatabaseBatchable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.Get(bucket, key.Bytes(), dst)
 	if err != nil {
 		return nil, err
@@ -248,6 +354,11 @@ func (db *Overlay) FetchBlock(bucket []byte, key interfaces.IHash, dst interface
 }
 
 func (db *Overlay) FetchAllBlocksFromBucket(bucket []byte, sample interfaces.BinaryMarshallableAndCopyable) ([]interfaces.BinaryMarshallableAndCopyable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllBlocksFromBucket.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer, _, err := db.GetAll(bucket, sample)
 	if err != nil {
 		return nil, err
@@ -256,6 +367,11 @@ func (db *Overlay) FetchAllBlocksFromBucket(bucket []byte, sample interfaces.Bin
 }
 
 func (db *Overlay) FetchAllBlockKeysFromBucket(bucket []byte) ([]interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllBlockKeysFromBucket.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entries, err := db.ListAllKeys(bucket)
 	if err != nil {
 		return nil, err
@@ -271,6 +387,11 @@ func (db *Overlay) FetchAllBlockKeysFromBucket(bucket []byte) ([]interfaces.IHas
 }
 
 func (db *Overlay) Insert(bucket []byte, entry interfaces.DatabaseBatchable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayInsert.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	err := db.Put(bucket, entry.DatabasePrimaryIndex().Bytes(), entry)
 	if err != nil {
 		return err
@@ -279,6 +400,11 @@ func (db *Overlay) Insert(bucket []byte, entry interfaces.DatabaseBatchable) err
 }
 
 func (db *Overlay) ProcessBlockMultiBatch(blockBucket, numberBucket, secondaryIndexBucket []byte, block interfaces.DatabaseBatchable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessBlockMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return nil
 	}
@@ -312,6 +438,11 @@ func (db *Overlay) ProcessBlockMultiBatch(blockBucket, numberBucket, secondaryIn
 }
 
 func (db *Overlay) ProcessBlockBatch(blockBucket, numberBucket, secondaryIndexBucket []byte, block interfaces.DatabaseBatchable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessBlockBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return nil
 	}
@@ -347,6 +478,11 @@ func (db *Overlay) ProcessBlockBatch(blockBucket, numberBucket, secondaryIndexBu
 }
 
 func (db *Overlay) ProcessBlockBatchWithoutHead(blockBucket, numberBucket, secondaryIndexBucket []byte, block interfaces.DatabaseBatchable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessBlockBatchWithoutHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return nil
 	}
@@ -373,6 +509,11 @@ func (db *Overlay) ProcessBlockBatchWithoutHead(blockBucket, numberBucket, secon
 }
 
 func (db *Overlay) ProcessBlockMultiBatchWithoutHead(blockBucket, numberBucket, secondaryIndexBucket []byte, block interfaces.DatabaseBatchable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessBlockMultiBatchWithoutHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return nil
 	}
@@ -397,6 +538,11 @@ func (db *Overlay) ProcessBlockMultiBatchWithoutHead(blockBucket, numberBucket, 
 
 // FetchHeadMRByChainID gets an index of the highest block from the database.
 func (db *Overlay) FetchHeadIndexByChainID(chainID interfaces.IHash) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchHeadIndexByChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if chainID == nil {
 		return nil, nil
 	}
@@ -416,6 +562,11 @@ func (db *Overlay) FetchHeadIndexByChainID(chainID interfaces.IHash) (interfaces
 }
 
 func (db *Overlay) FetchChainHeadByChainID(bucket []byte, chainID interfaces.IHash, dst interfaces.DatabaseBatchable) (interfaces.DatabaseBatchable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchChainHeadByChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	blockHash, err := db.FetchHeadIndexByChainID(chainID)
 	if err != nil {
 		return nil, err
@@ -428,6 +579,11 @@ func (db *Overlay) FetchChainHeadByChainID(bucket []byte, chainID interfaces.IHa
 
 //Use endHeight of -1 (or other negative numbers) to fetch all / as many entries as possibe
 func (db *Overlay) FetchBlockIndexesInHeightRange(numberBucket []byte, startHeight, endHeight int64) ([]interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchBlockIndexesInHeightRange.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var endidx int64
 	if endHeight < 0 {
 		endidx = startHeight + constants.MaxBlocksPerMsg
@@ -452,10 +608,20 @@ func (db *Overlay) FetchBlockIndexesInHeightRange(numberBucket []byte, startHeig
 }
 
 func (db *Overlay) DoesKeyExist(bucket, key []byte) (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayDoesKeyExist.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.DB.DoesKeyExist(bucket, key)
 }
 
 func (db *Overlay) GetEntryType(hash interfaces.IHash) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayGetEntryType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if hash == nil {
 		return nil, nil
 	}

@@ -8,6 +8,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"time"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -36,17 +38,38 @@ type ServerFault struct {
 var _ interfaces.IMsg = (*ServerFault)(nil)
 var _ Signable = (*ServerFault)(nil)
 
-func (m *ServerFault) Process(uint32, interfaces.IState) bool { return true }
+func (m *ServerFault) Process(uint32, interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+	return true
+}
 
 func (m *ServerFault) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *ServerFault) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *ServerFault) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -58,6 +81,11 @@ func (m *ServerFault) GetMsgHash() interfaces.IHash {
 }
 
 func (m *ServerFault) GetCoreHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultGetCoreHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := m.MarshalForSignature()
 	if err != nil {
 		return nil
@@ -66,14 +94,29 @@ func (m *ServerFault) GetCoreHash() interfaces.IHash {
 }
 
 func (m *ServerFault) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Timestamp
 }
 
 func (m *ServerFault) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.FED_SERVER_FAULT_MSG
 }
 
 func (m *ServerFault) MarshalForSignature() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Server Fault Core: %v", r)
@@ -108,6 +151,11 @@ func (m *ServerFault) MarshalForSignature() (data []byte, err error) {
 }
 
 func (m *ServerFault) PreMarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultPreMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Invalid Server Fault: %v", r)
@@ -142,6 +190,11 @@ func (m *ServerFault) PreMarshalBinary() (data []byte, err error) {
 }
 
 func (m *ServerFault) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	resp, err := m.PreMarshalBinary()
 	if err != nil {
 		return nil, err
@@ -160,6 +213,11 @@ func (m *ServerFault) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *ServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling With Signatures Invalid Server Fault: %v", r)
@@ -209,19 +267,39 @@ func (m *ServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (m *ServerFault) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *ServerFault) GetSignature() interfaces.IFullSignature {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Signature
 }
 
 func (m *ServerFault) VerifySignature() (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return VerifyMessage(m)
 }
 
 func (m *ServerFault) Sign(key interfaces.Signer) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -231,6 +309,11 @@ func (m *ServerFault) Sign(key interfaces.Signer) error {
 }
 
 func (m *ServerFault) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var sig [3]byte
 
 	if m.Signature != nil {
@@ -251,6 +334,11 @@ func (m *ServerFault) String() string {
 }
 
 func (m *ServerFault) GetDBHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.DBHeight
 }
 
@@ -259,6 +347,11 @@ func (m *ServerFault) GetDBHeight() uint32 {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *ServerFault) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.Signature == nil {
 		return -1
 	}
@@ -273,26 +366,56 @@ func (m *ServerFault) Validate(state interfaces.IState) int {
 }
 
 func (m *ServerFault) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 // Execute the leader functions of the given message
 func (m *ServerFault) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.FollowerExecute(state)
 }
 
 func (m *ServerFault) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.FollowerExecuteSFault(m)
 }
 
 func (e *ServerFault) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ServerFault) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (a *ServerFault) IsSameAs(b *ServerFault) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesServerFaultIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -318,6 +441,11 @@ func (a *ServerFault) IsSameAs(b *ServerFault) bool {
 //*******************************************************************************
 
 func NewServerFault(serverID interfaces.IHash, auditServerID interfaces.IHash, vmIndex int, dbheight uint32, height uint32, systemHeight int, timeStamp interfaces.Timestamp) *ServerFault {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesNewServerFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sf := new(ServerFault)
 	sf.VMIndex = byte(vmIndex)
 	sf.DBHeight = dbheight

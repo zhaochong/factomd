@@ -7,12 +7,18 @@ package state
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 var cntsMutex sync.Mutex
 var cnts map[string]int
 
 func PrintState(state *State) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatePrintState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if cnts == nil {
 		cnts = make(map[string]int, 0)
 	}

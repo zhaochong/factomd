@@ -11,12 +11,18 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/database/hybridDB"
+	"time"
 )
 
 const level string = "level"
 const bolt string = "bolt"
 
 func main() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainmain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Println("Usage:")
 	fmt.Println("BlockExtractor level/bolt DBFileLocation")
 	fmt.Println("Database will be dumped into a json-formatted text file")
@@ -56,6 +62,11 @@ func main() {
 }
 
 func ExportDatabaseJSON(db interfaces.IDatabase, convertNames bool) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainExportDatabaseJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("Exporting the database\n")
 	if db == nil {
 		return nil
@@ -115,6 +126,11 @@ func ExportDatabaseJSON(db interfaces.IDatabase, convertNames bool) error {
 }
 
 func KeyToName(key []byte) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainKeyToName.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	name, ok := databaseOverlay.ConstantNamesMap[string(key)]
 	if ok == true {
 		return name

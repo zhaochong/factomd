@@ -188,6 +188,11 @@ WalletdLocation                       = "localhost:8089"
 `
 
 func (s *FactomdConfig) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilFactomdConfigString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	out.WriteString(fmt.Sprintf("\nFactomd Config"))
@@ -249,14 +254,29 @@ func (s *FactomdConfig) String() string {
 }
 
 func ConfigFilename() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilConfigFilename.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return GetHomeDir() + "/.factom/m2/factomd.conf"
 }
 
 func GetConfigFilename(dir string) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilGetConfigFilename.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return GetHomeDir() + "/.factom/" + dir + "/factomd.conf"
 }
 
 func GetChangeAcksHeight(filename string) (change uint32, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilGetChangeAcksHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error getting acks - %v\n", r)
@@ -269,6 +289,11 @@ func GetChangeAcksHeight(filename string) (change uint32, err error) {
 }
 
 func ReadConfig(filename string) *FactomdConfig {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilReadConfig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if filename == "" {
 		filename = ConfigFilename()
 	}
@@ -312,6 +337,11 @@ func ReadConfig(filename string) *FactomdConfig {
 }
 
 func GetHomeDir() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdutilGetHomeDir.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Get the OS specific home directory via the Go standard lib.
 	var homeDir string
 	usr, err := user.Current()

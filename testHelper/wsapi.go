@@ -6,9 +6,15 @@ import (
 	"net/http"
 
 	"github.com/FactomProject/web"
+	"time"
 )
 
 func GetRespMap(context *web.Context) map[string]interface{} {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperGetRespMap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	j := GetBody(context)
 
 	if j == "" {
@@ -24,6 +30,11 @@ func GetRespMap(context *web.Context) map[string]interface{} {
 }
 
 func UnmarshalResp(context *web.Context, dst interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperUnmarshalResp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	j := GetBody(context)
 
 	type rtn struct {
@@ -41,6 +52,11 @@ func UnmarshalResp(context *web.Context, dst interface{}) {
 }
 
 func UnmarshalRespDirectly(context *web.Context, dst interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperUnmarshalRespDirectly.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	j := GetBody(context)
 
 	err := json.Unmarshal([]byte(j), dst)
@@ -51,6 +67,11 @@ func UnmarshalRespDirectly(context *web.Context, dst interface{}) {
 }
 
 func GetRespText(context *web.Context) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperGetRespText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	unmarshalled := GetRespMap(context)
 	if unmarshalled["Response"] != nil {
 		marshalled, err := json.Marshal(unmarshalled["Response"])
@@ -68,10 +89,20 @@ func GetRespText(context *web.Context) string {
 }
 
 func ClearContextResponseWriter(context *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperClearContextResponseWriter.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	context.ResponseWriter = new(TestResponseWriter)
 }
 
 func CreateWebContext() *web.Context {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperCreateWebContext.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	context := new(web.Context)
 	context.Server = new(web.Server)
 	context.Server.Env = map[string]interface{}{}
@@ -90,6 +121,11 @@ type TestResponseWriter struct {
 var _ http.ResponseWriter = (*TestResponseWriter)(nil)
 
 func (t *TestResponseWriter) Header() http.Header {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperTestResponseWriterHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if t.Head == nil {
 		t.Head = map[string][]string{}
 	}
@@ -97,14 +133,29 @@ func (t *TestResponseWriter) Header() http.Header {
 }
 
 func (t *TestResponseWriter) WriteHeader(h int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperTestResponseWriterWriteHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t.HeaderCode = h
 }
 
 func (t *TestResponseWriter) Write(b []byte) (int, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperTestResponseWriterWrite.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t.Body = t.Body + string(b)
 	return len(b), nil
 }
 
 func GetBody(context *web.Context) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdtestHelperGetBody.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return context.ResponseWriter.(*TestResponseWriter).Body
 }

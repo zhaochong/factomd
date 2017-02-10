@@ -12,11 +12,17 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 var DataStorePath string = "./receipts"
 
 func FileNotExists(name string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsFileNotExists.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := os.Stat(name)
 	if os.IsNotExist(err) {
 		return true
@@ -25,6 +31,11 @@ func FileNotExists(name string) bool {
 }
 
 func Save(receipt *Receipt) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsSave.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := receipt.JSONByte()
 	if err != nil {
 		return err
@@ -55,6 +66,11 @@ func Save(receipt *Receipt) error {
 }
 
 func ExportEntryReceipt(entryID string, dbo interfaces.DBOverlay) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsExportEntryReceipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h, err := primitives.NewShaHashFromStr(entryID)
 	if err != nil {
 		return err
@@ -67,6 +83,11 @@ func ExportEntryReceipt(entryID string, dbo interfaces.DBOverlay) error {
 }
 
 func ExportAllEntryReceipts(dbo interfaces.DBOverlay) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdreceiptsExportAllEntryReceipts.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entryIDs, err := dbo.FetchAllEntryIDs()
 	if err != nil {
 		return err

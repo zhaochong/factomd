@@ -9,6 +9,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 type IncreaseBalance struct {
@@ -25,6 +26,11 @@ var _ interfaces.ShortInterpretable = (*IncreaseBalance)(nil)
 var _ interfaces.IECBlockEntry = (*IncreaseBalance)(nil)
 
 func (e *IncreaseBalance) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.ECPubKey == nil {
 		e.ECPubKey = new(primitives.ByteSlice32)
 	}
@@ -34,6 +40,11 @@ func (e *IncreaseBalance) Init() {
 }
 
 func (e *IncreaseBalance) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf(" %-20s\n", "IncreaseBalance"))
@@ -46,16 +57,31 @@ func (e *IncreaseBalance) String() string {
 }
 
 func NewIncreaseBalance() *IncreaseBalance {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockNewIncreaseBalance.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	r := new(IncreaseBalance)
 	r.Init()
 	return r
 }
 
 func (a *IncreaseBalance) GetEntryHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceGetEntryHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 func (e *IncreaseBalance) Hash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -64,26 +90,56 @@ func (e *IncreaseBalance) Hash() interfaces.IHash {
 }
 
 func (e *IncreaseBalance) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.Hash()
 }
 
 func (e *IncreaseBalance) GetSigHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceGetSigHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 func (b *IncreaseBalance) ECID() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceECID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ECIDBalanceIncrease
 }
 
 func (b *IncreaseBalance) IsInterpretable() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceIsInterpretable.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return false
 }
 
 func (b *IncreaseBalance) Interpret() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceInterpret.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ""
 }
 
 func (b *IncreaseBalance) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.Init()
 	buf := new(primitives.Buffer)
 
@@ -99,6 +155,11 @@ func (b *IncreaseBalance) MarshalBinary() ([]byte, error) {
 }
 
 func (b *IncreaseBalance) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling IncreaseBalance: %v", r)
@@ -134,18 +195,38 @@ func (b *IncreaseBalance) UnmarshalBinaryData(data []byte) (newData []byte, err 
 }
 
 func (b *IncreaseBalance) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *IncreaseBalance) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *IncreaseBalance) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *IncreaseBalance) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockIncreaseBalanceGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }

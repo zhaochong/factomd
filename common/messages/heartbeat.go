@@ -11,6 +11,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 //A placeholder structure for messages
@@ -33,6 +34,11 @@ var _ interfaces.IMsg = (*Heartbeat)(nil)
 var _ Signable = (*Heartbeat)(nil)
 
 func (a *Heartbeat) IsSameAs(b *Heartbeat) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -71,14 +77,29 @@ func (a *Heartbeat) IsSameAs(b *Heartbeat) bool {
 }
 
 func (m *Heartbeat) Process(uint32, interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return true
 }
 
 func (m *Heartbeat) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *Heartbeat) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.hash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -90,6 +111,11 @@ func (m *Heartbeat) GetHash() interfaces.IHash {
 }
 
 func (m *Heartbeat) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -101,14 +127,29 @@ func (m *Heartbeat) GetMsgHash() interfaces.IHash {
 }
 
 func (m *Heartbeat) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Timestamp
 }
 
 func (m *Heartbeat) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.HEARTBEAT_MSG
 }
 
 func (m *Heartbeat) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling HeartBeat: %v", r)
@@ -157,11 +198,21 @@ func (m *Heartbeat) UnmarshalBinaryData(data []byte) (newData []byte, err error)
 }
 
 func (m *Heartbeat) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *Heartbeat) MarshalForSignature() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.DBlockHash == nil || m.IdentityChainID == nil {
 		return nil, fmt.Errorf("Message is incomplete")
 	}
@@ -193,6 +244,11 @@ func (m *Heartbeat) MarshalForSignature() (data []byte, err error) {
 }
 
 func (m *Heartbeat) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	resp, err := m.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -209,18 +265,38 @@ func (m *Heartbeat) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *Heartbeat) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fmt.Sprintf("HeartBeat ID[%x] dbht %d ts %d", m.IdentityChainID.Bytes()[3:5], m.DBHeight, m.Timestamp.GetTimeSeconds())
 }
 
 func (m *Heartbeat) ChainID() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 func (m *Heartbeat) ListHeight() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatListHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return 0
 }
 
 func (m *Heartbeat) SerialHash() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatSerialHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
@@ -229,6 +305,11 @@ func (m *Heartbeat) SerialHash() []byte {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *Heartbeat) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	now := state.GetTimestamp()
 
 	if now.GetTimeSeconds()-m.Timestamp.GetTimeSeconds() > 60 {
@@ -262,14 +343,29 @@ func (m *Heartbeat) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *Heartbeat) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 // Execute the leader functions of the given message
 func (m *Heartbeat) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.FollowerExecute(state)
 }
 
 func (m *Heartbeat) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, auditServer := range state.GetAuditServers(state.GetLeaderHeight()) {
 		if auditServer.GetChainID().IsSameAs(m.IdentityChainID) {
 			if m.IdentityChainID.IsSameAs(state.GetIdentityChainID()) {
@@ -283,14 +379,29 @@ func (m *Heartbeat) FollowerExecute(state interfaces.IState) {
 }
 
 func (e *Heartbeat) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Heartbeat) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (m *Heartbeat) Sign(key interfaces.Signer) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -300,9 +411,19 @@ func (m *Heartbeat) Sign(key interfaces.Signer) error {
 }
 
 func (m *Heartbeat) GetSignature() interfaces.IFullSignature {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Signature
 }
 
 func (m *Heartbeat) VerifySignature() (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesHeartbeatVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return VerifyMessage(m)
 }

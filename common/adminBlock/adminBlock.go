@@ -11,6 +11,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // Administrative Block
@@ -31,6 +32,11 @@ var _ interfaces.BinaryMarshallableAndCopyable = (*AdminBlock)(nil)
 var _ interfaces.DatabaseBatchable = (*AdminBlock)(nil)
 
 func (c *AdminBlock) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if c.Header == nil {
 		h := new(ABlockHeader)
 		h.Init()
@@ -39,6 +45,11 @@ func (c *AdminBlock) Init() {
 }
 
 func (c *AdminBlock) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	var out primitives.Buffer
 
@@ -59,6 +70,11 @@ func (c *AdminBlock) String() string {
 }
 
 func (c *AdminBlock) UpdateState(state interfaces.IState) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockUpdateState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	if state == nil {
 		return fmt.Errorf("No State provided")
@@ -87,6 +103,11 @@ func (c *AdminBlock) UpdateState(state interfaces.IState) error {
 }
 
 func (c *AdminBlock) AddDBSig(serverIdentity interfaces.IHash, sig interfaces.IFullSignature) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddDBSig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if serverIdentity == nil {
 		return fmt.Errorf("No serverIdentity provided")
 	}
@@ -102,6 +123,11 @@ func (c *AdminBlock) AddDBSig(serverIdentity interfaces.IHash, sig interfaces.IF
 }
 
 func (c *AdminBlock) AddFedServer(identityChainID interfaces.IHash) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddFedServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	if identityChainID == nil {
 		return fmt.Errorf("No identityChainID provided")
@@ -112,6 +138,11 @@ func (c *AdminBlock) AddFedServer(identityChainID interfaces.IHash) error {
 }
 
 func (c *AdminBlock) AddAuditServer(identityChainID interfaces.IHash) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddAuditServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	if identityChainID == nil {
 		return fmt.Errorf("No identityChainID provided")
@@ -122,6 +153,11 @@ func (c *AdminBlock) AddAuditServer(identityChainID interfaces.IHash) error {
 }
 
 func (c *AdminBlock) RemoveFederatedServer(identityChainID interfaces.IHash) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockRemoveFederatedServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	if identityChainID == nil {
 		return fmt.Errorf("No identityChainID provided")
@@ -132,6 +168,11 @@ func (c *AdminBlock) RemoveFederatedServer(identityChainID interfaces.IHash) err
 }
 
 func (c *AdminBlock) AddMatryoshkaHash(identityChainID interfaces.IHash, mHash interfaces.IHash) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddMatryoshkaHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if identityChainID == nil {
 		return fmt.Errorf("No identityChainID provided")
 	}
@@ -144,6 +185,11 @@ func (c *AdminBlock) AddMatryoshkaHash(identityChainID interfaces.IHash, mHash i
 }
 
 func (c *AdminBlock) AddFederatedServerSigningKey(identityChainID interfaces.IHash, publicKey [32]byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddFederatedServerSigningKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	if identityChainID == nil {
 		return fmt.Errorf("No identityChainID provided")
@@ -159,6 +205,11 @@ func (c *AdminBlock) AddFederatedServerSigningKey(identityChainID interfaces.IHa
 }
 
 func (c *AdminBlock) AddFederatedServerBitcoinAnchorKey(identityChainID interfaces.IHash, keyPriority byte, keyType byte, ecdsaPublicKey [20]byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddFederatedServerBitcoinAnchorKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if identityChainID == nil {
 		return fmt.Errorf("No identityChainID provided")
 	}
@@ -175,6 +226,11 @@ func (c *AdminBlock) AddFederatedServerBitcoinAnchorKey(identityChainID interfac
 }
 
 func (c *AdminBlock) AddEntry(entry interfaces.IABEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if entry == nil {
 		return fmt.Errorf("No entry provided")
 	}
@@ -196,6 +252,11 @@ func (c *AdminBlock) AddEntry(entry interfaces.IABEntry) error {
 }
 
 func (c *AdminBlock) AddServerFault(serverFault interfaces.IABEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddServerFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if serverFault == nil {
 		return fmt.Errorf("No serverFault provided")
 	}
@@ -219,59 +280,124 @@ func (c *AdminBlock) AddServerFault(serverFault interfaces.IABEntry) error {
 }
 
 func (c *AdminBlock) GetHeader() interfaces.IABlockHeader {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockGetHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	return c.Header
 }
 
 func (c *AdminBlock) SetHeader(header interfaces.IABlockHeader) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockSetHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Header = header
 }
 
 func (c *AdminBlock) GetABEntries() []interfaces.IABEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockGetABEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.ABEntries
 }
 
 func (c *AdminBlock) GetDBHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.GetHeader().GetDBHeight()
 }
 
 func (c *AdminBlock) SetABEntries(abentries []interfaces.IABEntry) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockSetABEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.ABEntries = abentries
 }
 
 func (c *AdminBlock) New() interfaces.BinaryMarshallableAndCopyable {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockNew.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return NewAdminBlock(nil)
 }
 
 func (c *AdminBlock) GetDatabaseHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.GetHeader().GetDBHeight()
 }
 
 func (c *AdminBlock) GetChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.GetHeader().GetAdminChainID()
 }
 
 func (c *AdminBlock) DatabasePrimaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	key, _ := c.LookupHash()
 	return key
 }
 
 func (c *AdminBlock) DatabaseSecondaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	key, _ := c.BackReferenceHash()
 	return key
 }
 
 func (c *AdminBlock) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h, _ := c.GetKeyMR()
 	return h
 }
 
 func (c *AdminBlock) GetKeyMR() (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockGetKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.BackReferenceHash()
 }
 
 // Returns the SHA512Half hash for the admin block
 func (b *AdminBlock) BackReferenceHash() (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockBackReferenceHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var binaryAB []byte
 	binaryAB, err := b.MarshalBinary()
 	if err != nil {
@@ -282,6 +408,11 @@ func (b *AdminBlock) BackReferenceHash() (interfaces.IHash, error) {
 
 // Returns the SHA256 hash for the admin block
 func (b *AdminBlock) LookupHash() (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockLookupHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var binaryAB []byte
 	binaryAB, err := b.MarshalBinary()
 	if err != nil {
@@ -292,11 +423,21 @@ func (b *AdminBlock) LookupHash() (interfaces.IHash, error) {
 
 // Add an Admin Block entry to the block
 func (b *AdminBlock) AddABEntry(e interfaces.IABEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddABEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.AddEntry(e)
 }
 
 // Add an Admin Block entry to the start of the block entries
 func (b *AdminBlock) AddFirstABEntry(e interfaces.IABEntry) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockAddFirstABEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.ABEntries = append(b.ABEntries, nil)
 	copy(b.ABEntries[1:], b.ABEntries[:len(b.ABEntries)-1])
 	b.ABEntries[0] = e
@@ -305,6 +446,11 @@ func (b *AdminBlock) AddFirstABEntry(e interfaces.IABEntry) (err error) {
 
 // Write out the AdminBlock to binary.
 func (b *AdminBlock) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.Init()
 	// Marshal all the entries into their own thing (need the size)
 	var buf2 primitives.Buffer
@@ -334,6 +480,11 @@ func (b *AdminBlock) MarshalBinary() ([]byte, error) {
 }
 
 func UnmarshalABlock(data []byte) (interfaces.IAdminBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockUnmarshalABlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block := NewAdminBlock(nil)
 	err := block.UnmarshalBinary(data)
 	if err != nil {
@@ -344,6 +495,11 @@ func UnmarshalABlock(data []byte) (interfaces.IAdminBlock, error) {
 }
 
 func (b *AdminBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Admin Block: %v", r)
@@ -396,12 +552,22 @@ func (b *AdminBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error
 
 // Read in the binary into the Admin block.
 func (b *AdminBlock) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
 
 // Read in the binary into the Admin block.
 func (b *AdminBlock) GetDBSignature() interfaces.IABEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockGetDBSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.Init()
 	for i := uint32(0); i < b.GetHeader().GetMessageCount(); i++ {
 		if b.ABEntries[i].Type() == constants.TYPE_DB_SIGNATURE {
@@ -413,16 +579,31 @@ func (b *AdminBlock) GetDBSignature() interfaces.IABEntry {
 }
 
 func (e *AdminBlock) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AdminBlock) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 type ExpandedABlock AdminBlock
 
 func (e AdminBlock) MarshalJSON() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAdminBlockMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	backRefHash, err := e.BackReferenceHash()
 	if err != nil {
 		return nil, err
@@ -449,6 +630,11 @@ func (e AdminBlock) MarshalJSON() ([]byte, error) {
  *********************************************************************/
 
 func NewAdminBlock(prev interfaces.IAdminBlock) interfaces.IAdminBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockNewAdminBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block := new(AdminBlock)
 	block.Init()
 	if prev != nil {
@@ -461,6 +647,11 @@ func NewAdminBlock(prev interfaces.IAdminBlock) interfaces.IAdminBlock {
 }
 
 func CheckBlockPairIntegrity(block interfaces.IAdminBlock, prev interfaces.IAdminBlock) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockCheckBlockPairIntegrity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return fmt.Errorf("No block specified")
 	}

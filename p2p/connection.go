@@ -72,14 +72,29 @@ type ConnectionParcel struct {
 }
 
 func (e *ConnectionParcel) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionParcelJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ConnectionParcel) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionParcelJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ConnectionParcel) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionParcelString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
@@ -109,14 +124,29 @@ type ConnectionCommand struct {
 }
 
 func (e *ConnectionCommand) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionCommandJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ConnectionCommand) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionCommandJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ConnectionCommand) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionCommandString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
@@ -139,6 +169,11 @@ const (
 
 // InitWithConn is called from our accept loop when a peer dials into us and we already have a network conn
 func (c *Connection) InitWithConn(conn net.Conn, peer Peer) *Connection {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionInitWithConn.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.conn = conn
 	c.isOutGoing = false // InitWithConn is called by controller's accept() loop
 	c.commonInit(peer)
@@ -151,6 +186,11 @@ func (c *Connection) InitWithConn(conn net.Conn, peer Peer) *Connection {
 
 // Init is called when we have peer info and need to dial into the peer
 func (c *Connection) Init(peer Peer, persistent bool) *Connection {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.conn = nil
 	c.isOutGoing = true
 	c.commonInit(peer)
@@ -160,21 +200,46 @@ func (c *Connection) Init(peer Peer, persistent bool) *Connection {
 }
 
 func (c *Connection) IsOutGoing() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionIsOutGoing.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.isOutGoing
 }
 
 func (c *Connection) IsOnline() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionIsOnline.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ConnectionOnline == c.state
 }
 
 func (c *Connection) StatusString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionStatusString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return connectionStateStrings[c.state]
 }
 
 func (c *Connection) IsPersistent() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionIsPersistent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.isPersistent
 }
 func (c *Connection) Notes() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionNotes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.notes
 }
 
@@ -185,6 +250,11 @@ func (c *Connection) Notes() string {
 //////////////////////////////
 
 func (c *Connection) commonInit(peer Peer) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectioncommonInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.state = ConnectionInitialized
 	c.peer = peer
 	c.setNotes("commonInit()")
@@ -197,12 +267,22 @@ func (c *Connection) commonInit(peer Peer) {
 }
 
 func (c *Connection) Start() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionStart.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	go c.runLoop()
 }
 
 // runloop OWNs the connection.  It is the only goroutine that can change values in the connection struct
 // runLoop operates the state machine and routes messages out to network (messages from network are routed in processReceives)
 func (c *Connection) runLoop() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionrunLoop.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for ConnectionClosed != c.state { // loop exits when we hit shutdown state
 		// time.Sleep(time.Second * 1) // This can be a tight loop, don't want to starve the application
 		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
@@ -258,6 +338,11 @@ func (c *Connection) runLoop() {
 }
 
 func (c *Connection) setNotes(format string, v ...interface{}) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionsetNotes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.notes = fmt.Sprintf(format, v...)
 	significant(c.peer.PeerIdent(), c.notes)
 }
@@ -265,6 +350,11 @@ func (c *Connection) setNotes(format string, v ...interface{}) {
 // dialLoop:  dials the connection until giving up. Called in offline or initializing states.
 // All exits from dialLoop change the state of the connection allowing the outside run_loop to proceed.
 func (c *Connection) dialLoop() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectiondialLoop.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.setNotes(fmt.Sprintf("dialLoop() dialing: %+v", c.peer.PeerIdent()))
 	if c.peer.QualityScore < MinumumQualityScore {
 		c.setNotes("Connection.dialLoop() Quality Score too low, not dialing out again.")
@@ -317,6 +407,11 @@ func (c *Connection) dialLoop() {
 
 // dial() handles connection logic and shifts states based on results.
 func (c *Connection) dial() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectiondial.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	address := c.peer.AddressPort()
 	note(c.peer.PeerIdent(), "Connection.dial() dialing: %+v", address)
 	// conn, err := net.Dial("tcp", c.peer.Address)
@@ -333,6 +428,11 @@ func (c *Connection) dial() bool {
 
 // Called when we are online and connected to the peer.
 func (c *Connection) goOnline() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectiongoOnline.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	debug(c.peer.PeerIdent(), "Connection.goOnline() called.")
 	c.state = ConnectionOnline
 	now := time.Now()
@@ -352,6 +452,11 @@ func (c *Connection) goOnline() {
 }
 
 func (c *Connection) goOffline() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectiongoOffline.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	debug(c.peer.PeerIdent(), "Connection.goOffline()")
 	c.state = ConnectionOffline
 	c.attempts = 0
@@ -359,6 +464,11 @@ func (c *Connection) goOffline() {
 }
 
 func (c *Connection) goShutdown() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectiongoShutdown.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.goOffline()
 	c.updatePeer()
 	if nil != c.conn {
@@ -371,6 +481,11 @@ func (c *Connection) goShutdown() {
 
 // processSends gets all the messages from the application and sends them out over the network
 func (c *Connection) processSends() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionprocessSends.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// note(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
 	for 0 < len(c.SendChannel) && ConnectionOnline == c.state {
 		message := <-c.SendChannel
@@ -391,6 +506,11 @@ func (c *Connection) processSends() {
 }
 
 func (c *Connection) handleCommand(command ConnectionCommand) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionhandleCommand.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch command.Command {
 	case ConnectionShutdownNow:
 		c.setNotes(fmt.Sprintf("Connection(%s) shutting down due to ConnectionShutdownNow message.", c.peer.AddressPort()))
@@ -420,10 +540,15 @@ func (c *Connection) handleCommand(command ConnectionCommand) {
 }
 
 func (c *Connection) sendParcel(parcel Parcel) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionsendParcel.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.SetWriteDeadline(time.Now().Add(NetworkDeadline*2))
+	c.conn.SetWriteDeadline(time.Now().Add(NetworkDeadline * 2))
 
 	//deadline := time.Now().Add(NetworkDeadline)
 	//if len(parcel.Payload) > 1000*10 {
@@ -449,6 +574,11 @@ func (c *Connection) sendParcel(parcel Parcel) {
 // -- something causes our state to be offline
 // -- we run out of data to recieve (which gives an io.EOF which is handled by handleNetErrors)
 func (c *Connection) processReceives() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionprocessReceives.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for ConnectionOnline == c.state {
 		var message Parcel
 		verbose(c.peer.PeerIdent(), "Connection.processReceives() called. State: %s", c.ConnectionState())
@@ -471,6 +601,11 @@ func (c *Connection) processReceives() {
 
 //handleNetErrors Reacts to errors we get from encoder or decoder
 func (c *Connection) handleNetErrors(err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionhandleNetErrors.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	nerr, isNetError := err.(net.Error)
 	verbose(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got error: %+v", c.ConnectionState(), err)
 	switch {
@@ -496,6 +631,11 @@ func (c *Connection) handleNetErrors(err error) {
 // handleParcel checks the parcel command type, and either generates a response, or passes it along.
 // return value:  Indicate whether we got a good message or not and thus whether we should keep reading from network
 func (c *Connection) handleParcel(parcel Parcel) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionhandleParcel.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			c.peer.demerit() /// so someone DDoS or just incompatible will eventually be cut off after 200+ panics
@@ -546,6 +686,11 @@ const (
 )
 
 func (c *Connection) parcelValidity(parcel Parcel) uint8 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionparcelValidity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	verbose(c.peer.PeerIdent(), "Connection.isValidParcel(%s)", parcel.MessageType())
 	crc := crc32.Checksum(parcel.Payload, CRCKoopmanTable)
 	switch {
@@ -576,6 +721,11 @@ func (c *Connection) parcelValidity(parcel Parcel) uint8 {
 	}
 }
 func (c *Connection) handleParcelTypes(parcel Parcel) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionhandleParcelTypes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch parcel.Header.Type {
 	case TypeAlert:
 		parcel.Trace("Connection.handleParcelTypes()-TypeAlert", "J")
@@ -628,6 +778,11 @@ func (c *Connection) handleParcelTypes(parcel Parcel) {
 }
 
 func (c *Connection) pingPeer() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionpingPeer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	durationLastContact := time.Since(c.peer.LastContact)
 	durationLastPing := time.Since(c.timeLastPing)
 	if PingInterval < durationLastContact && PingInterval < durationLastPing {
@@ -648,12 +803,22 @@ func (c *Connection) pingPeer() {
 }
 
 func (c *Connection) updatePeer() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionupdatePeer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	verbose(c.peer.PeerIdent(), "updatePeer() SENDING ConnectionUpdatingPeer - Connection State: %s", c.ConnectionState())
 	c.timeLastUpdate = time.Now()
 	BlockFreeChannelSend(c.ReceiveChannel, ConnectionCommand{Command: ConnectionUpdatingPeer, Peer: c.peer})
 }
 
 func (c *Connection) updateStats() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionupdateStats.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if time.Second < time.Since(c.timeLastMetrics) {
 		c.timeLastMetrics = time.Now()
 		c.metrics.PeerAddress = c.peer.Address
@@ -666,10 +831,20 @@ func (c *Connection) updateStats() {
 }
 
 func (c *Connection) ConnectionState() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionConnectionState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return connectionStateStrings[c.state]
 }
 
 func (c *Connection) connectionStatusReport() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pConnectionconnectionStatusReport.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	reportDuration := time.Since(c.timeLastStatus)
 	if reportDuration > ConnectionStatusInterval {
 		c.timeLastStatus = time.Now()

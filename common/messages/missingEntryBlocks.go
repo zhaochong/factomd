@@ -11,6 +11,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 //Requests entry blocks from a range of DBlocks
@@ -28,6 +29,11 @@ type MissingEntryBlocks struct {
 var _ interfaces.IMsg = (*MissingEntryBlocks)(nil)
 
 func (a *MissingEntryBlocks) IsSameAs(b *MissingEntryBlocks) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -45,14 +51,29 @@ func (a *MissingEntryBlocks) IsSameAs(b *MissingEntryBlocks) bool {
 }
 
 func (m *MissingEntryBlocks) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *MissingEntryBlocks) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *MissingEntryBlocks) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.MsgHash == nil {
 		data, err := m.MarshalBinary()
 		if err != nil {
@@ -64,10 +85,20 @@ func (m *MissingEntryBlocks) GetMsgHash() interfaces.IHash {
 }
 
 func (m *MissingEntryBlocks) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.MISSING_ENTRY_BLOCKS
 }
 
 func (m *MissingEntryBlocks) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Timestamp
 }
 
@@ -76,6 +107,11 @@ func (m *MissingEntryBlocks) GetTimestamp() interfaces.Timestamp {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *MissingEntryBlocks) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.DBHeightStart > m.DBHeightEnd {
 		return -1
 	}
@@ -83,14 +119,29 @@ func (m *MissingEntryBlocks) Validate(state interfaces.IState) int {
 }
 
 func (m *MissingEntryBlocks) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 // Execute the leader functions of the given message
 func (m *MissingEntryBlocks) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.FollowerExecute(state)
 }
 
 func (m *MissingEntryBlocks) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(state.NetworkOutMsgQueue()) > 1000 {
 		return
 	}
@@ -141,18 +192,38 @@ func (m *MissingEntryBlocks) FollowerExecute(state interfaces.IState) {
 
 // Acknowledgements do not go into the process list.
 func (e *MissingEntryBlocks) Process(dbheight uint32, state interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	panic("Ack object should never have its Process() method called")
 }
 
 func (e *MissingEntryBlocks) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *MissingEntryBlocks) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (m *MissingEntryBlocks) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block State Missing Message: %v", r)
@@ -179,11 +250,21 @@ func (m *MissingEntryBlocks) UnmarshalBinaryData(data []byte) (newData []byte, e
 }
 
 func (m *MissingEntryBlocks) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *MissingEntryBlocks) MarshalForSignature() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -202,14 +283,29 @@ func (m *MissingEntryBlocks) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *MissingEntryBlocks) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.MarshalForSignature()
 }
 
 func (m *MissingEntryBlocks) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMissingEntryBlocksString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fmt.Sprintf("MissingEntryBlocks: %d-%d", m.DBHeightStart, m.DBHeightEnd)
 }
 
 func NewMissingEntryBlocks(state interfaces.IState, dbheightStart uint32, dbheightEnd uint32) interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesNewMissingEntryBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	msg := new(MissingEntryBlocks)
 
 	msg.Peer2Peer = true // Always a peer2peer request.

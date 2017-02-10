@@ -9,6 +9,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/log"
 	"sync"
+	"time"
 )
 
 var _ = log.Printf
@@ -44,6 +45,11 @@ type MsgLog struct {
 }
 
 func (m *MsgLog) init(enable bool, nodecnt int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineMsgLoginit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.Enable = enable
 	m.nodeCnt = nodecnt
 	if nodecnt == 0 {
@@ -52,6 +58,11 @@ func (m *MsgLog) init(enable bool, nodecnt int) {
 }
 
 func (m *MsgLog) add2(fnode *FactomNode, out bool, peer string, where string, valid bool, msg interfaces.IMsg) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineMsgLogadd2.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.sem.Lock()
 	defer m.sem.Unlock()
 	now := fnode.State.GetTimestamp()
@@ -97,6 +108,11 @@ func (m *MsgLog) add2(fnode *FactomNode, out bool, peer string, where string, va
 }
 
 func (m *MsgLog) PrtMsgs(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineMsgLogPrtMsgs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.sem.Lock()
 	defer m.sem.Unlock()
 

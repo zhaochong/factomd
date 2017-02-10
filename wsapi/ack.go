@@ -15,9 +15,15 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 func HandleV2FactoidACK(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2FactoidACK.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ackReq := new(AckRequest)
 	err := MapToObject(params, ackReq)
 	if err != nil {
@@ -95,6 +101,11 @@ func HandleV2FactoidACK(state interfaces.IState, params interface{}) (interface{
 }
 
 func HandleV2EntryACK(state interfaces.IState, params interface{}) (interface{}, *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleV2EntryACK.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ackReq := new(AckRequest)
 
 	err := MapToObject(params, ackReq)
@@ -417,6 +428,11 @@ func HandleV2EntryACK(state interfaces.IState, params interface{}) (interface{},
 }
 
 func DecodeTransactionToHashes(fullTransaction string) (eTxID string, ecTxID string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiDecodeTransactionToHashes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//fmt.Printf("DecodeTransactionToHashes - %v\n", fullTransaction)
 	b, err := hex.DecodeString(fullTransaction)
 	if err != nil {

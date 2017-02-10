@@ -29,6 +29,11 @@ type FaultCore struct {
 }
 
 func (fc *FaultCore) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFaultCoreGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := fc.MarshalCore()
 	if err != nil {
 		return nil
@@ -37,6 +42,11 @@ func (fc *FaultCore) GetHash() interfaces.IHash {
 }
 
 func (fc *FaultCore) MarshalCore() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFaultCoreMarshalCore.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error marshalling Server Fault Core: %v", r)
@@ -71,6 +81,11 @@ func (fc *FaultCore) MarshalCore() (data []byte, err error) {
 }
 
 func markFault(pl *ProcessList, vmIndex int, faultReason int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatemarkFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// We can use the "IgnoreMissing" boolean to track if enough time has elapsed
 	// since bootup to start faulting servers on the network
 	if pl.State.IgnoreMissing {
@@ -103,6 +118,11 @@ func markFault(pl *ProcessList, vmIndex int, faultReason int) {
 }
 
 func markNoFault(pl *ProcessList, vmIndex int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatemarkNoFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	vm := pl.VMs[vmIndex]
 
 	vm.WhenFaulted = 0
@@ -137,6 +157,11 @@ func markNoFault(pl *ProcessList, vmIndex int) {
 }
 
 func NegotiationCheck(pl *ProcessList) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateNegotiationCheck.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if !pl.State.Leader {
 		//If I'm not a leader, do not attempt to negotiate
 		return
@@ -173,6 +198,11 @@ func NegotiationCheck(pl *ProcessList) {
 }
 
 func FaultCheck(pl *ProcessList) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateFaultCheck.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	NegotiationCheck(pl)
 
 	now := time.Now().Unix()
@@ -222,6 +252,11 @@ func FaultCheck(pl *ProcessList) {
 }
 
 func precedingVMIndex(pl *ProcessList) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateprecedingVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	precedingIndex := pl.State.LeaderVMIndex - 1
 	if precedingIndex < 0 {
 		precedingIndex = len(pl.FedServers) - 1
@@ -230,6 +265,11 @@ func precedingVMIndex(pl *ProcessList) int {
 }
 
 func ToggleAuditOffline(pl *ProcessList, fc FaultCore) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateToggleAuditOffline.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	auditServerList := pl.State.GetAuditServers(fc.DBHeight)
 	var theAuditReplacement interfaces.IFctServer
 
@@ -248,6 +288,11 @@ func ToggleAuditOffline(pl *ProcessList, fc FaultCore) {
 // enough ServerFaults (+the Audit Pledge) to issue a FullFault message
 // and conclude the faulting process ourselves
 func couldIFullFault(pl *ProcessList, vmIndex int) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatecouldIFullFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	leaderMin := getLeaderMin(pl)
 	faultedFed := pl.ServerMap[leaderMin][vmIndex]
 	id := pl.FedServers[faultedFed].GetChainID()
@@ -274,6 +319,11 @@ func couldIFullFault(pl *ProcessList, vmIndex int) bool {
 }
 
 func CraftFault(pl *ProcessList, vmIndex int, height int) *messages.ServerFault {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateCraftFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// TODO: if I am the Leader being faulted, I should respond by sending out
 	// a MissingMsgResponse to everyone for the msg I'm being faulted for
 
@@ -317,6 +367,11 @@ func CraftFault(pl *ProcessList, vmIndex int, height int) *messages.ServerFault 
 // these are "incomplete" FullFault messages which serve as status pings
 // for the negotiation in progress
 func CraftFullFault(pl *ProcessList, vmIndex int, height int) *messages.FullServerFault {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateCraftFullFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	faultState := pl.CurrentFault()
 	var sf *messages.ServerFault
 	var listOfSigs []interfaces.IFullSignature
@@ -355,6 +410,11 @@ func CraftFullFault(pl *ProcessList, vmIndex int, height int) *messages.FullServ
 }
 
 func (s *State) FollowerExecuteSFault(m interfaces.IMsg) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFollowerExecuteSFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sf, ok := m.(*messages.ServerFault)
 
 	if !ok {
@@ -415,6 +475,11 @@ func (s *State) FollowerExecuteSFault(m interfaces.IMsg) {
 }
 
 func ExtractFaultCore(sfMsg interfaces.IMsg) FaultCore {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateExtractFaultCore.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sf, ok := sfMsg.(*messages.ServerFault)
 	if !ok {
 		sf, ok2 := sfMsg.(*messages.FullServerFault)
@@ -427,6 +492,11 @@ func ExtractFaultCore(sfMsg interfaces.IMsg) FaultCore {
 }
 
 func isMyNegotiation(sf FaultCore, pl *ProcessList) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateisMyNegotiation.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var fedServerCnt int
 
 	if pl != nil {
@@ -445,6 +515,11 @@ func isMyNegotiation(sf FaultCore, pl *ProcessList) bool {
 // matchFault does what it sounds like; given a particular ServerFault
 // message, it will copy it, sign it, and send it out to the network
 func (s *State) matchFault(sf *messages.ServerFault) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatematchFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if sf != nil {
 		sf.Sign(s.serverPrivKey)
 		sf.SendOut(s, sf)
@@ -456,6 +531,11 @@ func (s *State) matchFault(sf *messages.ServerFault) {
 // necessary signatures + pledge) or incomplete, in which case it is just
 // a negotiation ping
 func (s *State) FollowerExecuteFullFault(m interfaces.IMsg) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFollowerExecuteFullFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fullFault, _ := m.(*messages.FullServerFault)
 
 	pl := s.ProcessLists.Get(fullFault.DBHeight)
@@ -483,6 +563,11 @@ func (s *State) FollowerExecuteFullFault(m interfaces.IMsg) {
 // If a FullFault message includes a signature from the Audit server
 // which was nominated in the Fault, pledgedByAudit will return true
 func (s *State) pledgedByAudit(fullFault *messages.FullServerFault) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStatepledgedByAudit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, a := range s.Authorities {
 		if a.AuthorityChainID.IsSameAs(fullFault.AuditServerID) {
 			marshalledSF, err := fullFault.MarshalForSF()
@@ -501,11 +586,21 @@ func (s *State) pledgedByAudit(fullFault *messages.FullServerFault) bool {
 }
 
 func (s *State) Reset() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateReset.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.ResetRequest = true
 }
 
 // Set to reprocess all messages and states
 func (s *State) DoReset() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateDoReset.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.ResetTryCnt++
 	s.AddStatus(fmt.Sprintf("RESET: Trying to Reset for the %d time", s.ResetTryCnt))
 	index := len(s.DBStates.DBStates) - 1

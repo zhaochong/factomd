@@ -20,11 +20,17 @@ import (
 	"github.com/FactomProject/factomd/wsapi"
 
 	"github.com/FactomProject/factomd/common/factoid"
+	"time"
 )
 
 var _ = htemp.HTMLEscaper("sdf")
 
 func handleSearchResult(content *SearchedStruct, w http.ResponseWriter) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelhandleSearchResult.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Functions able to be used within the html
 	funcMap := template.FuncMap{
 		"truncate": func(s string) string {
@@ -224,6 +230,11 @@ func handleSearchResult(content *SearchedStruct, w http.ResponseWriter) {
 }
 
 func getEcTransaction(hash string) interfaces.IECBlockEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetEcTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	mr, err := primitives.HexToHash(hash)
 	if err != nil {
 		return nil
@@ -243,6 +254,11 @@ func getEcTransaction(hash string) interfaces.IECBlockEntry {
 }
 
 func getFactTransaction(hash string) interfaces.ITransaction {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetFactTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	mr, err := primitives.HexToHash(hash)
 	if err != nil {
 		return nil
@@ -283,6 +299,11 @@ type FactoidAck struct {
 }
 
 func getFactoidAck(hash string) *wsapi.FactoidTxStatus {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetFactoidAck.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ackReq := new(wsapi.AckRequest)
 	ackReq.TxID = hash
 	answers, err := wsapi.HandleV2FactoidACK(StatePointer, ackReq)
@@ -293,6 +314,11 @@ func getFactoidAck(hash string) *wsapi.FactoidTxStatus {
 }
 
 func getEntryAck(hash string) *wsapi.EntryStatus {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetEntryAck.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ackReq := new(wsapi.AckRequest)
 	ackReq.TxID = hash
 	answers, err := wsapi.HandleV2EntryACK(StatePointer, ackReq)
@@ -308,6 +334,11 @@ type ECBlockHolder struct {
 }
 
 func getECblock(hash string) *ECBlockHolder {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetECblock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	mr, err := primitives.HexToHash(hash)
 	if err != nil {
 		return nil
@@ -344,6 +375,11 @@ type FBlockHolder struct {
 }
 
 func getFblock(hash string) *FBlockHolder {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetFblock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	mr, err := primitives.HexToHash(hash)
 	if err != nil {
 		return nil
@@ -395,6 +431,11 @@ type ABDisplayHolder struct {
 }
 
 func getAblock(hash string) *AblockHolder {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetAblock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	mr, err := primitives.HexToHash(hash)
 	if err != nil {
 		return nil
@@ -536,6 +577,11 @@ type EblockHolder struct {
 }
 
 func getEblock(hash string) *EblockHolder {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetEblock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	mr, err := primitives.HexToHash(hash)
 	if err != nil {
 		return nil
@@ -634,6 +680,11 @@ type DblockHolder struct {
 }
 
 func getDblock(hash string) *DblockHolder {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetDblock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	mr, err := primitives.HexToHash(hash)
 	if err != nil {
 		return nil
@@ -705,6 +756,11 @@ type EntryHolder struct {
 }
 
 func getEntry(hash string) *EntryHolder {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entryHash, err := primitives.HexToHash(hash)
 	if err != nil {
 		return nil
@@ -762,6 +818,11 @@ func getEntry(hash string) *EntryHolder {
 }
 
 func getAllChainEntries(chainIDString string) []SearchedStruct {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetAllChainEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	arr := make([]SearchedStruct, 0)
 	chainID, err := primitives.HexToHash(chainIDString)
 	if err != nil {

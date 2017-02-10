@@ -8,12 +8,18 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/database/hybridDB"
+	"time"
 )
 
 const level string = "level"
 const bolt string = "bolt"
 
 func main() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainmain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Println("Usage:")
 	fmt.Println("DBCleanCopy level/bolt DBFileLocation")
 	fmt.Println("Database will be copied over block by block to remove some DB inconsistencies")
@@ -63,6 +69,11 @@ func main() {
 }
 
 func CopyDB(dbase1, dbase2 interfaces.DBOverlay) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainCopyDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	processing := ""
 	defer func() {
 		if r := recover(); r != nil {

@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/common/directoryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 type DirectoryBlockSignature struct {
@@ -40,6 +41,11 @@ var _ interfaces.IMsg = (*DirectoryBlockSignature)(nil)
 var _ Signable = (*DirectoryBlockSignature)(nil)
 
 func (a *DirectoryBlockSignature) IsSameAs(b *DirectoryBlockSignature) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -82,18 +88,38 @@ func (a *DirectoryBlockSignature) IsSameAs(b *DirectoryBlockSignature) bool {
 }
 
 func (e *DirectoryBlockSignature) Process(dbheight uint32, state interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return state.ProcessDBSig(dbheight, e)
 }
 
 func (m *DirectoryBlockSignature) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *DirectoryBlockSignature) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *DirectoryBlockSignature) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, _ := m.MarshalForSignature()
 	if data == nil {
 		return nil
@@ -104,6 +130,11 @@ func (m *DirectoryBlockSignature) GetMsgHash() interfaces.IHash {
 }
 
 func (m *DirectoryBlockSignature) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.Timestamp == nil {
 		m.Timestamp = new(primitives.Timestamp)
 	}
@@ -111,6 +142,11 @@ func (m *DirectoryBlockSignature) GetTimestamp() interfaces.Timestamp {
 }
 
 func (m *DirectoryBlockSignature) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.DIRECTORY_BLOCK_SIGNATURE_MSG
 }
 
@@ -119,6 +155,11 @@ func (m *DirectoryBlockSignature) Type() byte {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *DirectoryBlockSignature) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.DBHeight < state.GetLLeaderHeight() {
 		state.AddStatus(fmt.Sprintf("DirectoryBlockSignature: Fail dbht: %v %s", state.GetLLeaderHeight(), m.String()))
 		return -1
@@ -166,18 +207,38 @@ func (m *DirectoryBlockSignature) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *DirectoryBlockSignature) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 // Execute the leader functions of the given message
 func (m *DirectoryBlockSignature) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.LeaderExecuteDBSig(m)
 }
 
 func (m *DirectoryBlockSignature) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.FollowerExecuteMsg(m)
 }
 
 func (m *DirectoryBlockSignature) Sign(key interfaces.Signer) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Signature that goes into admin block
 	err := m.SignHeader(key)
 	if err != nil {
@@ -193,6 +254,11 @@ func (m *DirectoryBlockSignature) Sign(key interfaces.Signer) error {
 }
 
 func (m *DirectoryBlockSignature) SignHeader(key interfaces.Signer) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureSignHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	header, err := m.DirectoryBlockHeader.MarshalBinary()
 	if err != nil {
 		return err
@@ -202,14 +268,29 @@ func (m *DirectoryBlockSignature) SignHeader(key interfaces.Signer) error {
 }
 
 func (m *DirectoryBlockSignature) GetSignature() interfaces.IFullSignature {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Signature
 }
 
 func (m *DirectoryBlockSignature) VerifySignature() (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return VerifyMessage(m)
 }
 
 func (m *DirectoryBlockSignature) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -276,11 +357,21 @@ func (m *DirectoryBlockSignature) UnmarshalBinaryData(data []byte) (newData []by
 }
 
 func (m *DirectoryBlockSignature) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *DirectoryBlockSignature) MarshalForSignature() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.DirectoryBlockHeader == nil {
 		m.DirectoryBlockHeader = directoryBlock.NewDBlockHeader()
 	}
@@ -336,6 +427,11 @@ func (m *DirectoryBlockSignature) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *DirectoryBlockSignature) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var sig interfaces.IFullSignature
 	resp, err := m.MarshalForSignature()
 	if err == nil {
@@ -353,6 +449,11 @@ func (m *DirectoryBlockSignature) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *DirectoryBlockSignature) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return fmt.Sprintf("%6s-VM%3d:          DBHt:%5d -- Signer[:3]=%x PrevDBKeyMR[:3]=%x hash[:3]=%x",
 		"DBSig",
 		m.VMIndex,
@@ -364,9 +465,19 @@ func (m *DirectoryBlockSignature) String() string {
 }
 
 func (e *DirectoryBlockSignature) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DirectoryBlockSignature) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesDirectoryBlockSignatureJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }

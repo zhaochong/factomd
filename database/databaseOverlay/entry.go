@@ -4,10 +4,16 @@ import (
 	"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // InsertEntry inserts an entry
 func (db *Overlay) InsertEntry(entry interfaces.IEBEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayInsertEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if entry == nil {
 		return nil
 	}
@@ -31,6 +37,11 @@ func (db *Overlay) InsertEntry(entry interfaces.IEBEntry) error {
 }
 
 func (db *Overlay) InsertEntryMultiBatch(entry interfaces.IEBEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayInsertEntryMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if entry == nil {
 		return nil
 	}
@@ -52,6 +63,11 @@ func (db *Overlay) InsertEntryMultiBatch(entry interfaces.IEBEntry) error {
 
 // FetchEntry gets an entry by hash from the database.
 func (db *Overlay) FetchEntry(hash interfaces.IHash) (interfaces.IEBEntry, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	chainID, err := db.FetchPrimaryIndexBySecondaryIndex(ENTRY, hash)
 	if err != nil {
 		return nil, err
@@ -72,6 +88,11 @@ func (db *Overlay) FetchEntry(hash interfaces.IHash) (interfaces.IEBEntry, error
 }
 
 func (db *Overlay) FetchAllEntriesByChainID(chainID interfaces.IHash) ([]interfaces.IEBEntry, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllEntriesByChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	list, err := db.FetchAllBlocksFromBucket(chainID.Bytes(), entryBlock.NewEntry())
 	if err != nil {
 		return nil, err
@@ -80,10 +101,20 @@ func (db *Overlay) FetchAllEntriesByChainID(chainID interfaces.IHash) ([]interfa
 }
 
 func (db *Overlay) FetchAllEntryIDsByChainID(chainID interfaces.IHash) ([]interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllEntryIDsByChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.FetchAllBlockKeysFromBucket(chainID.Bytes())
 }
 
 func (db *Overlay) FetchAllEntryIDs() ([]interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllEntryIDs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ids, err := db.ListAllKeys(ENTRY)
 	if err != nil {
 		return nil, err
@@ -100,6 +131,11 @@ func (db *Overlay) FetchAllEntryIDs() ([]interfaces.IHash, error) {
 }
 
 func toEntryList(source []interfaces.BinaryMarshallableAndCopyable) []interfaces.IEBEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlaytoEntryList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := make([]interfaces.IEBEntry, len(source))
 	for i, v := range source {
 		answer[i] = v.(interfaces.IEBEntry)

@@ -11,9 +11,15 @@ import (
 	"github.com/FactomProject/factomd/common/entryCreditBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
+	"time"
 )
 
 func (s *State) IsStateFullySynced() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIsStateFullySynced.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ll := s.ProcessLists.LastList()
 
 	return s.ProcessLists.DBHeightBase < ll.DBHeight
@@ -21,6 +27,11 @@ func (s *State) IsStateFullySynced() bool {
 
 //returns status, proper transaction ID, transaction timestamp, block timestamp, and an error
 func (s *State) GetACKStatus(hash interfaces.IHash) (int, interfaces.IHash, interfaces.Timestamp, interfaces.Timestamp, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetACKStatus.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	msg := s.GetInvalidMsg(hash)
 	if msg != nil {
 		return constants.AckStatusInvalid, hash, nil, nil, nil
@@ -116,6 +127,11 @@ func (s *State) GetACKStatus(hash interfaces.IHash) (int, interfaces.IHash, inte
 }
 
 func (s *State) FetchHoldingMessageByHash(hash interfaces.IHash) (int, byte, interfaces.IMsg, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFetchHoldingMessageByHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	q := s.LoadHoldingMap()
 	for _, h := range q {
 		switch {
@@ -179,6 +195,11 @@ func (s *State) FetchHoldingMessageByHash(hash interfaces.IHash) (int, byte, int
 }
 
 func (s *State) FetchECTransactionByHash(hash interfaces.IHash) (interfaces.IECBlockEntry, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFetchECTransactionByHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//TODO: expand to search data from outside database
 	if hash == nil {
 		return nil, nil
@@ -207,6 +228,11 @@ func (s *State) FetchECTransactionByHash(hash interfaces.IHash) (interfaces.IECB
 }
 
 func (s *State) FetchFactoidTransactionByHash(hash interfaces.IHash) (interfaces.ITransaction, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFetchFactoidTransactionByHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//TODO: expand to search data from outside database
 	if hash == nil {
 		return nil, nil
@@ -265,6 +291,11 @@ func (s *State) FetchFactoidTransactionByHash(hash interfaces.IHash) (interfaces
 }
 
 func (s *State) FetchPaidFor(hash interfaces.IHash) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFetchPaidFor.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//TODO: expand to search data from outside database
 	if hash == nil {
 		return nil, nil
@@ -294,6 +325,11 @@ func (s *State) FetchPaidFor(hash interfaces.IHash) (interfaces.IHash, error) {
 }
 
 func (s *State) FetchEntryByHash(hash interfaces.IHash) (interfaces.IEBEntry, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateFetchEntryByHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//TODO: expand to search data from outside database
 	if hash == nil {
 		return nil, nil

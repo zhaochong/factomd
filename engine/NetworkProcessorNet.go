@@ -18,12 +18,22 @@ var _ = log.Printf
 var _ = fmt.Print
 
 func NetworkProcessorNet(fnode *FactomNode) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineNetworkProcessorNet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	go Peers(fnode)
 	go NetworkOutputs(fnode)
 	go InvalidOutputs(fnode)
 }
 
 func Peers(fnode *FactomNode) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginePeers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	cnt := 0
 	for {
 		for i := 0; i < 100 && len(fnode.State.APIQueue()) > 0; i++ {
@@ -111,6 +121,11 @@ func Peers(fnode *FactomNode) {
 }
 
 func NetworkOutputs(fnode *FactomNode) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineNetworkOutputs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for {
 		// if len(fnode.State.NetworkOutMsgQueue()) > 500 {
 		// 	fmt.Print(fnode.State.GetFactomNodeName(), "-", len(fnode.State.NetworkOutMsgQueue()), " ")
@@ -178,6 +193,11 @@ func NetworkOutputs(fnode *FactomNode) {
 
 // Just throw away the trash
 func InvalidOutputs(fnode *FactomNode) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineInvalidOutputs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for {
 		time.Sleep(1 * time.Millisecond)
 		_ = <-fnode.State.NetworkInvalidMsgQueue()

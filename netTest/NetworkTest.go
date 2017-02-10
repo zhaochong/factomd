@@ -41,6 +41,11 @@ var size int
 var logPort string
 
 func InitNetwork() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainInitNetwork.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	go http.ListenAndServe(fmt.Sprintf("localhost:%s", logPort), nil)
 
 	namePtr := flag.String("name", fmt.Sprintf("%d", rand.Int()), "Name for this node")
@@ -117,6 +122,11 @@ var cntreply int32
 
 // Returns true if message is new
 func MsgIsNew(msg interfaces.IMsg) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainMsgIsNew.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	oldsync.Lock()
 	defer oldsync.Unlock()
 	for _, m := range old {
@@ -130,6 +140,11 @@ func MsgIsNew(msg interfaces.IMsg) bool {
 var lastTime *time.Time
 
 func SetMsg(msg interfaces.IMsg) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainSetMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	oldsync.Lock()
 	defer oldsync.Unlock()
 	now := time.Now()
@@ -147,6 +162,11 @@ func SetMsg(msg interfaces.IMsg) {
 }
 
 func listen() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainlisten.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for {
 		msg, err := p2pProxy.Recieve()
 		if err != nil || msg == nil {
@@ -221,6 +241,11 @@ func listen() {
 }
 
 func main() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainmain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	InitNetwork()
 
 	time.Sleep(1 * time.Second)

@@ -36,6 +36,11 @@ var UpdateKnownPeers sync.Mutex
 // This ensures that all shared memory is accessed from that goroutine.
 
 func (d *Discovery) Init(peersFile string, seed string) *Discovery {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	UpdateKnownPeers.Lock()
 	d.knownPeers = map[string]Peer{}
 	UpdateKnownPeers.Unlock()
@@ -52,6 +57,11 @@ func (d *Discovery) Init(peersFile string, seed string) *Discovery {
 
 // UpdatePeer updates the values in our known peers. Creates peer if its not in there.
 func (d *Discovery) updatePeer(peer Peer) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryupdatePeer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	note("discovery", "Updating peer: %v", peer)
 	UpdateKnownPeers.Lock()
 	d.knownPeers[peer.Address] = peer
@@ -60,6 +70,11 @@ func (d *Discovery) updatePeer(peer Peer) {
 
 // getPeer returns a known peer, if present
 func (d *Discovery) getPeer(address string) Peer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoverygetPeer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	UpdateKnownPeers.Lock()
 	thePeer := d.knownPeers[address]
 	UpdateKnownPeers.Unlock()
@@ -68,6 +83,11 @@ func (d *Discovery) getPeer(address string) Peer {
 
 // UpdatePeer updates the values in our known peers. Creates peer if its not in there.
 func (d *Discovery) isPeerPresent(peer Peer) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryisPeerPresent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	UpdateKnownPeers.Lock()
 	_, present := d.knownPeers[peer.Address]
 	UpdateKnownPeers.Unlock()
@@ -76,6 +96,11 @@ func (d *Discovery) isPeerPresent(peer Peer) bool {
 
 // LoadPeers loads the known peers from disk OVERWRITING PREVIOUS VALUES
 func (d *Discovery) LoadPeers() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryLoadPeers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	file, err := os.Open(d.peersFilePath)
 	if nil != err {
 		logerror("discovery", "Discover.LoadPeers() File read error on file: %s, Error: %+v", d.peersFilePath, err)
@@ -97,6 +122,11 @@ func (d *Discovery) LoadPeers() {
 
 // SavePeers just saves our known peers out to disk. Called periodically.
 func (d *Discovery) SavePeers() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoverySavePeers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// save known peers to peers.json
 	d.lastPeerSave = time.Now()
 	file, err := os.Create(d.peersFilePath)
@@ -135,6 +165,11 @@ func (d *Discovery) SavePeers() {
 // The unique peers are added to our peer list.
 // The peers are in a json encoded string as a byte slice
 func (d *Discovery) LearnPeers(parcel Parcel) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryLearnPeers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dec := json.NewDecoder(bytes.NewReader(parcel.Payload))
 	var peerArray []Peer
 	err := dec.Decode(&peerArray)
@@ -160,6 +195,11 @@ func (d *Discovery) LearnPeers(parcel Parcel) {
 
 // updatePeerSource checks to see if source is in peer's sources, and if not puts it in there with a value equal to time.Now()
 func (d *Discovery) updatePeerSource(peer Peer, source string) Peer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryupdatePeerSource.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if nil == peer.Source {
 		peer.Source = map[string]time.Time{}
 	}
@@ -171,6 +211,11 @@ func (d *Discovery) updatePeerSource(peer Peer, source string) Peer {
 }
 
 func (d *Discovery) filterPeersFromOtherNetworks(peers []Peer) (filtered []Peer) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryfilterPeersFromOtherNetworks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, peer := range peers {
 		if CurrentNetwork == peer.Network {
 			filtered = append(filtered, peer)
@@ -180,6 +225,11 @@ func (d *Discovery) filterPeersFromOtherNetworks(peers []Peer) (filtered []Peer)
 }
 
 func (d *Discovery) filterForUniqueIPAdresses(peers []Peer) (filtered []Peer) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryfilterForUniqueIPAdresses.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	unique := map[string]Peer{}
 	for _, peer := range peers {
 		_, present := unique[peer.Address]
@@ -201,6 +251,11 @@ func (d *Discovery) filterForUniqueIPAdresses(peers []Peer) (filtered []Peer) {
 //  -- remove each candidate from the list.
 //  -- continue until there are no candidates left, or we have our set.
 func (d *Discovery) GetOutgoingPeers() []Peer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryGetOutgoingPeers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	firstPassPeers := []Peer{}
 	selectedPeers := map[string]Peer{}
 	UpdateKnownPeers.Lock()
@@ -250,6 +305,11 @@ func (d *Discovery) GetOutgoingPeers() []Peer {
 // For now, this gives a random set of  the total known peers.
 // The peers are in a json encoded string as byte slice
 func (d *Discovery) SharePeers() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoverySharePeers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return d.getPeerSelection()
 }
 
@@ -259,6 +319,11 @@ func (d *Discovery) SharePeers() []byte {
 // getPeerSelection gets a selection of peers for SHARING.  So we want to share quality peers with the
 // network.  Therefore, we sort by quality, and filter out special peers
 func (d *Discovery) getPeerSelection() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoverygetPeerSelection.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// var peer, currentBest Peer
 	// var currentBestDistance float64
 	selectedPeers := []Peer{}
@@ -306,6 +371,11 @@ func (d *Discovery) getPeerSelection() []byte {
 
 // DiscoverPeers gets a set of peers from a DNS Seed
 func (d *Discovery) DiscoverPeersFromSeed() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryDiscoverPeersFromSeed.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	resp, err := http.Get(d.seedURL)
 	if nil != err {
 		logerror("discovery", "DiscoverPeersFromSeed getting peers from %s produced error %+v", d.seedURL, err)
@@ -331,6 +401,11 @@ func (d *Discovery) DiscoverPeersFromSeed() {
 
 // PrintPeers Print details about the known peers
 func (d *Discovery) PrintPeers() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pDiscoveryPrintPeers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	note("discovery", "Peer Report:")
 	UpdateKnownPeers.Lock()
 	for key, value := range d.knownPeers {

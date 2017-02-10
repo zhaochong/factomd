@@ -7,6 +7,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 type ServerFault struct {
@@ -23,6 +24,11 @@ type ServerFault struct {
 }
 
 func (e *ServerFault) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.Timestamp == nil {
 		e.Timestamp = primitives.NewTimestampFromMilliseconds(0)
 	}
@@ -43,6 +49,11 @@ var _ interfaces.IABEntry = (*ServerFault)(nil)
 var _ interfaces.BinaryMarshallable = (*ServerFault)(nil)
 
 func (sl *SigList) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockSigListMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, uint32(sl.Length))
@@ -62,6 +73,11 @@ func (sl *SigList) MarshalBinary() (data []byte, err error) {
 }
 
 func (sl *SigList) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockSigListUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling SigList in Full Server Fault: %v", r)
@@ -82,6 +98,11 @@ func (sl *SigList) UnmarshalBinaryData(data []byte) (newData []byte, err error) 
 }
 
 func (e *ServerFault) UpdateState(state interfaces.IState) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultUpdateState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	core, err := e.MarshalCore()
 	if err != nil {
@@ -118,6 +139,11 @@ func (e *ServerFault) UpdateState(state interfaces.IState) error {
 }
 
 func (m *ServerFault) MarshalCore() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultMarshalCore.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.Init()
 	defer func() {
 		if r := recover(); r != nil {
@@ -146,6 +172,11 @@ func (m *ServerFault) MarshalCore() (data []byte, err error) {
 }
 
 func (m *ServerFault) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.Init()
 	defer func() {
 		if r := recover(); r != nil {
@@ -187,6 +218,11 @@ func (m *ServerFault) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *ServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling With Signatures Invalid Server Fault: %v", r)
@@ -233,27 +269,57 @@ func (m *ServerFault) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (m *ServerFault) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (e *ServerFault) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ServerFault) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ServerFault) IsInterpretable() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultIsInterpretable.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return false
 }
 
 func (e *ServerFault) Interpret() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultInterpret.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ""
 }
 
 func (e *ServerFault) Hash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -262,6 +328,11 @@ func (e *ServerFault) Hash() interfaces.IHash {
 }
 
 func (e *ServerFault) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	str := fmt.Sprintf("    E: %35s -- DBheight %ds ServerID %8x AuditServer %8x, #sigs %d, VMIndex %d",
 		"EntryServerFault",
@@ -273,10 +344,20 @@ func (e *ServerFault) String() string {
 }
 
 func (e *ServerFault) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.TYPE_SERVER_FAULT
 }
 
 func (e *ServerFault) Compare(b *ServerFault) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockServerFaultCompare.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.Timestamp.GetTimeMilliUInt64() < b.Timestamp.GetTimeMilliUInt64() {
 		return -1
 	}

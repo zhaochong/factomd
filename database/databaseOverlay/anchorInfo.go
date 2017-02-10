@@ -6,11 +6,13 @@ package databaseOverlay
 
 import (
 	//"fmt"
+	"sort"
+	"time"
+
 	"github.com/FactomProject/factomd/anchor"
 	"github.com/FactomProject/factomd/common/directoryBlock/dbInfo"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
-	"sort"
 )
 
 var AnchorBlockID string = "df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604"
@@ -21,6 +23,11 @@ var AnchorSigKeys []string = []string{
 var AnchorSigPublicKeys []interfaces.Verifier
 
 func init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayAnchorinit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, v := range AnchorSigKeys {
 		pubKey := new(primitives.PublicKey)
 		err := pubKey.UnmarshalText([]byte(v))
@@ -32,6 +39,11 @@ func init() {
 }
 
 func (dbo *Overlay) RebuildDirBlockInfo() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayRebuildDirBlockInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ars, err := dbo.FetchAllAnchorInfo()
 	if err != nil {
 		return err
@@ -45,6 +57,11 @@ func (dbo *Overlay) RebuildDirBlockInfo() error {
 }
 
 func (dbo *Overlay) SaveAnchorInfoFromEntry(entry interfaces.IEBEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySaveAnchorInfoFromEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if entry.DatabasePrimaryIndex().String() == "24674e6bc3094eb773297de955ee095a05830e431da13a37382dcdc89d73c7d7" {
 		return nil
 	}
@@ -66,6 +83,11 @@ func (dbo *Overlay) SaveAnchorInfoFromEntry(entry interfaces.IEBEntry) error {
 }
 
 func (dbo *Overlay) SaveAnchorInfoFromEntryMultiBatch(entry interfaces.IEBEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySaveAnchorInfoFromEntryMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if entry.DatabasePrimaryIndex().String() == "24674e6bc3094eb773297de955ee095a05830e431da13a37382dcdc89d73c7d7" {
 		return nil
 	}
@@ -87,6 +109,11 @@ func (dbo *Overlay) SaveAnchorInfoFromEntryMultiBatch(entry interfaces.IEBEntry)
 }
 
 func (dbo *Overlay) FetchAllAnchorInfo() ([]*anchor.AnchorRecord, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllAnchorInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	chainID, err := primitives.NewShaHashFromStr(AnchorBlockID)
 	if err != nil {
 		panic(err)
@@ -115,6 +142,11 @@ func (dbo *Overlay) FetchAllAnchorInfo() ([]*anchor.AnchorRecord, error) {
 }
 
 func (dbo *Overlay) SaveAnchorInfoAsDirBlockInfo(ars []*anchor.AnchorRecord) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySaveAnchorInfoAsDirBlockInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sort.Sort(ByAnchorDBHeightAccending(ars))
 
 	for _, v := range ars {
@@ -132,6 +164,11 @@ func (dbo *Overlay) SaveAnchorInfoAsDirBlockInfo(ars []*anchor.AnchorRecord) err
 }
 
 func AnchorRecordToDirBlockInfo(ar *anchor.AnchorRecord) (*dbInfo.DirBlockInfo, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayAnchorRecordToDirBlockInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbi := new(dbInfo.DirBlockInfo)
 	var err error
 
@@ -166,11 +203,26 @@ func AnchorRecordToDirBlockInfo(ar *anchor.AnchorRecord) (*dbInfo.DirBlockInfo, 
 type ByAnchorDBHeightAccending []*anchor.AnchorRecord
 
 func (f ByAnchorDBHeightAccending) Len() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayByAnchorDBHeightAccendingLen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return len(f)
 }
 func (f ByAnchorDBHeightAccending) Less(i, j int) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayByAnchorDBHeightAccendingLess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f[i].DBHeight < f[j].DBHeight
 }
 func (f ByAnchorDBHeightAccending) Swap(i, j int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayByAnchorDBHeightAccendingSwap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f[i], f[j] = f[j], f[i]
 }

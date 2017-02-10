@@ -11,6 +11,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 /************************
@@ -37,10 +38,20 @@ var _ interfaces.IRCD = (*RCD_2)(nil)
  *************************************/
 
 func (b RCD_2) GetAddress() (interfaces.IAddress, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2GetAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil, nil
 }
 
 func (b RCD_2) NumberOfSignatures() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2NumberOfSignatures.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return 1
 }
 
@@ -49,27 +60,57 @@ func (b RCD_2) NumberOfSignatures() int {
  ***************************************/
 
 func (b RCD_2) IsSameAs(rcd interfaces.IRCD) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2IsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.String() == rcd.String()
 }
 
 func (b RCD_2) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2UnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := b.UnmarshalBinaryData(data)
 	return err
 }
 
 func (b RCD_2) CheckSig(trans interfaces.ITransaction, sigblk interfaces.ISignatureBlock) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2CheckSig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return false
 }
 
 func (e *RCD_2) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2JSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RCD_2) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2JSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (b RCD_2) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2String.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -78,6 +119,11 @@ func (b RCD_2) String() string {
 }
 
 func (w RCD_2) Clone() interfaces.IRCD {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2Clone.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c := new(RCD_2)
 	c.M = w.M
 	c.N = w.N
@@ -89,6 +135,11 @@ func (w RCD_2) Clone() interfaces.IRCD {
 }
 
 func (t *RCD_2) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2UnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if data == nil || len(data) < 5 {
 		return nil, fmt.Errorf("Not enough data to unmarshal")
 	}
@@ -115,6 +166,11 @@ func (t *RCD_2) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (a RCD_2) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2MarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	binary.Write(&out, binary.BigEndian, uint8(2))
@@ -132,6 +188,11 @@ func (a RCD_2) MarshalBinary() ([]byte, error) {
 }
 
 func (a RCD_2) CustomMarshalText() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_2CustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	primitives.WriteNumber8(&out, uint8(2)) // Type 2 Authorization

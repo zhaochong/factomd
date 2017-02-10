@@ -29,6 +29,11 @@ type FEREntryWithHeight struct {
 }
 
 func MakeFEREntryWithHeightFromContent(passedResidentHeight uint32, passedTargetActivationHeight uint32,
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano() 
+	defer factomdtestHelperMakeFEREntryWithHeightFromContent.Observe(float64(time.Now().UnixNano() - callTime)) 
+	/////STOP PROMETHEUS/////
+
 	passedTargetPrice uint64, passedExpirationHeight uint32, passedPriority uint32) *FEREntryWithHeight {
 	// Create and format the signing private key
 	var signingPrivateKey [64]byte
@@ -83,6 +88,11 @@ func MakeFEREntryWithHeightFromContent(passedResidentHeight uint32, passedTarget
 }
 
 func CreateAndPopulateTestStateForFER(testEntries []FEREntryWithHeight, desiredHeight int) *state.State {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano() 
+	defer factomdtestHelperCreateAndPopulateTestStateForFER.Observe(float64(time.Now().UnixNano() - callTime)) 
+	/////STOP PROMETHEUS/////
+
 	s := new(state.State)
 	s.DB = CreateAndPopulateTestDatabaseOverlayForFER(testEntries, desiredHeight)
 	s.LoadConfig("", "")
@@ -102,6 +112,11 @@ func CreateAndPopulateTestStateForFER(testEntries []FEREntryWithHeight, desiredH
 }
 
 func CreateAndPopulateTestDatabaseOverlayForFER(testEntries []FEREntryWithHeight, desiredHeight int) *databaseOverlay.Overlay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano() 
+	defer factomdtestHelperCreateAndPopulateTestDatabaseOverlayForFER.Observe(float64(time.Now().UnixNano() - callTime)) 
+	/////STOP PROMETHEUS/////
+
 	dbo := CreateEmptyTestDatabaseOverlay()
 
 	var prev *BlockSet = nil
@@ -170,6 +185,11 @@ func CreateAndPopulateTestDatabaseOverlayForFER(testEntries []FEREntryWithHeight
 }
 
 func CreateTestBlockSetForFER(prev *BlockSet, db *databaseOverlay.Overlay, testEntries []FEREntryWithHeight) *BlockSet {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano() 
+	defer factomdtestHelperCreateTestBlockSetForFER.Observe(float64(time.Now().UnixNano() - callTime)) 
+	/////STOP PROMETHEUS/////
+
 	var err error
 	height := 0
 	if prev != nil {
@@ -273,6 +293,11 @@ func CreateTestBlockSetForFER(prev *BlockSet, db *databaseOverlay.Overlay, testE
 }
 
 func CreateTestEntryBlockForFER(p interfaces.IEntryBlock, height uint32) (*entryBlock.EBlock, []*entryBlock.Entry) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano() 
+	defer factomdtestHelperCreateTestEntryBlockForFER.Observe(float64(time.Now().UnixNano() - callTime)) 
+	/////STOP PROMETHEUS/////
+
 	prev, ok := p.(*entryBlock.EBlock)
 	if ok == false {
 		prev = nil
@@ -316,6 +341,11 @@ func CreateTestEntryBlockForFER(p interfaces.IEntryBlock, height uint32) (*entry
 }
 
 func CreateTestFEREntry(n uint32) *entryBlock.Entry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano() 
+	defer factomdtestHelperCreateTestFEREntry.Observe(float64(time.Now().UnixNano() - callTime)) 
+	/////STOP PROMETHEUS/////
+
 	answer := entryBlock.NewEntry()
 
 	answer.ChainID = GetChainID()

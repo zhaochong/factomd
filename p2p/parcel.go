@@ -68,6 +68,11 @@ var CommandStrings = map[ParcelCommandType]string{
 const MaxPayloadSize = 1000
 
 func NewParcel(network NetworkID, payload []byte) *Parcel {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pNewParcel.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	header := new(ParcelHeader).Init(network)
 	header.AppHash = "NetworkMessage"
 	header.AppType = "Network"
@@ -78,6 +83,11 @@ func NewParcel(network NetworkID, payload []byte) *Parcel {
 }
 
 func ParcelsForPayload(network NetworkID, payload []byte) []Parcel {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelsForPayload.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	parcelCount := (len(payload) / MaxPayloadSize) + 1
 	parcels := make([]Parcel, parcelCount)
 
@@ -101,6 +111,11 @@ func ParcelsForPayload(network NetworkID, payload []byte) []Parcel {
 }
 
 func ReassembleParcel(parcels []*Parcel) *Parcel {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pReassembleParcel.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var payload bytes.Buffer
 
 	for _, parcel := range parcels {
@@ -123,6 +138,11 @@ func ReassembleParcel(parcels []*Parcel) *Parcel {
 }
 
 func (p *ParcelHeader) Init(network NetworkID) *ParcelHeader {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelHeaderInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.Network = network
 	p.Version = ProtocolVersion
 	p.Type = TypeMessage
@@ -132,16 +152,31 @@ func (p *ParcelHeader) Init(network NetworkID) *ParcelHeader {
 }
 
 func (p *Parcel) Init(header ParcelHeader) *Parcel {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.Header = header
 	return p
 }
 
 func (p *Parcel) UpdateHeader() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelUpdateHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.Header.Crc32 = crc32.Checksum(p.Payload, CRCKoopmanTable)
 	p.Header.Length = uint32(len(p.Payload))
 }
 
 func (p *Parcel) Trace(location string, sequence string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelTrace.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if 10 < CurrentLoggingLevel { // lower level means more severe. "Silence" level always printed, overriding silence.
 		time := time.Now().Unix()
 		fmt.Printf("\nParcelTrace, %s, %s, %s, %s, %s, %d \n", p.Header.AppHash, sequence, p.Header.AppType, CommandStrings[p.Header.Type], location, time)
@@ -149,6 +184,11 @@ func (p *Parcel) Trace(location string, sequence string) {
 }
 
 func (p *ParcelHeader) Print() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelHeaderPrint.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// debug( true, "\t Cookie: \t%+v", string(p.Cookie))
 	debug("parcel", "\t Network:\t%+v", p.Network.String())
 	debug("parcel", "\t Version:\t%+v", p.Version)
@@ -160,6 +200,11 @@ func (p *ParcelHeader) Print() {
 }
 
 func (p *Parcel) Print() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelPrint.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	debug("parcel", "Pretty Printing Parcel:")
 	p.Header.Print()
 	s := strconv.Quote(string(p.Payload))
@@ -167,14 +212,29 @@ func (p *Parcel) Print() {
 }
 
 func (p *Parcel) MessageType() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelMessageType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return (fmt.Sprintf("[%s]", CommandStrings[p.Header.Type]))
 }
 
 func (p *Parcel) PrintMessageType() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelPrintMessageType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("[%+v]", CommandStrings[p.Header.Type])
 }
 
 func (p *Parcel) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pParcelString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var output string
 	s := strconv.Quote(string(p.Payload))
 	output = fmt.Sprintf("%s\t Network:\t%+v\n", output, p.Header.Network.String())

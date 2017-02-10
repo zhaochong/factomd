@@ -14,6 +14,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // FBlockHeader defines information about a block and is used in the bitcoin
@@ -45,6 +46,11 @@ var _ interfaces.BinaryMarshallableAndCopyable = (*FBlock)(nil)
 var _ interfaces.DatabaseBlockWithEntries = (*FBlock)(nil)
 
 func (c *FBlock) GetEntryHashes() []interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetEntryHashes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entries := c.Transactions[:]
 	answer := make([]interfaces.IHash, len(entries))
 	for i, entry := range entries {
@@ -54,6 +60,11 @@ func (c *FBlock) GetEntryHashes() []interfaces.IHash {
 }
 
 func (c *FBlock) GetTransactionByHash(hash interfaces.IHash) interfaces.ITransaction {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetTransactionByHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if hash == nil {
 		return nil
 	}
@@ -71,6 +82,11 @@ func (c *FBlock) GetTransactionByHash(hash interfaces.IHash) interfaces.ITransac
 }
 
 func (c *FBlock) GetEntrySigHashes() []interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetEntrySigHashes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entries := c.Transactions[:]
 	answer := make([]interfaces.IHash, len(entries))
 	for i, entry := range entries {
@@ -80,23 +96,48 @@ func (c *FBlock) GetEntrySigHashes() []interfaces.IHash {
 }
 
 func (c *FBlock) New() interfaces.BinaryMarshallableAndCopyable {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockNew.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return new(FBlock)
 }
 
 func (c *FBlock) DatabasePrimaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.GetKeyMR()
 }
 
 func (c *FBlock) DatabaseSecondaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.GetLedgerKeyMR()
 }
 
 func (c *FBlock) GetDatabaseHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.DBHeight
 }
 
 // Return the timestamp of the coinbase transaction
 func (b *FBlock) GetCoinbaseTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetCoinbaseTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(b.Transactions) == 0 {
 		return nil
 	}
@@ -104,6 +145,11 @@ func (b *FBlock) GetCoinbaseTimestamp() interfaces.Timestamp {
 }
 
 func (b *FBlock) EndOfPeriod(period int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockEndOfPeriod.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if period == 0 {
 		return
 	} else {
@@ -116,18 +162,38 @@ func (b *FBlock) EndOfPeriod(period int) {
 }
 
 func (b *FBlock) GetTransactions() []interfaces.ITransaction {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetTransactions.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.Transactions
 }
 
 func (b FBlock) GetNewInstance() interfaces.IFBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetNewInstance.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return new(FBlock)
 }
 
 func (b *FBlock) GetEndOfPeriod() [10]int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetEndOfPeriod.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.endOfPeriod
 }
 
 func (b *FBlock) MarshalTrans() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockMarshalTrans.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 	var periodMark = 0
 	var i int
@@ -164,6 +230,11 @@ func (b *FBlock) MarshalTrans() ([]byte, error) {
 }
 
 func (b *FBlock) MarshalHeader() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockMarshalHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	out.Write(constants.FACTOID_CHAINID)
@@ -215,6 +286,11 @@ func (b *FBlock) MarshalHeader() ([]byte, error) {
 
 // Write out the block
 func (b *FBlock) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	data, err := b.MarshalHeader()
@@ -233,6 +309,11 @@ func (b *FBlock) MarshalBinary() ([]byte, error) {
 }
 
 func UnmarshalFBlock(data []byte) (interfaces.IFBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidUnmarshalFBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block := new(FBlock)
 
 	err := block.UnmarshalBinary(data)
@@ -246,6 +327,11 @@ func UnmarshalFBlock(data []byte) (interfaces.IFBlock, error) {
 // UnmarshalBinary assumes that the Binary is all good.  We do error
 // out if there isn't enough data, or the transaction is too large.
 func (b *FBlock) UnmarshalBinaryData(data []byte) (newdata []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// To catch memory errors, we capture the panic and turn it into
 	// a reported error.
 	defer func() {
@@ -318,16 +404,31 @@ func (b *FBlock) UnmarshalBinaryData(data []byte) (newdata []byte, err error) {
 }
 
 func (b *FBlock) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = b.UnmarshalBinaryData(data)
 	return err
 }
 
 func (b *FBlock) GetChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.NewHash(constants.FACTOID_CHAINID)
 }
 
 // Calculates the Key Merkle Root for this block and returns it.
 func (b *FBlock) GetKeyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bodyMR := b.GetBodyMR()
 
 	data, err := b.MarshalHeader()
@@ -342,10 +443,20 @@ func (b *FBlock) GetKeyMR() interfaces.IHash {
 }
 
 func (b *FBlock) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.GetLedgerKeyMR()
 }
 
 func (b *FBlock) GetLedgerKeyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetLedgerKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ledgerMR := b.GetLedgerMR()
 
 	data, err := b.MarshalHeader()
@@ -361,6 +472,11 @@ func (b *FBlock) GetLedgerKeyMR() interfaces.IHash {
 
 // Returns the LedgerMR for this block.
 func (b *FBlock) GetLedgerMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetLedgerMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hashes := make([]interfaces.IHash, 0, len(b.Transactions))
 	marker := 0
 	for i, trans := range b.Transactions {
@@ -381,6 +497,11 @@ func (b *FBlock) GetLedgerMR() interfaces.IHash {
 }
 
 func (b *FBlock) GetBodyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetBodyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hashes := make([]interfaces.IHash, 0, len(b.Transactions))
 	marker := 0
 	for i, trans := range b.Transactions {
@@ -402,43 +523,93 @@ func (b *FBlock) GetBodyMR() interfaces.IHash {
 }
 
 func (b *FBlock) GetPrevKeyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetPrevKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.PrevKeyMR
 }
 
 func (b *FBlock) SetPrevKeyMR(hash interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockSetPrevKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.PrevKeyMR = hash
 }
 
 func (b *FBlock) GetPrevLedgerKeyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetPrevLedgerKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.PrevLedgerKeyMR
 }
 
 func (b *FBlock) SetPrevLedgerKeyMR(hash interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockSetPrevLedgerKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.PrevLedgerKeyMR = hash
 }
 
 func (b *FBlock) CalculateHashes() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockCalculateHashes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.BodyMR = nil
 	b.GetBodyMR()
 }
 
 func (b *FBlock) SetDBHeight(dbheight uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.DBHeight = dbheight
 }
 
 func (b *FBlock) GetDBHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.DBHeight
 }
 
 func (b *FBlock) SetExchRate(rate uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockSetExchRate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.ExchRate = rate
 }
 
 func (b *FBlock) GetExchRate() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockGetExchRate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.ExchRate
 }
 
 func (b FBlock) ValidateTransaction(index int, trans interfaces.ITransaction) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockValidateTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Calculate the fee due.
 	{
 		err := trans.Validate(index)
@@ -488,6 +659,11 @@ func (b FBlock) ValidateTransaction(index int, trans interfaces.ITransaction) er
 }
 
 func (b FBlock) Validate() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i, trans := range b.Transactions {
 		if err := b.ValidateTransaction(i, trans); err != nil {
 			return nil
@@ -523,6 +699,11 @@ func (b FBlock) Validate() error {
 // payout to the servers, so it has no inputs.   This transaction must
 // be deterministic so that all servers will know and expect its output.
 func (b *FBlock) AddCoinbase(trans interfaces.ITransaction) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockAddCoinbase.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.BodyMR = nil
 	if len(b.Transactions) != 0 {
 		return fmt.Errorf("The coinbase transaction must be the first transaction")
@@ -549,6 +730,11 @@ func (b *FBlock) AddCoinbase(trans interfaces.ITransaction) error {
 // Add the given transaction to this block.  Reports an error if this
 // cannot be done, or if the transaction is invalid.
 func (b *FBlock) AddTransaction(trans interfaces.ITransaction) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockAddTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// These tests check that the Transaction itself is valid.  If it
 	// is not internally valid, it never will be valid.
 	b.BodyMR = nil
@@ -564,6 +750,11 @@ func (b *FBlock) AddTransaction(trans interfaces.ITransaction) error {
 }
 
 func (b FBlock) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return err.Error()
@@ -573,6 +764,11 @@ func (b FBlock) String() string {
 
 // Marshal to text.  Largely a debugging thing.
 func (b FBlock) CustomMarshalText() (text []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	out.WriteString("Transaction Block\n")
@@ -631,16 +827,31 @@ func (b FBlock) CustomMarshalText() (text []byte, err error) {
 }
 
 func (e *FBlock) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *FBlock) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 type ExpandedFBlock FBlock
 
 func (e FBlock) MarshalJSON() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidFBlockMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return json.Marshal(struct {
 		ExpandedFBlock
 		ChainID     string `json:"chainid"`
@@ -659,6 +870,11 @@ func (e FBlock) MarshalJSON() ([]byte, error) {
  **************************/
 
 func NewFBlock(prev interfaces.IFBlock) interfaces.IFBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidNewFBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	scb := new(FBlock)
 	scb.BodyMR = new(primitives.Hash)
 	if prev != nil {
@@ -676,6 +892,11 @@ func NewFBlock(prev interfaces.IFBlock) interfaces.IFBlock {
 }
 
 func CheckBlockPairIntegrity(block interfaces.IFBlock, prev interfaces.IFBlock) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidCheckBlockPairIntegrity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return fmt.Errorf("No block specified")
 	}

@@ -5,9 +5,15 @@ import (
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
+	"time"
 )
 
 func GetGenesisFBlock(netID uint32) interfaces.IFBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidGetGenesisFBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block := new(FBlock)
 	var data []byte
 	var err error

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	dd "github.com/FactomProject/factomd/controlPanel/dataDumpFormatting"
+	"time"
 )
 
 type DataDump struct {
@@ -30,6 +31,11 @@ type DataDump struct {
 }
 
 func getDataDumps() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelgetDataDumps.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	holder := new(DataDump)
 	DisplayStateMutex.RLock()
 	DsCopy := DisplayState.Clone()
@@ -57,6 +63,11 @@ func getDataDumps() []byte {
 }
 
 func SortedConnectionString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelSortedConnectionString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	arr := AllConnections.SortedConnections()
 	str := ""
 	for _, con := range arr {
@@ -66,6 +77,11 @@ func SortedConnectionString() string {
 }
 
 func AllConnectionsString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdcontrolPanelAllConnectionsString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str := ""
 	con := AllConnections.GetConnectedCopy()
 	dis := AllConnections.GetDisconnectedCopy()

@@ -22,6 +22,7 @@ import (
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
+	"time"
 )
 
 var _ = fmt.Print
@@ -38,6 +39,11 @@ type Request struct {
 var _ interfaces.IRequest = (*Request)(nil)
 
 func (r *Request) key() (thekey [32]byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateRequestkey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	binary.BigEndian.PutUint32(thekey[0:4], uint32(r.vmIndex))
 	binary.BigEndian.PutUint64(thekey[5:13], uint64(r.wait))
 	binary.BigEndian.PutUint64(thekey[14:22], uint64(r.vmheight))
@@ -46,6 +52,11 @@ func (r *Request) key() (thekey [32]byte) {
 
 /*
 func (r *Request) key() (thekey [20]byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateRequestkey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	binary.BigEndian.PutUint32(thekey[0:4], uint32(r.vmIndex))
 	binary.BigEndian.PutUint64(thekey[4:12], uint64(r.wait))
 	binary.BigEndian.PutUint64(thekey[12:20], uint64(r.sent))
@@ -113,10 +124,20 @@ type ProcessList struct {
 var _ interfaces.IProcessList = (*ProcessList)(nil)
 
 func (p *ProcessList) GetAmINegotiator() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetAmINegotiator.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return p.AmINegotiator
 }
 
 func (p *ProcessList) SetAmINegotiator(b bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListSetAmINegotiator.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.AmINegotiator = b
 }
 
@@ -142,6 +163,11 @@ type VM struct {
 }
 
 func (p *ProcessList) Clear() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListClear.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return
 	p.State.AddStatus(fmt.Sprintf("PROCESSLIST.Clear dbht %d", p.DBHeight))
 	p.FactoidBalancesTMutex.Lock()
@@ -182,6 +208,11 @@ func (p *ProcessList) Clear() {
 }
 
 func (p *ProcessList) GetKeysNewEntries() (keys [][32]byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetKeysNewEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	keys = make([][32]byte, p.LenNewEntries())
 
 	if p == nil {
@@ -198,12 +229,22 @@ func (p *ProcessList) GetKeysNewEntries() (keys [][32]byte) {
 }
 
 func (p *ProcessList) GetNewEntry(key [32]byte) interfaces.IEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetNewEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.NewEntriesMutex.RLock()
 	defer p.NewEntriesMutex.RUnlock()
 	return p.NewEntries[key]
 }
 
 func (p *ProcessList) LenNewEntries() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListLenNewEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if p == nil {
 		return 0
 	}
@@ -213,6 +254,11 @@ func (p *ProcessList) LenNewEntries() int {
 }
 
 func (p *ProcessList) Complete() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListComplete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if p.DBHeight <= p.State.GetHighestSavedBlk() {
 		return true
 	}
@@ -230,6 +276,11 @@ func (p *ProcessList) Complete() bool {
 
 // Returns the Virtual Server index for this hash for the given minute
 func (p *ProcessList) VMIndexFor(hash []byte) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListVMIndexFor.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if p.State.OneLeader {
 		return 0
 	}
@@ -243,6 +294,11 @@ func (p *ProcessList) VMIndexFor(hash []byte) int {
 }
 
 func SortServers(servers []interfaces.IFctServer) []interfaces.IFctServer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateSortServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < len(servers)-1; i++ {
 		done := true
 		for j := 0; j < len(servers)-1-i; j++ {
@@ -263,14 +319,29 @@ func SortServers(servers []interfaces.IFctServer) []interfaces.IFctServer {
 }
 
 func (p *ProcessList) SortFedServers() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListSortFedServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.FedServers = SortServers(p.FedServers)
 }
 
 func (p *ProcessList) SortAuditServers() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListSortAuditServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.AuditServers = SortServers(p.AuditServers)
 }
 
 func (p *ProcessList) SortDBSigs() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListSortDBSigs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Sort by VMIndex
 	for i := 0; i < len(p.DBSignatures)-1; i++ {
 		done := true
@@ -307,6 +378,11 @@ func (p *ProcessList) SortDBSigs() {
 
 // Returns the Federated Server responsible for this hash in this minute
 func (p *ProcessList) FedServerFor(minute int, hash []byte) interfaces.IFctServer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListFedServerFor.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	vs := p.VMIndexFor(hash)
 	if vs < 0 {
 		return nil
@@ -316,6 +392,11 @@ func (p *ProcessList) FedServerFor(minute int, hash []byte) interfaces.IFctServe
 }
 
 func (p *ProcessList) GetVirtualServers(minute int, identityChainID interfaces.IHash) (found bool, index int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetVirtualServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	found, fedIndex := p.GetFedServerIndexHash(identityChainID)
 	if !found {
 		return false, -1
@@ -333,6 +414,11 @@ func (p *ProcessList) GetVirtualServers(minute int, identityChainID interfaces.I
 
 // Returns true and the index of this server, or false and the insertion point for this server
 func (p *ProcessList) GetFedServerIndexHash(identityChainID interfaces.IHash) (bool, int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetFedServerIndexHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if p == nil {
 		return false, 0
 	}
@@ -354,6 +440,11 @@ func (p *ProcessList) GetFedServerIndexHash(identityChainID interfaces.IHash) (b
 
 // Returns true and the index of this server, or false and the insertion point for this server
 func (p *ProcessList) GetAuditServerIndexHash(identityChainID interfaces.IHash) (bool, int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetAuditServerIndexHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if p == nil {
 		return false, 0
 	}
@@ -374,6 +465,11 @@ func (p *ProcessList) GetAuditServerIndexHash(identityChainID interfaces.IHash) 
 // This function will be replaced by a calculation from the Matryoshka hashes from the servers
 // but for now, we are just going to make it a function of the dbheight.
 func (p *ProcessList) MakeMap() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListMakeMap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	n := len(p.FedServers)
 	if n > 0 {
 		indx := int(p.DBHeight*131) % n
@@ -391,6 +487,11 @@ func (p *ProcessList) MakeMap() {
 // This function will be replaced by a calculation from the Matryoshka hashes from the servers
 // but for now, we are just going to make it a function of the dbheight.
 func (p *ProcessList) PrintMap() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListPrintMap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	n := len(p.FedServers)
 	prt := fmt.Sprintf("===PrintMapStart=== %d\n", p.DBHeight)
 	prt = prt + fmt.Sprintf("dddd %s minute map:  s.LeaderVMIndex %d pl.dbht %d  s.dbht %d s.EOM %v\ndddd     ",
@@ -413,6 +514,11 @@ func (p *ProcessList) PrintMap() string {
 // Add the given serverChain to this processlist as a Federated Server, and return
 // the server index number of the added server
 func (p *ProcessList) AddFedServer(identityChainID interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAddFedServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.SortFedServers()
 	found, i := p.GetFedServerIndexHash(identityChainID)
 	if found {
@@ -438,6 +544,11 @@ func (p *ProcessList) AddFedServer(identityChainID interfaces.IHash) int {
 // Add the given serverChain to this processlist as an Audit Server, and return
 // the server index number of the added server
 func (p *ProcessList) AddAuditServer(identityChainID interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAddAuditServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	found, i := p.GetAuditServerIndexHash(identityChainID)
 	if found {
 		p.State.AddStatus(fmt.Sprintf("ProcessList.AddAuditServer Server already there %x at height %d", identityChainID.Bytes()[2:6], p.DBHeight))
@@ -459,6 +570,11 @@ func (p *ProcessList) AddAuditServer(identityChainID interfaces.IHash) int {
 
 // Remove the given serverChain from this processlist's Federated Servers
 func (p *ProcessList) RemoveFedServerHash(identityChainID interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListRemoveFedServerHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	found, i := p.GetFedServerIndexHash(identityChainID)
 	if !found {
 		p.RemoveAuditServerHash(identityChainID) // SOF-201
@@ -471,6 +587,11 @@ func (p *ProcessList) RemoveFedServerHash(identityChainID interfaces.IHash) {
 
 // Remove the given serverChain from this processlist's Audit Servers
 func (p *ProcessList) RemoveAuditServerHash(identityChainID interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListRemoveAuditServerHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	found, i := p.GetAuditServerIndexHash(identityChainID)
 	if !found {
 		return
@@ -481,11 +602,21 @@ func (p *ProcessList) RemoveAuditServerHash(identityChainID interfaces.IHash) {
 
 // Given a server index, return the last Ack
 func (p *ProcessList) GetAck(vmIndex int) *messages.Ack {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetAck.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return p.GetAckAt(vmIndex, p.VMs[vmIndex].Height)
 }
 
 // Given a server index, return the last Ack
 func (p *ProcessList) GetAckAt(vmIndex int, height int) *messages.Ack {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetAckAt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	vm := p.VMs[vmIndex]
 	if height < 0 || height >= len(vm.ListAck) {
 		return nil
@@ -494,6 +625,11 @@ func (p *ProcessList) GetAckAt(vmIndex int, height int) *messages.Ack {
 }
 
 func (p ProcessList) HasMessage() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListHasMessage.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < len(p.FedServers); i++ {
 		if len(p.VMs[i].List) > 0 {
 			return true
@@ -504,54 +640,99 @@ func (p ProcessList) HasMessage() bool {
 }
 
 func (p *ProcessList) AddOldMsgs(m interfaces.IMsg) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAddOldMsgs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.oldmsgslock.Lock()
 	defer p.oldmsgslock.Unlock()
 	p.OldMsgs[m.GetHash().Fixed()] = m
 }
 
 func (p *ProcessList) DeleteOldMsgs(key interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListDeleteOldMsgs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.oldmsgslock.Lock()
 	defer p.oldmsgslock.Unlock()
 	delete(p.OldMsgs, key.Fixed())
 }
 
 func (p *ProcessList) GetOldMsgs(key interfaces.IHash) interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetOldMsgs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.oldmsgslock.Lock()
 	defer p.oldmsgslock.Unlock()
 	return p.OldMsgs[key.Fixed()]
 }
 
 func (p *ProcessList) AddNewEBlocks(key interfaces.IHash, value interfaces.IEntryBlock) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAddNewEBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.neweblockslock.Lock()
 	defer p.neweblockslock.Unlock()
 	p.NewEBlocks[key.Fixed()] = value
 }
 
 func (p *ProcessList) GetNewEBlocks(key interfaces.IHash) interfaces.IEntryBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetNewEBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.neweblockslock.Lock()
 	defer p.neweblockslock.Unlock()
 	return p.NewEBlocks[key.Fixed()]
 }
 
 func (p *ProcessList) DeleteEBlocks(key interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListDeleteEBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.neweblockslock.Lock()
 	defer p.neweblockslock.Unlock()
 	delete(p.NewEBlocks, key.Fixed())
 }
 
 func (p *ProcessList) AddNewEntry(key interfaces.IHash, value interfaces.IEntry) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAddNewEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.NewEntriesMutex.Lock()
 	defer p.NewEntriesMutex.Unlock()
 	p.NewEntries[key.Fixed()] = value
 }
 
 func (p *ProcessList) DeleteNewEntry(key interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListDeleteNewEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.NewEntriesMutex.Lock()
 	defer p.NewEntriesMutex.Unlock()
 	delete(p.NewEntries, key.Fixed())
 }
 
 func (p *ProcessList) CurrentFault() *messages.FullServerFault {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListCurrentFault.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(p.System.List) < 1 || len(p.System.List) <= p.System.Height {
 		return nil
 	}
@@ -559,6 +740,11 @@ func (p *ProcessList) CurrentFault() *messages.FullServerFault {
 }
 
 func (p *ProcessList) GetLeaderTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetLeaderTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, msg := range p.VMs[0].List {
 		if msg.Type() == constants.DIRECTORY_BLOCK_SIGNATURE_MSG {
 			return msg.GetTimestamp()
@@ -568,14 +754,29 @@ func (p *ProcessList) GetLeaderTimestamp() interfaces.Timestamp {
 }
 
 func (p *ProcessList) ResetDiffSigTally() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListResetDiffSigTally.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.diffSigTally = 0
 }
 
 func (p *ProcessList) IncrementDiffSigTally() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListIncrementDiffSigTally.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.diffSigTally++
 }
 
 func (p *ProcessList) CheckDiffSigTally() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListCheckDiffSigTally.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// If the majority of VMs' signatures do not match our
 	// saved block, we discard that block from our database.
 	if p.diffSigTally > 0 && p.diffSigTally > (len(p.FedServers)/2) {
@@ -587,6 +788,11 @@ func (p *ProcessList) CheckDiffSigTally() bool {
 }
 
 func (p *ProcessList) GetRequest(now int64, vmIndex int, height int, waitSeconds int64) *Request {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListGetRequest.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	r := new(Request)
 	r.wait = waitSeconds
 	r.vmIndex = vmIndex
@@ -605,6 +811,11 @@ func (p *ProcessList) GetRequest(now int64, vmIndex int, height int, waitSeconds
 
 // Return the number of times we have tripped an ask for this request.
 func (p *ProcessList) AskDBState(vmIndex int, height int) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAskDBState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	now := p.State.GetTimestamp().GetTimeMilli()
 
 	r := p.GetRequest(now, vmIndex, height, 60)
@@ -624,6 +835,11 @@ func (p *ProcessList) AskDBState(vmIndex int, height int) int {
 
 // Return the number of times we have tripped an ask for this request.
 func (p *ProcessList) Ask(vmIndex int, height int, waitSeconds int64, tag int) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAsk.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	now := p.State.GetTimestamp().GetTimeMilli()
 
 	r := p.GetRequest(now, vmIndex, len(p.VMs[0].List), waitSeconds)
@@ -674,6 +890,11 @@ func (p *ProcessList) Ask(vmIndex int, height int, waitSeconds int64, tag int) i
 }
 
 func getLeaderMin(p *ProcessList) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstategetLeaderMin.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	leaderMin := 0
 	for _, vm := range p.VMs {
 		if vm.LeaderMinute > leaderMin {
@@ -691,6 +912,11 @@ func getLeaderMin(p *ProcessList) int {
 }
 
 func (p *ProcessList) TrimVMList(height uint32, vmIndex int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListTrimVMList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if !(uint32(len(p.VMs[vmIndex].List)) > height) {
 		p.VMs[vmIndex].List = p.VMs[vmIndex].List[:height]
 	}
@@ -698,6 +924,11 @@ func (p *ProcessList) TrimVMList(height uint32, vmIndex int) {
 
 // Process messages and update our state.
 func (p *ProcessList) Process(state *State) (progress bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dbht := state.GetHighestSavedBlk()
 	if dbht >= p.DBHeight {
 		return true
@@ -838,6 +1069,11 @@ func (p *ProcessList) Process(state *State) (progress bool) {
 }
 
 func (p *ProcessList) AddToSystemList(m interfaces.IMsg) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAddToSystemList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Make sure we have a list, and punt if we don't.
 	if p == nil {
 		p.State.Holding[m.GetRepeatHash().Fixed()] = m
@@ -925,6 +1161,11 @@ func (p *ProcessList) AddToSystemList(m interfaces.IMsg) bool {
 }
 
 func (p *ProcessList) AddToProcessList(ack *messages.Ack, m interfaces.IMsg) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAddToProcessList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if p == nil {
 		return
 	}
@@ -1028,6 +1269,11 @@ func (p *ProcessList) AddToProcessList(ack *messages.Ack, m interfaces.IMsg) {
 }
 
 func (p *ProcessList) ContainsDBSig(serverID interfaces.IHash) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListContainsDBSig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for _, dbsig := range p.DBSignatures {
 		if dbsig.ChainID.IsSameAs(serverID) {
 			return true
@@ -1037,6 +1283,11 @@ func (p *ProcessList) ContainsDBSig(serverID interfaces.IHash) bool {
 }
 
 func (p *ProcessList) AddDBSig(serverID interfaces.IHash, sig interfaces.IFullSignature) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListAddDBSig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	found, _ := p.GetFedServerIndexHash(serverID)
 	if !found || p.ContainsDBSig(serverID) {
 		return // Duplicate, or not a federated server
@@ -1053,6 +1304,11 @@ func (p *ProcessList) AddDBSig(serverID interfaces.IHash, sig interfaces.IFullSi
 }
 
 func (p *ProcessList) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 	if p == nil {
 		buf.WriteString("-- <nil>\n")
@@ -1123,6 +1379,11 @@ func (p *ProcessList) String() string {
 }
 
 func (p *ProcessList) Reset() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessListReset.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	previous := p.State.ProcessLists.Get(p.DBHeight - 1)
 
 	if previous == nil {
@@ -1231,6 +1492,11 @@ func (p *ProcessList) Reset() bool {
  ************************************************/
 
 func NewProcessList(state interfaces.IState, previous *ProcessList, dbheight uint32) *ProcessList {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateNewProcessList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// We default to the number of Servers previous.   That's because we always
 	// allocate the FUTURE directoryblock, not the current or previous...
 

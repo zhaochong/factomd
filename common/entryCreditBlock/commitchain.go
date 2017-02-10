@@ -13,6 +13,7 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 
 	ed "github.com/FactomProject/ed25519"
+	"time"
 )
 
 const (
@@ -39,6 +40,11 @@ var _ interfaces.IECBlockEntry = (*CommitChain)(nil)
 var _ interfaces.ISignable = (*CommitChain)(nil)
 
 func (e *CommitChain) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.MilliTime == nil {
 		e.MilliTime = new(primitives.ByteSlice6)
 	}
@@ -63,6 +69,11 @@ func (e *CommitChain) Init() {
 }
 
 func (e *CommitChain) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf(" %-20s\n", "CommitChain"))
@@ -79,6 +90,11 @@ func (e *CommitChain) String() string {
 }
 
 func NewCommitChain() *CommitChain {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockNewCommitChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c := new(CommitChain)
 	c.Version = 0
 	c.MilliTime = new(primitives.ByteSlice6)
@@ -92,10 +108,20 @@ func NewCommitChain() *CommitChain {
 }
 
 func (a *CommitChain) GetEntryHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainGetEntryHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return a.EntryHash
 }
 
 func (a *CommitChain) IsSameAs(b *CommitChain) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -111,6 +137,11 @@ func (a *CommitChain) IsSameAs(b *CommitChain) bool {
 }
 
 func (e *CommitChain) Hash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -119,16 +150,31 @@ func (e *CommitChain) Hash() interfaces.IHash {
 }
 
 func (b *CommitChain) IsInterpretable() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainIsInterpretable.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return false
 }
 
 func (b *CommitChain) Interpret() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainInterpret.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ""
 }
 
 // CommitMsg returns the binary marshaled message section of the CommitEntry
 // that is covered by the CommitEntry.Sig.
 func (c *CommitChain) CommitMsg() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainCommitMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p, err := c.MarshalBinary()
 	if err != nil {
 		return []byte{byte(0)}
@@ -138,6 +184,11 @@ func (c *CommitChain) CommitMsg() []byte {
 
 // Return the timestamp
 func (c *CommitChain) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	a := make([]byte, 2, 8)
 	a = append(a, c.MilliTime[:]...)
@@ -146,6 +197,11 @@ func (c *CommitChain) GetTimestamp() interfaces.Timestamp {
 }
 
 func (c *CommitChain) IsValid() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainIsValid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	//double check the credits in the commit
 	if c.Credits < 10 || c.Version != 0 {
@@ -156,17 +212,32 @@ func (c *CommitChain) IsValid() bool {
 }
 
 func (c *CommitChain) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, _ := c.MarshalBinary()
 	return primitives.Sha(data)
 }
 
 func (c *CommitChain) GetSigHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainGetSigHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data := c.CommitMsg()
 	c.SigHash = primitives.Sha(data)
 	return c.SigHash
 }
 
 func (c *CommitChain) MarshalBinarySig() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainMarshalBinarySig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	buf := new(primitives.Buffer)
 
@@ -197,6 +268,11 @@ func (c *CommitChain) MarshalBinarySig() ([]byte, error) {
 
 // Transaction hash of chain commit. (version through pub key hashed)
 func (c *CommitChain) MarshalBinaryTransaction() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainMarshalBinaryTransaction.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	buf := new(primitives.Buffer)
 
@@ -215,6 +291,11 @@ func (c *CommitChain) MarshalBinaryTransaction() ([]byte, error) {
 }
 
 func (c *CommitChain) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	buf := new(primitives.Buffer)
 
@@ -235,6 +316,11 @@ func (c *CommitChain) MarshalBinary() ([]byte, error) {
 }
 
 func (c *CommitChain) Sign(privateKey []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	sig, err := primitives.SignSignable(privateKey, c)
 	if err != nil {
@@ -262,6 +348,11 @@ func (c *CommitChain) Sign(privateKey []byte) error {
 }
 
 func (c *CommitChain) ValidateSignatures() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainValidateSignatures.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if c.ECPubKey == nil {
 		return fmt.Errorf("No public key present")
 	}
@@ -276,10 +367,20 @@ func (c *CommitChain) ValidateSignatures() error {
 }
 
 func (c *CommitChain) ECID() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainECID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ECIDChainCommit
 }
 
 func (c *CommitChain) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling CommitChain: %v", r)
@@ -384,14 +485,29 @@ func (c *CommitChain) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (c *CommitChain) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = c.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *CommitChain) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *CommitChain) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockCommitChainJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }

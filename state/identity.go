@@ -14,6 +14,7 @@ import (
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/log"
+	"time"
 )
 
 var (
@@ -26,6 +27,11 @@ var (
 )
 
 func (st *State) GetNetworkSkeletonKey() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateGetNetworkSkeletonKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	i := st.isIdentityChain(st.GetNetworkSkeletonIdentity())
 	if i == -1 { // There should always be a skeleton identity. It cannot be removed
 		return nil
@@ -42,6 +48,11 @@ func (st *State) GetNetworkSkeletonKey() interfaces.IHash {
 
 // Add the skeleton identity and try to build it
 func (st *State) IntiateNetworkSkeletonIdentity() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateIntiateNetworkSkeletonIdentity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	skel := st.GetNetworkSkeletonIdentity()
 	// This adds the status
 	st.CreateBlankFactomIdentity(skel)
@@ -55,6 +66,11 @@ func (st *State) IntiateNetworkSkeletonIdentity() error {
 }
 
 func (st *State) AddIdentityFromChainID(cid interfaces.IHash) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateAddIdentityFromChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if cid.String() == st.GetNetworkBootStrapIdentity().String() { // Ignore Bootstrap Identity, as it is invalid
 		return nil
 	}
@@ -168,11 +184,21 @@ func (st *State) AddIdentityFromChainID(cid interfaces.IHash) error {
 }
 
 func (st *State) RemoveIdentity(chainID interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateRemoveIdentity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	index := st.isIdentityChain(chainID)
 	st.removeIdentity(index)
 }
 
 func (st *State) removeIdentity(i int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateremoveIdentity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if st.Identities[i].Status == constants.IDENTITY_SKELETON {
 		return // Do not remove skeleton identity
 	}
@@ -180,6 +206,11 @@ func (st *State) removeIdentity(i int) {
 }
 
 func (st *State) isIdentityChain(cid interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateisIdentityChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// is this an identity chain
 	for i, identityChain := range st.Identities {
 		if identityChain.IdentityChainID.IsSameAs(cid) {
@@ -202,6 +233,11 @@ func (st *State) isIdentityChain(cid interfaces.IHash) int {
 // Using this will not send any message out if a key is changed.
 // Eg. Only call from addserver or you don't want any messages being sent.
 func LoadIdentityByEntryBlock(eblk interfaces.IEntryBlock, st *State) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateLoadIdentityByEntryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if eblk == nil {
 		log.Println("DEBUG: Identity Error, EBlock nil, disregard")
 		return
@@ -223,6 +259,11 @@ func LoadIdentityByEntryBlock(eblk interfaces.IEntryBlock, st *State) {
 }
 
 func LoadIdentityByEntry(ent interfaces.IEBEntry, st *State, height uint32, initial bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateLoadIdentityByEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if ent == nil {
 		return
 	}
@@ -264,6 +305,11 @@ func LoadIdentityByEntry(ent interfaces.IEBEntry, st *State, height uint32, init
 
 // Creates a blank identity
 func (st *State) CreateBlankFactomIdentity(chainID interfaces.IHash) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateCreateBlankFactomIdentity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if index := st.isIdentityChain(chainID); index != -1 {
 		return index
 	}
@@ -301,6 +347,11 @@ func (st *State) CreateBlankFactomIdentity(chainID interfaces.IHash) int {
 }
 
 func RegisterFactomIdentity(entry interfaces.IEBEntry, chainID interfaces.IHash, height uint32, st *State) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateRegisterFactomIdentity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	extIDs := entry.ExternalIDs()
 	if len(extIDs) == 0 {
 		return errors.New("Identity Error Register Identity: Invalid external ID length")
@@ -336,6 +387,11 @@ func RegisterFactomIdentity(entry interfaces.IEBEntry, chainID interfaces.IHash,
 }
 
 func addIdentity(entry interfaces.IEBEntry, height uint32, st *State) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateaddIdentity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	extIDs := entry.ExternalIDs()
 	// This check is here to prevent possible index out of bounds with extIDs[:6]
 	if len(extIDs) != 7 {
@@ -369,6 +425,11 @@ func addIdentity(entry interfaces.IEBEntry, height uint32, st *State) error {
 // is a federated or audit server. Returning an err makes the identity be removed, so return nil
 // if we don't want it removed
 func checkIdentityForFull(identityIndex int, st *State) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatecheckIdentityForFull.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	status := st.Identities[identityIndex].Status
 	if statusIsFedOrAudit(st.Identities[identityIndex].Status) || status == constants.IDENTITY_PENDING_FULL || status == constants.IDENTITY_SKELETON {
 		return nil // If already full, we don't need to check. If it is fed or audit, we do not need to check
@@ -407,6 +468,11 @@ func checkIdentityForFull(identityIndex int, st *State) error {
 }
 
 func UpdateManagementKey(entry interfaces.IEBEntry, height uint32, st *State) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateUpdateManagementKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	extIDs := entry.ExternalIDs()
 	// This check is here to prevent possible index out of bounds with extIDs[:3]
 	if len(extIDs) != 4 {
@@ -429,6 +495,11 @@ func UpdateManagementKey(entry interfaces.IEBEntry, height uint32, st *State) er
 }
 
 func registerIdentityAsServer(entry interfaces.IEBEntry, height uint32, st *State) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateregisterIdentityAsServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	extIDs := entry.ExternalIDs()
 	if len(extIDs) == 0 {
 		return errors.New("Identity Error Register Identity: Invalid external ID length")
@@ -461,6 +532,11 @@ func registerIdentityAsServer(entry interfaces.IEBEntry, height uint32, st *Stat
 }
 
 func RegisterBlockSigningKey(entry interfaces.IEBEntry, initial bool, height uint32, st *State) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateRegisterBlockSigningKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	extIDs := entry.ExternalIDs()
 	if len(extIDs) == 0 {
 		return errors.New("Identity Error Block Signing Key: Invalid external ID length")
@@ -532,6 +608,11 @@ func RegisterBlockSigningKey(entry interfaces.IEBEntry, initial bool, height uin
 }
 
 func UpdateMatryoshkaHash(entry interfaces.IEBEntry, initial bool, height uint32, st *State) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateUpdateMatryoshkaHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	extIDs := entry.ExternalIDs()
 	if len(extIDs) == 0 {
 		return errors.New("Identity Error MHash: Invalid external ID length")
@@ -603,6 +684,11 @@ func UpdateMatryoshkaHash(entry interfaces.IEBEntry, initial bool, height uint32
 }
 
 func RegisterAnchorSigningKey(entry interfaces.IEBEntry, initial bool, height uint32, st *State, BlockChain string) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateRegisterAnchorSigningKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	extIDs := entry.ExternalIDs()
 	if bytes.Compare([]byte{0x00}, extIDs[0]) != 0 ||
 		!CheckExternalIDsLength(extIDs, []int{1, 15, 32, 1, 1, 20, 8, 33, 64}) {
@@ -698,6 +784,11 @@ func RegisterAnchorSigningKey(entry interfaces.IEBEntry, initial bool, height ui
 
 // Called by AddServer Message
 func ProcessIdentityToAdminBlock(st *State, chainID interfaces.IHash, servertype int) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateProcessIdentityToAdminBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var matryoshkaHash interfaces.IHash
 	var blockSigningKey [32]byte
 	var btcKey [20]byte
@@ -776,6 +867,11 @@ func ProcessIdentityToAdminBlock(st *State, chainID interfaces.IHash, servertype
 
 // Verifies if is authority
 func (st *State) VerifyIsAuthority(cid interfaces.IHash) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateVerifyIsAuthority.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if st.isAuthorityChain(cid) != -1 {
 		return true
 	}
@@ -783,6 +879,11 @@ func (st *State) VerifyIsAuthority(cid interfaces.IHash) bool {
 }
 
 func UpdateIdentityStatus(ChainID interfaces.IHash, StatusTo int, st *State) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateUpdateIdentityStatus.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	IdentityIndex := st.isIdentityChain(ChainID)
 	if IdentityIndex == -1 {
 		return

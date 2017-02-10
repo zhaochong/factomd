@@ -35,6 +35,11 @@ const ( // iota is reset to 0
 )
 
 func (p *Peer) Init(address string, port string, quality int32, peerType uint8, connections int) *Peer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p.Address = address
 	p.Port = port
 	p.QualityScore = quality
@@ -47,6 +52,11 @@ func (p *Peer) Init(address string, port string, quality int32, peerType uint8, 
 }
 
 func (p *Peer) generatePeerHash() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeergeneratePeerHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	buff := make([]byte, 256)
 	RandomGenerator.Read(buff)
 	raw := sha256.Sum256(buff)
@@ -54,14 +64,29 @@ func (p *Peer) generatePeerHash() {
 }
 
 func (p *Peer) AddressPort() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerAddressPort.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return p.Address + ":" + p.Port
 }
 
 func (p *Peer) PeerIdent() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerPeerIdent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return p.Hash[0:12] + "-" + p.Address + ":" + p.Port
 }
 
 func (p *Peer) PeerFixedIdent() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerPeerFixedIdent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	address := fmt.Sprintf("%16s", p.Address)
 	return p.Hash[0:12] + "-" + address + ":" + p.Port
 }
@@ -79,6 +104,11 @@ func (p *Peer) PeerFixedIdent() string {
 // TODO - we might have a DNS address, not iP address and need to resolve it!
 // locationFromAddress converts the peers address into a uint32 "location" numeric
 func (p *Peer) LocationFromAddress() (location uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerLocationFromAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	location = 0
 	// Split the IPv4 octets
 	octets := strings.Split(p.Address, ".")
@@ -101,6 +131,11 @@ func (p *Peer) LocationFromAddress() (location uint32) {
 
 // merit increases a peers reputation
 func (p *Peer) merit() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeermerit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if 2147483000 > p.QualityScore {
 		p.QualityScore++
 	}
@@ -108,6 +143,11 @@ func (p *Peer) merit() {
 
 // demerit decreases a peers reputation
 func (p *Peer) demerit() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerdemerit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if -2147483000 < p.QualityScore {
 		//p.QualityScore--
 	}
@@ -117,12 +157,27 @@ func (p *Peer) demerit() {
 type PeerQualitySort []Peer
 
 func (p PeerQualitySort) Len() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerQualitySortLen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return len(p)
 }
 func (p PeerQualitySort) Swap(i, j int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerQualitySortSwap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p[i], p[j] = p[j], p[i]
 }
 func (p PeerQualitySort) Less(i, j int) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerQualitySortLess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return p[i].QualityScore < p[j].QualityScore
 }
 
@@ -130,11 +185,26 @@ func (p PeerQualitySort) Less(i, j int) bool {
 type PeerDistanceSort []Peer
 
 func (p PeerDistanceSort) Len() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerDistanceSortLen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return len(p)
 }
 func (p PeerDistanceSort) Swap(i, j int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerDistanceSortSwap.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p[i], p[j] = p[j], p[i]
 }
 func (p PeerDistanceSort) Less(i, j int) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdp2pPeerDistanceSortLess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return p[i].Location < p[j].Location
 }

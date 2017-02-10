@@ -34,6 +34,11 @@ var printout Printout
 var doPrint bool
 
 func PrintoutLoop() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainPrintoutLoop.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for {
 		time.Sleep(time.Second)
 		if doPrint {
@@ -44,6 +49,11 @@ func PrintoutLoop() {
 }
 
 func main() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainmain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var (
 		fast           = flag.Bool("fast", false, "Do a random sampling for all blocks below the designated 'checkedUpTo' block")
 		completedBlock = flag.Int("completed", 0, "Will only do a random sampling of entries below 'completed' block if 'fast' enabled")
@@ -200,6 +210,11 @@ func main() {
 }
 
 func SaveBlocksLoop(input chan []interfaces.IDirectoryBlock, done chan int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainSaveBlocksLoop.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//fmt.Printf("\t\tSaving blocks\n")
 
 	dbChan := make(chan []BlockSet, 2)
@@ -305,6 +320,11 @@ type BlockSet struct {
 }
 
 func SaveToDBLoop(input chan []BlockSet, done chan int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainSaveToDBLoop.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for {
 		if dbo != nil {
 			dbo.Close()
@@ -374,6 +394,11 @@ func SaveToDBLoop(input chan []BlockSet, done chan int) {
 var HashMap map[string]string
 
 func CheckDatabaseForMissingEntries(dbo interfaces.DBOverlay, fast bool, completed int, sampleRate int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainCheckDatabaseForMissingEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("\t\tIterating over DBlocks\n")
 
 	prevD, err := dbo.FetchDBlockHead()
@@ -566,6 +591,11 @@ func CheckDatabaseForMissingEntries(dbo interfaces.DBOverlay, fast bool, complet
 }
 
 func CheckDBlockEntries(dBlock interfaces.IDirectoryBlock, dbo interfaces.DBOverlay, fast bool, sampleRate int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainCheckDBlockEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entries := dBlock.GetDBEntries()
 	for {
 		missing := 0
@@ -690,6 +720,11 @@ func CheckDBlockEntries(dBlock interfaces.IDirectoryBlock, dbo interfaces.DBOver
 }
 
 func GetDBlockList() []string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainGetDBlockList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	/*return []string{
 		"3a5ec711a1dc1c6e463b0c0344560f830eb0b56e42def141cb423b0d8487a1dc", //10
 		"cde346e7ed87957edfd68c432c984f35596f29c7d23de6f279351cddecd5dc66", //100

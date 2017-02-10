@@ -11,6 +11,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // Communicate a Admin Block Change
@@ -31,14 +32,29 @@ var _ interfaces.IMsg = (*ChangeServerKeyMsg)(nil)
 var _ Signable = (*ChangeServerKeyMsg)(nil)
 
 func (m *ChangeServerKeyMsg) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *ChangeServerKeyMsg) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.GetMsgHash()
 }
 
 func (m *ChangeServerKeyMsg) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.MsgHash == nil {
 		data, err := m.MarshalForSignature()
 		if err != nil {
@@ -50,14 +66,29 @@ func (m *ChangeServerKeyMsg) GetMsgHash() interfaces.IHash {
 }
 
 func (m *ChangeServerKeyMsg) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.CHANGESERVER_KEY_MSG
 }
 
 func (m *ChangeServerKeyMsg) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Timestamp
 }
 
 func (m *ChangeServerKeyMsg) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Check to see if identity exists and is audit or fed server
 	if !state.VerifyIsAuthority(m.IdentityChainID) {
 		fmt.Println("ChangeServerKey Error. Server is not an authority")
@@ -99,32 +130,67 @@ func (m *ChangeServerKeyMsg) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *ChangeServerKeyMsg) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.VMIndex = state.ComputeVMIndex(constants.ADMIN_CHAINID)
 }
 
 // Execute the leader functions of the given message
 func (m *ChangeServerKeyMsg) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.LeaderExecute(m)
 }
 
 func (m *ChangeServerKeyMsg) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.FollowerExecuteMsg(m)
 }
 
 // Acknowledgements do not go into the process list.
 func (e *ChangeServerKeyMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return state.ProcessChangeServerKey(dbheight, e)
 }
 
 func (e *ChangeServerKeyMsg) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ChangeServerKeyMsg) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (m *ChangeServerKeyMsg) Sign(key interfaces.Signer) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	signature, err := SignSignable(m, key)
 	if err != nil {
 		return err
@@ -134,14 +200,29 @@ func (m *ChangeServerKeyMsg) Sign(key interfaces.Signer) error {
 }
 
 func (m *ChangeServerKeyMsg) GetSignature() interfaces.IFullSignature {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Signature
 }
 
 func (m *ChangeServerKeyMsg) VerifySignature() (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return VerifyMessage(m)
 }
 
 func (m *ChangeServerKeyMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Add Server Message: %v", r)
@@ -191,11 +272,21 @@ func (m *ChangeServerKeyMsg) UnmarshalBinaryData(data []byte) (newData []byte, e
 }
 
 func (m *ChangeServerKeyMsg) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *ChangeServerKeyMsg) MarshalForSignature() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgMarshalForSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -227,6 +318,11 @@ func (m *ChangeServerKeyMsg) MarshalForSignature() ([]byte, error) {
 }
 
 func (m *ChangeServerKeyMsg) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	data, err := m.MarshalForSignature()
@@ -247,6 +343,11 @@ func (m *ChangeServerKeyMsg) MarshalBinary() ([]byte, error) {
 }
 
 func (m *ChangeServerKeyMsg) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var mtype string
 	if m.AdminBlockChange == constants.TYPE_ADD_MATRYOSHKA {
 		mtype = "MHash"
@@ -267,6 +368,11 @@ func (m *ChangeServerKeyMsg) String() string {
 }
 
 func (m *ChangeServerKeyMsg) IsSameAs(b *ChangeServerKeyMsg) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesChangeServerKeyMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -300,6 +406,11 @@ func (m *ChangeServerKeyMsg) IsSameAs(b *ChangeServerKeyMsg) bool {
 }
 
 func NewChangeServerKeyMsg(state interfaces.IState, identityChain interfaces.IHash, adminChange byte, keyPriority byte, keyType byte, key interfaces.IHash) interfaces.IMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesNewChangeServerKeyMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	msg := new(ChangeServerKeyMsg)
 	msg.IdentityChainID = identityChain
 	msg.AdminBlockChange = adminChange

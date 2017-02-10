@@ -23,10 +23,20 @@ import (
 var _ = fmt.Print
 
 func SetDBFinished(s *State) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateSetDBFinished.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.DBFinished = true
 }
 
 func LoadDatabase(s *State) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateLoadDatabase.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer SetDBFinished(s)
 
 	var blkCnt uint32
@@ -88,6 +98,11 @@ func LoadDatabase(s *State) {
 }
 
 func GenerateGenesisBlocks(networkID uint32) (interfaces.IDirectoryBlock, interfaces.IAdminBlock, interfaces.IFBlock, interfaces.IEntryCreditBlock) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateGenerateGenesisBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dblk := directoryBlock.NewDirectoryBlock(nil)
 	ablk := adminBlock.NewAdminBlock(nil)
 	fblk := factoid.GetGenesisFBlock(networkID)

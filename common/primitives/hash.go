@@ -13,6 +13,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"time"
+
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives/random"
@@ -26,6 +28,11 @@ var _ interfaces.BinaryMarshallableAndCopyable = (*Hash)(nil)
 var _ encoding.TextMarshaler = (*Hash)(nil)
 
 func RandomHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesRandomHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := random.RandByteSliceOfLen(constants.HASH_LENGTH)
 	answer := new(Hash)
 	answer.SetBytes(h)
@@ -33,6 +40,11 @@ func RandomHash() interfaces.IHash {
 }
 
 func (c *Hash) Copy() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashCopy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := new(Hash)
 	err := h.SetBytes(c.Bytes())
 	if err != nil {
@@ -42,14 +54,29 @@ func (c *Hash) Copy() interfaces.IHash {
 }
 
 func (c *Hash) New() interfaces.BinaryMarshallableAndCopyable {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashNew.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return new(Hash)
 }
 
 func (h *Hash) MarshalText() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashMarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return []byte(hex.EncodeToString(h[:])), nil
 }
 
 func (h *Hash) IsZero() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashIsZero.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.String() == "0000000000000000000000000000000000000000000000000000000000000000"
 }
 
@@ -57,6 +84,11 @@ func (h *Hash) IsZero() bool {
 // the hexadecimal string of a byte-reversed hash, but any missing characters
 // result in zero padding at the end of the ShaHash.
 func NewShaHashFromStr(hash string) (*Hash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesNewShaHashFromStr.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := new(Hash)
 	err := h.UnmarshalText([]byte(hash))
 	if err != nil {
@@ -66,6 +98,11 @@ func NewShaHashFromStr(hash string) (*Hash, error) {
 }
 
 func (h *Hash) UnmarshalText(b []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashUnmarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	p, err := hex.DecodeString(string(b))
 	if err != nil {
 		return err
@@ -75,18 +112,38 @@ func (h *Hash) UnmarshalText(b []byte) error {
 }
 
 func (h Hash) Fixed() [constants.HASH_LENGTH]byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashFixed.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h
 }
 
 func (h *Hash) Bytes() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashBytes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.GetBytes()
 }
 
 func (Hash) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 func CreateHash(entities ...interfaces.BinaryMarshallable) (h interfaces.IHash, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesCreateHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sha := sha256.New()
 	h = new(Hash)
 	for _, entity := range entities {
@@ -101,10 +158,20 @@ func CreateHash(entities ...interfaces.BinaryMarshallable) (h interfaces.IHash, 
 }
 
 func (h *Hash) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.Bytes(), nil
 }
 
 func (h *Hash) UnmarshalBinaryData(p []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -116,6 +183,11 @@ func (h *Hash) UnmarshalBinaryData(p []byte) (newData []byte, err error) {
 }
 
 func (h *Hash) UnmarshalBinary(p []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = h.UnmarshalBinaryData(p)
 	return
 }
@@ -124,6 +196,11 @@ func (h *Hash) UnmarshalBinary(p []byte) (err error) {
 // reflected in the source hash.  You have to do a SetBytes to change the source
 // value.
 func (h *Hash) GetBytes() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashGetBytes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	newHash := make([]byte, constants.HASH_LENGTH)
 	copy(newHash, h[:])
 
@@ -133,6 +210,11 @@ func (h *Hash) GetBytes() []byte {
 // SetBytes sets the bytes which represent the hash.  An error is returned if
 // the number of bytes passed in is not constants.HASH_LENGTH.
 func (hash *Hash) SetBytes(newHash []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashSetBytes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	nhlen := len(newHash)
 	if nhlen != constants.HASH_LENGTH {
 		return fmt.Errorf("invalid sha length of %v, want %v", nhlen, constants.HASH_LENGTH)
@@ -144,6 +226,11 @@ func (hash *Hash) SetBytes(newHash []byte) error {
 // NewShaHash returns a new ShaHash from a byte slice.  An error is returned if
 // the number of bytes passed in is not constants.HASH_LENGTH.
 func NewShaHash(newHash []byte) (*Hash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesNewShaHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var sh Hash
 	err := sh.SetBytes(newHash)
 	if err != nil {
@@ -154,6 +241,11 @@ func NewShaHash(newHash []byte) (*Hash, error) {
 
 // Create a Sha512[:256] Hash from a byte array
 func Sha512Half(p []byte) (h *Hash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSha512Half.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sha := sha512.New()
 	sha.Write(p)
 
@@ -164,6 +256,11 @@ func Sha512Half(p []byte) (h *Hash) {
 
 // Convert a hash into a string with hex encoding
 func (h *Hash) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if h == nil {
 		return hex.EncodeToString(nil)
 	} else {
@@ -172,10 +269,20 @@ func (h *Hash) String() string {
 }
 
 func (h *Hash) ByteString() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashByteString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return string(h[:])
 }
 
 func HexToHash(hexStr string) (h interfaces.IHash, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHexToHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h = new(Hash)
 	v, err := hex.DecodeString(hexStr)
 	err = h.SetBytes(v)
@@ -184,6 +291,11 @@ func HexToHash(hexStr string) (h interfaces.IHash, err error) {
 
 // Compare two Hashes
 func (a Hash) IsSameAs(b interfaces.IHash) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -197,6 +309,11 @@ func (a Hash) IsSameAs(b interfaces.IHash) bool {
 
 // Is the hash a minute marker (the last byte indicates the minute number)
 func (h *Hash) IsMinuteMarker() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashIsMinuteMarker.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if bytes.Equal(h[:constants.HASH_LENGTH-1], constants.ZERO_HASH[:constants.HASH_LENGTH-1]) {
 		return true
 	}
@@ -205,10 +322,20 @@ func (h *Hash) IsMinuteMarker() bool {
 }
 
 func (e *Hash) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return EncodeJSON(e)
 }
 
 func (e *Hash) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHashJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return EncodeJSONString(e)
 }
 
@@ -218,6 +345,11 @@ func (e *Hash) JSONString() (string, error) {
 
 // Create a Sha256 Hash from a byte array
 func Sha(p []byte) interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSha.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := new(Hash)
 	b := sha256.Sum256(p)
 	h.SetBytes(b[:])
@@ -226,6 +358,11 @@ func Sha(p []byte) interfaces.IHash {
 
 // Shad Double Sha256 Hash; sha256(sha256(data))
 func Shad(data []byte) interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesShad.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h1 := sha256.Sum256(data)
 	h2 := sha256.Sum256(h1[:])
 	h := new(Hash)
@@ -234,11 +371,21 @@ func Shad(data []byte) interfaces.IHash {
 }
 
 func NewZeroHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesNewZeroHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := new(Hash)
 	return h
 }
 
 func NewHash(b []byte) interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesNewHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := new(Hash)
 	h.SetBytes(b)
 	return h
@@ -246,12 +393,22 @@ func NewHash(b []byte) interfaces.IHash {
 
 // shad Double Sha256 Hash; sha256(sha256(data))
 func DoubleSha(data []byte) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesDoubleSha.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h1 := sha256.Sum256(data)
 	h2 := sha256.Sum256(h1[:])
 	return h2[:]
 }
 
 func NewShaHashFromStruct(DataStruct interface{}) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesNewShaHashFromStruct.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	jsonbytes, err := json.Marshal(DataStruct)
 	if err != nil {
 		return nil, err

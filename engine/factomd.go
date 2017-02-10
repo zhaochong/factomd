@@ -29,6 +29,11 @@ var _ = fmt.Print
 var Build string
 
 func Factomd() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineFactomd.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	log.Print("//////////////////////// Copyright 2017 Factom Foundation")
 	log.Print("//////////////////////// Use of this source code is governed by the MIT")
 	log.Print("//////////////////////// license that can be found in the LICENSE file.")
@@ -54,6 +59,11 @@ func Factomd() {
 }
 
 func isCompilerVersionOK() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineisCompilerVersionOK.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	goodenough := false
 
 	if strings.Contains(runtime.Version(), "1.4") {

@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 type ECBlockHeader struct {
@@ -28,6 +29,11 @@ var _ = fmt.Print
 var _ interfaces.Printable = (*ECBlockHeader)(nil)
 
 func (c *ECBlockHeader) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if c.BodyHash == nil {
 		c.BodyHash = primitives.NewZeroHash()
 	}
@@ -43,6 +49,11 @@ func (c *ECBlockHeader) Init() {
 }
 
 func (e *ECBlockHeader) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("   %-20s %x\n", "ECChainID", e.GetECChainID().Bytes()[:3]))
@@ -58,82 +69,177 @@ func (e *ECBlockHeader) String() string {
 }
 
 func (e *ECBlockHeader) SetBodySize(cnt uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderSetBodySize.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.BodySize = cnt
 }
 
 func (e *ECBlockHeader) GetBodySize() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderGetBodySize.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.BodySize
 }
 
 func (e *ECBlockHeader) SetObjectCount(cnt uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderSetObjectCount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.ObjectCount = cnt
 }
 
 func (e *ECBlockHeader) GetObjectCount() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderGetObjectCount.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.ObjectCount
 }
 
 func (e *ECBlockHeader) SetHeaderExpansionArea(area []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderSetHeaderExpansionArea.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.HeaderExpansionArea = area
 }
 
 func (e *ECBlockHeader) GetHeaderExpansionArea() (area []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderGetHeaderExpansionArea.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.HeaderExpansionArea
 }
 
 func (e *ECBlockHeader) SetBodyHash(prev interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderSetBodyHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.BodyHash = prev
 }
 
 func (e *ECBlockHeader) GetBodyHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderGetBodyHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.BodyHash
 }
 
 func (e *ECBlockHeader) GetECChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderGetECChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := primitives.NewZeroHash()
 	h.SetBytes(constants.EC_CHAINID)
 	return h
 }
 
 func (e *ECBlockHeader) SetPrevHeaderHash(prev interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderSetPrevHeaderHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.PrevHeaderHash = prev
 }
 
 func (e *ECBlockHeader) GetPrevHeaderHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderGetPrevHeaderHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.PrevHeaderHash
 }
 
 func (e *ECBlockHeader) SetPrevFullHash(prev interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderSetPrevFullHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.PrevFullHash = prev
 }
 
 func (e *ECBlockHeader) GetPrevFullHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderGetPrevFullHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.PrevFullHash
 }
 
 func (e *ECBlockHeader) SetDBHeight(height uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderSetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.DBHeight = height
 }
 
 func (e *ECBlockHeader) GetDBHeight() (height uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderGetDBHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.DBHeight
 }
 
 func NewECBlockHeader() *ECBlockHeader {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockNewECBlockHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := new(ECBlockHeader)
 	h.Init()
 	return h
 }
 
 func (e *ECBlockHeader) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *ECBlockHeader) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *ECBlockHeader) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	buf := new(primitives.Buffer)
 
@@ -177,6 +283,11 @@ func (e *ECBlockHeader) MarshalBinary() ([]byte, error) {
 }
 
 func (e *ECBlockHeader) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -238,6 +349,11 @@ func (e *ECBlockHeader) UnmarshalBinaryData(data []byte) (newData []byte, err er
 }
 
 func (e *ECBlockHeader) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := e.UnmarshalBinaryData(data)
 	return err
 }
@@ -245,6 +361,11 @@ func (e *ECBlockHeader) UnmarshalBinary(data []byte) error {
 type ExpandedECBlockHeader ECBlockHeader
 
 func (e ECBlockHeader) MarshalJSON() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryCreditBlockECBlockHeaderMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return json.Marshal(struct {
 		ExpandedECBlockHeader
 		ChainID   string

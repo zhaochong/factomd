@@ -17,6 +17,11 @@ import (
 )
 
 func LoadJournal(s interfaces.IState, journal string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineLoadJournal.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f, err := os.Open(journal)
 	if err != nil {
 		fmt.Println(err)
@@ -29,12 +34,22 @@ func LoadJournal(s interfaces.IState, journal string) {
 }
 
 func LoadJournalFromString(s interfaces.IState, journalStr string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineLoadJournalFromString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f := strings.NewReader(journalStr)
 	r := bufio.NewReaderSize(f, 4*1024)
 	LoadJournalFromReader(s, r)
 }
 
 func LoadJournalFromReader(s interfaces.IState, r *bufio.Reader) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineLoadJournalFromReader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	s.SetIsReplaying()
 	defer s.SetIsDoneReplaying()
 

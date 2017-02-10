@@ -13,6 +13,11 @@ import (
 )
 
 func waitToKill(k *bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginewaitToKill.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t := rand.Int()%120 + 60
 	for t > 0 {
 		os.Stderr.WriteString(fmt.Sprintf("     Will kill some servers in about %d seconds\n", t))
@@ -29,6 +34,11 @@ func waitToKill(k *bool) {
 // Wait some random amount of time between 0 and 2 minutes, and bring the node back.  We might
 // come back before we are faulted, or we might not.
 func bringback(f *FactomNode) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginebringback.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t := rand.Int()%120 + 60
 	for t > 0 {
 		if !f.State.GetNetStateOff() {
@@ -46,6 +56,11 @@ func bringback(f *FactomNode) {
 }
 
 func offlineReport(faulting *bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineofflineReport.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for *faulting {
 		// How many nodes are running.
 		stmt := "Offline: "
@@ -64,6 +79,11 @@ func offlineReport(faulting *bool) {
 }
 
 func faultTest(faulting *bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginefaultTest.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	killsome := false
 	killing := false
 	numleaders := 0

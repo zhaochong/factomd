@@ -10,6 +10,7 @@ package messages
 
 import (
 	"fmt"
+	"time"
 )
 
 // MessageError describes an issue with a message.
@@ -29,6 +30,11 @@ var _ error = (*MessageError)(nil)
 
 // Error satisfies the error interface and prints human-readable errors.
 func (e *MessageError) Error() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageErrorError.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.Func != "" {
 		return fmt.Sprintf("%v: %v", e.Func, e.Description)
 	}
@@ -37,5 +43,10 @@ func (e *MessageError) Error() string {
 
 // messageError creates an error for the given function and description.
 func messageError(f string, desc string) *MessageError {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesmessageError.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return &MessageError{Func: f, Description: desc}
 }

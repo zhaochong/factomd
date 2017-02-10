@@ -10,12 +10,18 @@ import (
 	"github.com/FactomProject/factomd/state"
 	"github.com/FactomProject/factomd/util"
 	"os"
+	"time"
 )
 
 const level string = "level"
 const bolt string = "bolt"
 
 func main() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainmain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Println("Usage:")
 	fmt.Println("BlockExtractor level/bolt [ChainID-To-Extract]")
 	fmt.Println("Leave out the last one to export basic chains (A, D, EC, F)")

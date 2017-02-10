@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
+	"time"
 )
 
 /**************************
@@ -21,6 +22,11 @@ import (
  ***********************/
 
 func UnmarshalBinaryAuth(data []byte) (a interfaces.IRCD, newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidUnmarshalBinaryAuth.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if data == nil || len(data) < 1 {
 		return nil, nil, fmt.Errorf("Not enough data to unmarshal")
 	}
@@ -40,6 +46,11 @@ func UnmarshalBinaryAuth(data []byte) (a interfaces.IRCD, newData []byte, err er
 }
 
 func NewRCD_1(publicKey []byte) interfaces.IRCD {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidNewRCD_1.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(publicKey) != constants.ADDRESS_LENGTH {
 		panic("Bad publickey.  This should not happen")
 	}
@@ -49,6 +60,11 @@ func NewRCD_1(publicKey []byte) interfaces.IRCD {
 }
 
 func NewRCD_2(n int, m int, addresses []interfaces.IAddress) (interfaces.IRCD, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidNewRCD_2.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(addresses) != m {
 		return nil, fmt.Errorf("Improper number of addresses.  m = %d n = %d #addresses = %d", m, n, len(addresses))
 	}
@@ -63,6 +79,11 @@ func NewRCD_2(n int, m int, addresses []interfaces.IAddress) (interfaces.IRCD, e
 }
 
 func CreateRCD(data []byte) interfaces.IRCD {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidCreateRCD.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch data[0] {
 	case 1:
 		return new(RCD_1)

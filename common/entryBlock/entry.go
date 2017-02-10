@@ -12,6 +12,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // An Entry is the element which carries user data
@@ -34,6 +35,11 @@ var _ interfaces.BinaryMarshallable = (*Entry)(nil)
 // to 1K returns 1, everything up to and including 2K returns 2, etc.
 // An error returns 100 (an invalid size)
 func (c *Entry) KSize() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryKSize.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := c.MarshalBinary()
 	if err != nil {
 		return 100
@@ -42,38 +48,78 @@ func (c *Entry) KSize() int {
 }
 
 func (c *Entry) New() interfaces.BinaryMarshallableAndCopyable {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryNew.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return NewEntry()
 }
 
 func (c *Entry) GetDatabaseHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return 0
 }
 
 func (e *Entry) GetWeld() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryGetWeld.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.DoubleSha(append(e.GetHash().Bytes(), e.GetChainID().Bytes()...))
 }
 
 func (e *Entry) GetWeldHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryGetWeldHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hash := primitives.NewZeroHash()
 	hash.SetBytes(e.GetWeld())
 	return hash
 }
 
 func (c *Entry) GetChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryGetChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.ChainID
 }
 
 func (c *Entry) DatabasePrimaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.GetHash()
 }
 
 func (c *Entry) DatabaseSecondaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 // NewChainID generates a ChainID from an entry. ChainID = primitives.Sha(Sha(ExtIDs[0]) +
 // Sha(ExtIDs[1] + ... + Sha(ExtIDs[n]))
 func NewChainID(e interfaces.IEBEntry) interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockNewChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	id := new(primitives.Hash)
 	sum := sha256.New()
 	for _, v := range e.ExternalIDs() {
@@ -86,14 +132,29 @@ func NewChainID(e interfaces.IEBEntry) interfaces.IHash {
 }
 
 func (e *Entry) GetContent() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryGetContent.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.Content.Bytes
 }
 
 func (e *Entry) GetChainIDHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryGetChainIDHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return e.ChainID
 }
 
 func (e *Entry) ExternalIDs() [][]byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryExternalIDs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := [][]byte{}
 	for _, v := range e.ExtIDs {
 		answer = append(answer, v.Bytes)
@@ -102,6 +163,11 @@ func (e *Entry) ExternalIDs() [][]byte {
 }
 
 func (e *Entry) IsValid() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryIsValid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//double check the version
 	if e.Version != 0 {
 		return false
@@ -111,6 +177,11 @@ func (e *Entry) IsValid() bool {
 }
 
 func (e *Entry) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.hash == nil {
 		h := primitives.NewZeroHash()
 		entry, err := e.MarshalBinary()
@@ -127,6 +198,11 @@ func (e *Entry) GetHash() interfaces.IHash {
 }
 
 func (e *Entry) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	buf := new(primitives.Buffer)
 
 	// 1 byte Version
@@ -159,6 +235,11 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 // MarshalExtIDsBinary marshals the ExtIDs into a []byte containing a series of
 // 2 byte size of each ExtID followed by the ExtID.
 func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryMarshalExtIDsBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	buf := new(primitives.Buffer)
 
 	for _, x := range e.ExtIDs {
@@ -175,6 +256,11 @@ func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 }
 
 func UnmarshalEntry(data []byte) (interfaces.IEBEntry, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockUnmarshalEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entry := NewEntry()
 	err := entry.UnmarshalBinary(data)
 	if err != nil {
@@ -184,6 +270,11 @@ func UnmarshalEntry(data []byte) (interfaces.IEBEntry, error) {
 }
 
 func (e *Entry) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -257,19 +348,39 @@ func (e *Entry) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (e *Entry) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *Entry) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Entry) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *Entry) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockEntryString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
@@ -279,6 +390,11 @@ func (e *Entry) String() string {
  ***************************************************************/
 
 func NewEntry() *Entry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdentryBlockNewEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e := new(Entry)
 	e.ChainID = primitives.NewZeroHash()
 	e.ExtIDs = make([]primitives.ByteSlice, 0)

@@ -6,11 +6,17 @@ import (
 	"text/template"
 
 	"fmt"
+	"time"
 )
 
 // Custom parsing of static files. Makes it easier to use with templates
 
 func CustomParseGlob(temp *template.Template, file string) *template.Template {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfilesCustomParseGlob.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var err error
 	readers, err := OpenGlob(file)
 	if err != nil {
@@ -26,6 +32,11 @@ func CustomParseGlob(temp *template.Template, file string) *template.Template {
 }
 
 func CustomParseFile(temp *template.Template, file string) (*template.Template, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfilesCustomParseFile.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	reader, err := Open(file)
 	if err != nil {
 		return temp, err
@@ -38,6 +49,11 @@ func CustomParseFile(temp *template.Template, file string) (*template.Template, 
 }
 
 func parseData(temp *template.Template, reader io.ReadCloser) (*template.Template, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfilesparseData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return temp, err

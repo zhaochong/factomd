@@ -7,9 +7,10 @@ package engine
 import (
 	"bytes"
 	"fmt"
+	"time"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
-	"time"
 )
 
 var _ = fmt.Print
@@ -46,20 +47,40 @@ var _ interfaces.IPeer = (*SimPeer)(nil)
 
 // Bytes sent out per second from this peer
 func (f *SimPeer) BytesOut() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerBytesOut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f.RateOut
 }
 
 // Bytes recieved per second from this peer
 func (f *SimPeer) BytesIn() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerBytesIn.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f.RateIn
 }
 
 func (*SimPeer) Weight() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineWeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// A SimPeer only represents itself
 	return 1
 }
 
 func (f *SimPeer) Equals(ff interfaces.IPeer) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerEquals.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f2, ok := ff.(*SimPeer)
 	if !ok {
 		return false
@@ -78,10 +99,20 @@ func (f *SimPeer) Equals(ff interfaces.IPeer) bool {
 }
 
 func (f *SimPeer) Len() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerLen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return len(f.BroadcastIn)
 }
 
 func (f *SimPeer) Init(fromName, toName string) interfaces.IPeer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f.ToName = toName
 	f.FromName = fromName
 	f.BroadcastOut = make(chan *SimPacket, 10000)
@@ -90,13 +121,28 @@ func (f *SimPeer) Init(fromName, toName string) interfaces.IPeer {
 }
 
 func (f *SimPeer) GetNameFrom() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerGetNameFrom.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f.FromName
 }
 func (f *SimPeer) GetNameTo() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerGetNameTo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f.ToName
 }
 
 func (f *SimPeer) computeBandwidth() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeercomputeBandwidth.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	now := time.Now().UnixNano()
 	delta := (now - f.Last) / 1000000000 // Make delta seconds
 	if delta < 5 {
@@ -111,6 +157,11 @@ func (f *SimPeer) computeBandwidth() {
 }
 
 func (f *SimPeer) Send(msg interfaces.IMsg) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerSend.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := msg.MarshalBinary()
 	f.bytesOut += len(data)
 	f.computeBandwidth()
@@ -127,6 +178,11 @@ func (f *SimPeer) Send(msg interfaces.IMsg) error {
 
 // Non-blocking return value from channel.
 func (f *SimPeer) Recieve() (interfaces.IMsg, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineSimPeerRecieve.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if f.Delayed == nil {
 		select {
 		case packet, ok := <-f.BroadcastIn:
@@ -158,6 +214,11 @@ func (f *SimPeer) Recieve() (interfaces.IMsg, error) {
 }
 
 func AddSimPeer(fnodes []*FactomNode, i1 int, i2 int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineAddSimPeer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Ignore out of range, and connections to self.
 	if i1 < 0 ||
 		i2 < 0 ||

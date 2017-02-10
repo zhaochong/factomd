@@ -4,9 +4,15 @@ import (
 	"github.com/FactomProject/factomd/common/entryCreditBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 func (db *Overlay) SavePaidFor(entry, ecEntry interfaces.IHash) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySavePaidFor.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if entry == nil || ecEntry == nil {
 		return nil
 	}
@@ -23,6 +29,11 @@ func (db *Overlay) SavePaidFor(entry, ecEntry interfaces.IHash) error {
 }
 
 func (db *Overlay) SavePaidForMultiFromBlockMultiBatch(block interfaces.IEntryCreditBlock, checkForDuplicateEntries bool) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySavePaidForMultiFromBlockMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return nil
 	}
@@ -62,6 +73,11 @@ func (db *Overlay) SavePaidForMultiFromBlockMultiBatch(block interfaces.IEntryCr
 }
 
 func (db *Overlay) SavePaidForMultiFromBlock(block interfaces.IEntryCreditBlock, checkForDuplicateEntries bool) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySavePaidForMultiFromBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return nil
 	}
@@ -104,6 +120,11 @@ func (db *Overlay) SavePaidForMultiFromBlock(block interfaces.IEntryCreditBlock,
 }
 
 func (db *Overlay) FetchPaidFor(hash interfaces.IHash) (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchPaidFor.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.DB.Get(PAID_FOR, hash.Bytes(), new(primitives.Hash))
 	if err != nil {
 		return nil, err

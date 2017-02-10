@@ -5,10 +5,16 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/util"
 	"sort"
+	"time"
 )
 
 // ProcessDirBlockInfoBatch inserts the dirblock info block
 func (db *Overlay) ProcessDirBlockInfoBatch(block interfaces.IDirBlockInfo) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessDirBlockInfoBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block.GetBTCConfirmed() == true {
 		err := db.Delete(DIRBLOCKINFO_UNCONFIRMED, block.DatabasePrimaryIndex().Bytes())
 		if err != nil {
@@ -21,6 +27,11 @@ func (db *Overlay) ProcessDirBlockInfoBatch(block interfaces.IDirBlockInfo) erro
 }
 
 func (db *Overlay) ProcessDirBlockInfoMultiBatch(block interfaces.IDirBlockInfo) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayProcessDirBlockInfoMultiBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block.GetBTCConfirmed() == true {
 		err := db.Delete(DIRBLOCKINFO_UNCONFIRMED, block.DatabasePrimaryIndex().Bytes())
 		if err != nil {
@@ -34,6 +45,11 @@ func (db *Overlay) ProcessDirBlockInfoMultiBatch(block interfaces.IDirBlockInfo)
 
 // FetchDirBlockInfoByHash gets a dirblock info block by hash from the database.
 func (db *Overlay) FetchDirBlockInfoByHash(hash interfaces.IHash) (interfaces.IDirBlockInfo, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchDirBlockInfoByHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.FetchBlockBySecondaryIndex(DIRBLOCKINFO_SECONDARYINDEX, DIRBLOCKINFO_UNCONFIRMED, hash, dbInfo.NewDirBlockInfo())
 	if err != nil {
 		return nil, err
@@ -52,6 +68,11 @@ func (db *Overlay) FetchDirBlockInfoByHash(hash interfaces.IHash) (interfaces.ID
 
 // FetchDirBlockInfoByKeyMR gets a dirblock info block by keyMR from the database.
 func (db *Overlay) FetchDirBlockInfoByKeyMR(hash interfaces.IHash) (interfaces.IDirBlockInfo, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchDirBlockInfoByKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	block, err := db.FetchBlock(DIRBLOCKINFO_UNCONFIRMED, hash, dbInfo.NewDirBlockInfo())
 	if err != nil {
 		return nil, err
@@ -70,6 +91,11 @@ func (db *Overlay) FetchDirBlockInfoByKeyMR(hash interfaces.IHash) (interfaces.I
 
 // FetchAllConfirmedDirBlockInfos gets all of the confiemed dirblock info blocks
 func (db *Overlay) FetchAllConfirmedDirBlockInfos() ([]interfaces.IDirBlockInfo, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllConfirmedDirBlockInfos.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	list, err := db.FetchAllBlocksFromBucket(DIRBLOCKINFO, dbInfo.NewDirBlockInfo())
 	if err != nil {
 		return nil, err
@@ -79,6 +105,11 @@ func (db *Overlay) FetchAllConfirmedDirBlockInfos() ([]interfaces.IDirBlockInfo,
 
 // FetchAllUnconfirmedDirBlockInfos gets all of the unconfirmed dirblock info blocks
 func (db *Overlay) FetchAllUnconfirmedDirBlockInfos() ([]interfaces.IDirBlockInfo, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllUnconfirmedDirBlockInfos.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	list, err := db.FetchAllBlocksFromBucket(DIRBLOCKINFO_UNCONFIRMED, dbInfo.NewDirBlockInfo())
 	if err != nil {
 		return nil, err
@@ -88,6 +119,11 @@ func (db *Overlay) FetchAllUnconfirmedDirBlockInfos() ([]interfaces.IDirBlockInf
 
 // FetchAllDirBlockInfos gets all of the dirblock info blocks
 func (db *Overlay) FetchAllDirBlockInfos() ([]interfaces.IDirBlockInfo, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlayFetchAllDirBlockInfos.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	unconfirmed, err := db.FetchAllUnconfirmedDirBlockInfos()
 	if err != nil {
 		return nil, err
@@ -102,6 +138,11 @@ func (db *Overlay) FetchAllDirBlockInfos() ([]interfaces.IDirBlockInfo, error) {
 }
 
 func toDirBlockInfosList(source []interfaces.BinaryMarshallableAndCopyable) []interfaces.IDirBlockInfo {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlaytoDirBlockInfosList.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := make([]interfaces.IDirBlockInfo, len(source))
 	for i, v := range source {
 		answer[i] = v.(interfaces.IDirBlockInfo)
@@ -111,5 +152,10 @@ func toDirBlockInfosList(source []interfaces.BinaryMarshallableAndCopyable) []in
 }
 
 func (db *Overlay) SaveDirBlockInfo(block interfaces.IDirBlockInfo) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddatabaseOverlayOverlaySaveDirBlockInfo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return db.ProcessDirBlockInfoBatch(block)
 }

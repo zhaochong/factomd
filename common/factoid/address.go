@@ -16,6 +16,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 type Address struct {
@@ -25,11 +26,21 @@ type Address struct {
 var _ interfaces.IAddress = (*Address)(nil)
 
 func RandomAddress() interfaces.IAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRandomAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	h := primitives.RandomHash()
 	return CreateAddress(h)
 }
 
 func (a *Address) CustomMarshalText() (text []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidAddressCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 	addr := hex.EncodeToString(a.Bytes())
 	out.WriteString("addr  ")
@@ -38,12 +49,22 @@ func (a *Address) CustomMarshalText() (text []byte, err error) {
 }
 
 func NewAddress(b []byte) interfaces.IAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidNewAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	a := new(Address)
 	a.SetBytes(b)
 	return a
 }
 
 func CreateAddress(hash interfaces.IHash) interfaces.IAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidCreateAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if hash == nil {
 		return NewAddress(nil)
 	}

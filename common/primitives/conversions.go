@@ -14,9 +14,15 @@ import (
 	"github.com/FactomProject/btcutil/base58"
 	"github.com/FactomProject/go-bip32"
 	"github.com/FactomProject/go-bip39"
+	"time"
 )
 
 func MnemonicStringToPrivateKey(mnemonic string) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesMnemonicStringToPrivateKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
@@ -37,6 +43,11 @@ func MnemonicStringToPrivateKey(mnemonic string) ([]byte, error) {
 }
 
 func MnemonicStringToPrivateKeyString(mnemonic string) (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesMnemonicStringToPrivateKeyString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	key, err := MnemonicStringToPrivateKey(mnemonic)
 	if err != nil {
 		return "", err
@@ -49,6 +60,11 @@ func MnemonicStringToPrivateKeyString(mnemonic string) (string, error) {
 /******************************************************************************/
 
 func HumanReadableFactoidPrivateKeyToPrivateKey(human string) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHumanReadableFactoidPrivateKeyToPrivateKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	human = strings.TrimSpace(human)
 	base, v1, v2, err := base58.CheckDecodeWithTwoVersionBytes(human)
 	if err != nil {
@@ -63,6 +79,11 @@ func HumanReadableFactoidPrivateKeyToPrivateKey(human string) ([]byte, error) {
 }
 
 func HumanReadableFactoidPrivateKeyToPrivateKeyString(human string) (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHumanReadableFactoidPrivateKeyToPrivateKeyString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	key, err := HumanReadableFactoidPrivateKeyToPrivateKey(human)
 	if err != nil {
 		return "", err
@@ -71,6 +92,11 @@ func HumanReadableFactoidPrivateKeyToPrivateKeyString(human string) (string, err
 }
 
 func HumanReadableECPrivateKeyToPrivateKey(human string) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHumanReadableECPrivateKeyToPrivateKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	human = strings.TrimSpace(human)
 	base, v1, v2, err := base58.CheckDecodeWithTwoVersionBytes(human)
 	if err != nil {
@@ -85,6 +111,11 @@ func HumanReadableECPrivateKeyToPrivateKey(human string) ([]byte, error) {
 }
 
 func HumanReadableECPrivateKeyToPrivateKeyString(human string) (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesHumanReadableECPrivateKeyToPrivateKeyString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	key, err := HumanReadableECPrivateKeyToPrivateKey(human)
 	if err != nil {
 		return "", err
@@ -93,14 +124,29 @@ func HumanReadableECPrivateKeyToPrivateKeyString(human string) (string, error) {
 }
 
 func PrivateKeyStringToHumanReadableFactoidPrivateKey(priv string) (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesPrivateKeyStringToHumanReadableFactoidPrivateKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return PrivateKeyStringToHumanReadablePrivateKey(priv, 0x64, 0x78)
 }
 
 func PrivateKeyStringToHumanReadableECPrivateKey(priv string) (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesPrivateKeyStringToHumanReadableECPrivateKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return PrivateKeyStringToHumanReadablePrivateKey(priv, 0x5d, 0xb6)
 }
 
 func PrivateKeyStringToHumanReadablePrivateKey(priv string, b1, b2 byte) (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesPrivateKeyStringToHumanReadablePrivateKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	priv = strings.TrimSpace(priv)
 
 	h, err := hex.DecodeString(priv)
@@ -116,6 +162,11 @@ func PrivateKeyStringToHumanReadablePrivateKey(priv string, b1, b2 byte) (string
 /******************************************************************************/
 
 func PrivateKeyStringToPublicKeyString(private string) (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesPrivateKeyStringToPublicKeyString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pub, err := PrivateKeyStringToPublicKey(private)
 	if err != nil {
 		return "", err
@@ -124,6 +175,11 @@ func PrivateKeyStringToPublicKeyString(private string) (string, error) {
 }
 
 func PrivateKeyStringToPublicKey(private string) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesPrivateKeyStringToPublicKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	privHex, err := hex.DecodeString(private)
 	if err != nil {
 		return nil, err
@@ -132,6 +188,11 @@ func PrivateKeyStringToPublicKey(private string) ([]byte, error) {
 }
 
 func PrivateKeyToPublicKey(private []byte) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesPrivateKeyToPublicKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pub, _, err := GenerateKeyFromPrivateKey(private)
 	if err != nil {
 		return nil, err
@@ -140,6 +201,11 @@ func PrivateKeyToPublicKey(private []byte) ([]byte, error) {
 }
 
 func GenerateKeyFromPrivateKey(privateKey []byte) (public []byte, private []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesGenerateKeyFromPrivateKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(privateKey) == 64 {
 		privateKey = privateKey[:32]
 	}

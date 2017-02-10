@@ -35,6 +35,11 @@ var Servers map[int]*web.Server
 var ServersMutex sync.Mutex
 
 func Start(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiStart.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var server *web.Server
 
 	ServersMutex.Lock()
@@ -110,6 +115,11 @@ func Start(state interfaces.IState) {
 }
 
 func SetState(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiSetState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	wait := func() {
 		ServersMutex.Lock()
 		defer ServersMutex.Unlock()
@@ -123,6 +133,11 @@ func SetState(state interfaces.IState) {
 }
 
 func Stop(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiStop.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -130,6 +145,11 @@ func Stop(state interfaces.IState) {
 }
 
 func handleV1Error(ctx *web.Context, err *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapihandleV1Error.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	/*
 		if err.Data != nil {
 			data, ok := err.Data.(string)
@@ -148,6 +168,11 @@ func handleV1Error(ctx *web.Context, err *primitives.JSONError) {
 }
 
 func returnV1(ctx *web.Context, jsonResp *primitives.JSON2Response, jsonError *primitives.JSONError) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapireturnV1.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if jsonError != nil {
 		handleV1Error(ctx, jsonError)
 		return
@@ -156,6 +181,11 @@ func returnV1(ctx *web.Context, jsonResp *primitives.JSON2Response, jsonError *p
 }
 
 func HandleDBlockByHeight(ctx *web.Context, height string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleDBlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -178,6 +208,11 @@ func HandleDBlockByHeight(ctx *web.Context, height string) {
 }
 
 func HandleECBlockByHeight(ctx *web.Context, height string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleECBlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -200,6 +235,11 @@ func HandleECBlockByHeight(ctx *web.Context, height string) {
 }
 
 func HandleFBlockByHeight(ctx *web.Context, height string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleFBlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -222,6 +262,11 @@ func HandleFBlockByHeight(ctx *web.Context, height string) {
 }
 
 func HandleABlockByHeight(ctx *web.Context, height string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleABlockByHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -244,6 +289,11 @@ func HandleABlockByHeight(ctx *web.Context, height string) {
 }
 
 func HandleCommitChain(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleCommitChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -282,10 +332,20 @@ func HandleCommitChain(ctx *web.Context) {
 }
 
 func HandleRevealChain(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleRevealChain.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	HandleRevealEntry(ctx)
 }
 
 func HandleCommitEntry(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleCommitEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -328,6 +388,11 @@ func HandleCommitEntry(ctx *web.Context) {
 }
 
 func HandleRevealEntry(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleRevealEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -366,6 +431,11 @@ func HandleRevealEntry(ctx *web.Context) {
 }
 
 func HandleDirectoryBlockHead(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleDirectoryBlockHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -395,6 +465,11 @@ func HandleDirectoryBlockHead(ctx *web.Context) {
 }
 
 func HandleGetRaw(ctx *web.Context, hashkey string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleGetRaw.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -412,6 +487,11 @@ func HandleGetRaw(ctx *web.Context, hashkey string) {
 }
 
 func HandleGetReceipt(ctx *web.Context, hashkey string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleGetReceipt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -429,6 +509,11 @@ func HandleGetReceipt(ctx *web.Context, hashkey string) {
 }
 
 func HandleDirectoryBlock(ctx *web.Context, hashkey string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleDirectoryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -474,6 +559,11 @@ func HandleDirectoryBlock(ctx *web.Context, hashkey string) {
 }
 
 func HandleDirectoryBlockHeight(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleDirectoryBlockHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -509,6 +599,11 @@ func HandleDirectoryBlockHeight(ctx *web.Context) {
 }
 
 func HandleEntryBlock(ctx *web.Context, hashkey string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleEntryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -550,6 +645,11 @@ func HandleEntryBlock(ctx *web.Context, hashkey string) {
 }
 
 func HandleEntry(ctx *web.Context, hashkey string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -577,6 +677,11 @@ func HandleEntry(ctx *web.Context, hashkey string) {
 }
 
 func HandleChainHead(ctx *web.Context, chainid string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleChainHead.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -607,6 +712,11 @@ func HandleChainHead(ctx *web.Context, chainid string) {
 }
 
 func HandleEntryCreditBalance(ctx *web.Context, address string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleEntryCreditBalance.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	type x struct {
 		Response string
 		Success  bool
@@ -637,6 +747,11 @@ func HandleEntryCreditBalance(ctx *web.Context, address string) {
 }
 
 func HandleGetFee(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleGetFee.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -662,6 +777,11 @@ func HandleGetFee(ctx *web.Context) {
 }
 
 func HandleFactoidSubmit(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleFactoidSubmit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	type x struct {
 		Response string
 		Success  bool
@@ -706,6 +826,11 @@ func HandleFactoidSubmit(ctx *web.Context) {
 }
 
 func HandleFactoidBalance(ctx *web.Context, address string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleFactoidBalance.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	type x struct {
 		Response string
 		Success  bool
@@ -737,6 +862,11 @@ func HandleFactoidBalance(ctx *web.Context, address string) {
 }
 
 func HandleProperties(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleProperties.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -764,6 +894,11 @@ func HandleProperties(ctx *web.Context) {
 }
 
 func HandleHeights(ctx *web.Context) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapiHandleHeights.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ServersMutex.Lock()
 	defer ServersMutex.Unlock()
 
@@ -783,6 +918,11 @@ func HandleHeights(ctx *web.Context) {
  *********************************************************/
 
 func returnMsg(ctx *web.Context, msg interface{}, success bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapireturnMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	type rtn struct {
 		Response interface{}
 		Success  bool
@@ -807,6 +947,11 @@ func returnMsg(ctx *web.Context, msg interface{}, success bool) {
 }
 
 func returnV1Msg(ctx *web.Context, msg string, success bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapireturnV1Msg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	/* V1 requires call specific case changes that can't be handled with
 	interfaces for example.  Block Height needs to return  height as the json item name
 	in golang, lower case names are private so won't be returned.
@@ -822,6 +967,11 @@ func returnV1Msg(ctx *web.Context, msg string, success bool) {
 //
 //   "Basic " + base64(username + ":" + password)
 func httpBasicAuth(username, password string) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapihttpBasicAuth.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	const header = "Basic "
 	base64 := base64.StdEncoding
 
@@ -838,6 +988,11 @@ func httpBasicAuth(username, password string) []byte {
 }
 
 func checkAuthHeader(state interfaces.IState, r *http.Request) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapicheckAuthHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if "" == state.GetRpcUser() {
 		//no username was specified in the config file or command line, meaning factomd API is open access
 		return nil
@@ -862,6 +1017,11 @@ func checkAuthHeader(state interfaces.IState, r *http.Request) error {
 }
 
 func checkHttpPasswordOkV1(state interfaces.IState, ctx *web.Context) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapicheckHttpPasswordOkV1.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if err := checkAuthHeader(state, ctx.Request); err != nil {
 		remoteIP := ""
 		remoteIP += strings.Split(ctx.Request.RemoteAddr, ":")[0]
@@ -874,6 +1034,11 @@ func checkHttpPasswordOkV1(state interfaces.IState, ctx *web.Context) bool {
 }
 
 func fileExists(name string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapifileExists.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
 			return false
@@ -883,6 +1048,11 @@ func fileExists(name string) bool {
 }
 
 func genCertPair(certFile string, keyFile string, extraAddress string) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdwsapigenCertPair.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Println("Generating TLS certificates...")
 
 	org := "factom autogenerated cert"

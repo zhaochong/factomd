@@ -9,11 +9,17 @@ import (
 	"github.com/FactomProject/factomd/database/hybridDB"
 	"github.com/FactomProject/factomd/database/mapdb"
 	"github.com/FactomProject/factomd/util"
+	"time"
 )
 
 //DBInit
 
 func InitBolt(cfg *util.FactomdConfig) interfaces.DBOverlay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainInitBolt.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//fmt.Println("InitBolt")
 	path := cfg.App.BoltDBPath + "/"
 
@@ -23,6 +29,11 @@ func InitBolt(cfg *util.FactomdConfig) interfaces.DBOverlay {
 }
 
 func InitLevelDB(cfg *util.FactomdConfig) interfaces.DBOverlay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainInitLevelDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//fmt.Println("InitLevelDB")
 	path := cfg.App.LdbPath + "/" + "FactoidLevel-Import.db"
 
@@ -39,6 +50,11 @@ func InitLevelDB(cfg *util.FactomdConfig) interfaces.DBOverlay {
 }
 
 func InitMapDB(cfg *util.FactomdConfig) interfaces.DBOverlay {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmainInitMapDB.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//fmt.Println("InitMapDB")
 	dbase := new(mapdb.MapDB)
 	dbase.Init(nil)

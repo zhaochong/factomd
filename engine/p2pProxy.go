@@ -49,14 +49,29 @@ type factomMessage struct {
 }
 
 func (e *factomMessage) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginefactomMessageJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *factomMessage) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginefactomMessageJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *factomMessage) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginefactomMessageString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
@@ -64,24 +79,49 @@ func (e *factomMessage) String() string {
 var _ interfaces.IPeer = (*P2PProxy)(nil)
 
 func (f *P2PProxy) Weight() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyWeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// should return the number of connections this peer represents.  For now, just say a lot
 	return f.NumPeers
 }
 
 func (f *P2PProxy) SetWeight(w int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxySetWeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// should return the number of connections this peer represents.  For now, just say a lot
 	f.NumPeers = w
 }
 
 func (f *P2PProxy) BytesOut() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyBytesOut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f.bytesOut
 }
 
 func (f *P2PProxy) BytesIn() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyBytesIn.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f.bytesIn
 }
 
 func (f *P2PProxy) Init(fromName, toName string) interfaces.IPeer {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f.ToName = toName
 	f.FromName = fromName
 	f.BroadcastOut = make(chan interface{}, p2p.StandardChannelSize)
@@ -90,18 +130,38 @@ func (f *P2PProxy) Init(fromName, toName string) interfaces.IPeer {
 	return f
 }
 func (f *P2PProxy) SetDebugMode(netdebug int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxySetDebugMode.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f.debugMode = netdebug
 }
 
 func (f *P2PProxy) GetNameFrom() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyGetNameFrom.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f.FromName
 }
 
 func (f *P2PProxy) GetNameTo() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyGetNameTo.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return f.ToName
 }
 
 func (f *P2PProxy) Send(msg interfaces.IMsg) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxySend.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f.logMessage(msg, false) // NODE_TALK_FIX
 	data, err := msg.MarshalBinary()
 	if err != nil {
@@ -131,6 +191,11 @@ func (f *P2PProxy) Send(msg interfaces.IMsg) error {
 
 // Non-blocking return value from channel.
 func (f *P2PProxy) Recieve() (interfaces.IMsg, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyRecieve.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	select {
 	case data, ok := <-f.BroadcastIn:
 		if ok {
@@ -159,6 +224,11 @@ func (f *P2PProxy) Recieve() (interfaces.IMsg, error) {
 
 // Is this connection equal to parm connection
 func (f *P2PProxy) Equals(ff interfaces.IPeer) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyEquals.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	f2, ok := ff.(*P2PProxy)
 	if !ok {
 		return false
@@ -176,6 +246,11 @@ func (f *P2PProxy) Equals(ff interfaces.IPeer) bool {
 
 // Returns the number of messages waiting to be read
 func (f *P2PProxy) Len() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyLen.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return len(f.BroadcastIn)
 }
 
@@ -183,6 +258,11 @@ func (f *P2PProxy) Len() int {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (p *P2PProxy) StartProxy() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyStartProxy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if 1 < p.debugMode {
 		go p.ManageLogging()
 	}
@@ -192,6 +272,11 @@ func (p *P2PProxy) StartProxy() {
 
 // NODE_TALK_FIX
 func (p *P2PProxy) stopProxy() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxystopProxy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if 0 < p.debugMode {
 		p2p.BlockFreeChannelSend(p.logging, "stop")
 	}
@@ -206,19 +291,39 @@ type messageLog struct {
 }
 
 func (e *messageLog) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginemessageLogJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *messageLog) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginemessageLogJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *messageLog) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginemessageLogString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	str, _ := e.JSONString()
 	return str
 }
 
 func (p *P2PProxy) logMessage(msg interfaces.IMsg, received bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxylogMessage.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if 2 < p.debugMode {
 		// if constants.DBSTATE_MSG == msg.Type() {
 		// fmt.Printf("AppMsgLogging: \n Type: %s \n Network Origin: %s \n Message: %s", msg.Type(), msg.GetNetworkOrigin(), msg.String())
@@ -231,6 +336,11 @@ func (p *P2PProxy) logMessage(msg interfaces.IMsg, received bool) {
 }
 
 func (p *P2PProxy) ManageLogging() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyManageLogging.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	fmt.Printf("setting up message logging")
 	file, err := os.OpenFile("message_log.csv", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
 	p.logFile = *file
@@ -269,6 +379,11 @@ func (p *P2PProxy) ManageLogging() {
 
 // manageOutChannel takes messages from the f.broadcastOut channel and sends them to the network.
 func (f *P2PProxy) ManageOutChannel() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyManageOutChannel.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for data := range f.BroadcastOut {
 		switch data.(type) {
 		case factomMessage:
@@ -293,6 +408,11 @@ func (f *P2PProxy) ManageOutChannel() {
 
 // manageInChannel takes messages from the network and stuffs it in the f.BroadcastIn channel
 func (f *P2PProxy) ManageInChannel() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyManageInChannel.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for data := range f.FromNetwork {
 		switch data.(type) {
 		case p2p.Parcel:
@@ -307,6 +427,11 @@ func (f *P2PProxy) ManageInChannel() {
 }
 
 func (p *P2PProxy) trace(appHash string, appType string, location string, sequence string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxytrace.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if 10 < p.debugMode {
 		time := time.Now().Unix()
 		fmt.Printf("\nParcelTrace, %s, %s, %s, Message, %s, %d \n", appHash, sequence, appType, location, time)
@@ -314,6 +439,11 @@ func (p *P2PProxy) trace(appHash string, appType string, location string, sequen
 }
 
 func (f *P2PProxy) PeriodicStatusReport(fnodes []*FactomNode) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineP2PProxyPeriodicStatusReport.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	time.Sleep(p2p.NetworkStatusInterval) // wait for things to spin up
 	for {
 		time.Sleep(p2p.NetworkStatusInterval)

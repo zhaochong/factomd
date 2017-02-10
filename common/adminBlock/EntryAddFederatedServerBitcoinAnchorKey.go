@@ -6,6 +6,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // DB Signature Entry -------------------------
@@ -20,12 +21,22 @@ var _ interfaces.IABEntry = (*AddFederatedServerBitcoinAnchorKey)(nil)
 var _ interfaces.BinaryMarshallable = (*AddFederatedServerBitcoinAnchorKey)(nil)
 
 func (e *AddFederatedServerBitcoinAnchorKey) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.IdentityChainID == nil {
 		e.IdentityChainID = primitives.NewZeroHash()
 	}
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8x %12s %8x %12s %8s",
@@ -38,6 +49,11 @@ func (e *AddFederatedServerBitcoinAnchorKey) String() string {
 }
 
 func (c *AddFederatedServerBitcoinAnchorKey) UpdateState(state interfaces.IState) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyUpdateState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	state.UpdateAuthorityFromABEntry(c)
 	return nil
@@ -45,6 +61,11 @@ func (c *AddFederatedServerBitcoinAnchorKey) UpdateState(state interfaces.IState
 
 // Create a new DB Signature Entry
 func NewAddFederatedServerBitcoinAnchorKey(identityChainID interfaces.IHash, keyPriority byte, keyType byte, ecdsaPublicKey primitives.ByteSlice20) (e *AddFederatedServerBitcoinAnchorKey) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockNewAddFederatedServerBitcoinAnchorKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e = new(AddFederatedServerBitcoinAnchorKey)
 	e.IdentityChainID = identityChainID
 	e.KeyPriority = keyPriority
@@ -54,10 +75,20 @@ func NewAddFederatedServerBitcoinAnchorKey(identityChainID interfaces.IHash, key
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.TYPE_ADD_BTC_ANCHOR_KEY
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var buf primitives.Buffer
 
@@ -82,6 +113,11 @@ func (e *AddFederatedServerBitcoinAnchorKey) MarshalBinary() ([]byte, error) {
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Add Federated Server Bitcoin Anchor Key: %v", r)
@@ -115,27 +151,57 @@ func (e *AddFederatedServerBitcoinAnchorKey) UnmarshalBinaryData(data []byte) (n
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) IsInterpretable() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyIsInterpretable.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return false
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) Interpret() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyInterpret.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ""
 }
 
 func (e *AddFederatedServerBitcoinAnchorKey) Hash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockAddFederatedServerBitcoinAnchorKeyHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)

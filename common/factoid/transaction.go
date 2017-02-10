@@ -39,6 +39,11 @@ var _ interfaces.Printable = (*Transaction)(nil)
 var _ interfaces.BinaryMarshallableAndCopyable = (*Transaction)(nil)
 
 func (t *Transaction) IsSameAs(trans interfaces.ITransaction) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if trans == nil {
 		if t == nil {
 			return true
@@ -98,31 +103,66 @@ func (t *Transaction) IsSameAs(trans interfaces.ITransaction) bool {
 }
 
 func (w *Transaction) New() interfaces.BinaryMarshallableAndCopyable {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionNew.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return new(Transaction)
 }
 
 func (t *Transaction) SetBlockHeight(height uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionSetBlockHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t.BlockHeight = height
 }
 
 func (t *Transaction) GetBlockHeight() (height uint32) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetBlockHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return t.BlockHeight
 }
 
 // Clears caches if they are no long valid.
 func (t *Transaction) clearCaches() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionclearCaches.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return
 }
 
 func (*Transaction) GetVersion() uint64 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidGetVersion.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return 2
 }
 
 func (t *Transaction) GetTxID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetTxID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return t.GetSigHash()
 }
 
 func (t *Transaction) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m, err := t.MarshalBinary()
 	if err != nil {
 		return nil
@@ -131,6 +171,11 @@ func (t *Transaction) GetHash() interfaces.IHash {
 }
 
 func (t Transaction) GetFullHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetFullHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m, err := t.MarshalBinary()
 	if err != nil {
 		return nil
@@ -139,6 +184,11 @@ func (t Transaction) GetFullHash() interfaces.IHash {
 }
 
 func (t Transaction) GetSigHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetSigHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m, err := t.MarshalBinarySig()
 	if err != nil {
 		return nil
@@ -147,6 +197,11 @@ func (t Transaction) GetSigHash() interfaces.IHash {
 }
 
 func (t Transaction) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	txt, err := t.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -156,14 +211,29 @@ func (t Transaction) String() string {
 
 // MilliTimestamp is in milliseconds
 func (t *Transaction) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.NewTimestampFromMilliseconds(t.MilliTimestamp)
 }
 
 func (t *Transaction) SetTimestamp(ts interfaces.Timestamp) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionSetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t.MilliTimestamp = ts.GetTimeMilliUInt64()
 }
 
 func (t *Transaction) SetSignatureBlock(i int, sig interfaces.ISignatureBlock) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionSetSignatureBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for len(t.SigBlocks) <= i {
 		t.SigBlocks = append(t.SigBlocks, new(SignatureBlock))
 	}
@@ -171,6 +241,11 @@ func (t *Transaction) SetSignatureBlock(i int, sig interfaces.ISignatureBlock) {
 }
 
 func (t *Transaction) GetSignatureBlock(i int) interfaces.ISignatureBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetSignatureBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for len(t.SigBlocks) <= i {
 		t.SigBlocks = append(t.SigBlocks, new(SignatureBlock))
 	}
@@ -178,6 +253,11 @@ func (t *Transaction) GetSignatureBlock(i int) interfaces.ISignatureBlock {
 }
 
 func (t *Transaction) AddRCD(rcd interfaces.IRCD) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionAddRCD.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	t.RCDs = append(t.RCDs, rcd)
 	t.clearCaches()
 }
@@ -197,6 +277,11 @@ func (t *Transaction) AddRCD(rcd interfaces.IRCD) {
 //    all full nodes. A fee of 10 EC equivalent must be paid for each
 //    signature included.
 func (t Transaction) CalculateFee(factoshisPerEC uint64) (uint64, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionCalculateFee.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// First look at the size of the transaction, and make sure
 	// everything is inbounds.
 	data, err := t.MarshalBinary()
@@ -225,6 +310,11 @@ func (t Transaction) CalculateFee(factoshisPerEC uint64) (uint64, error) {
 // a signed boundry.  Returns false if invalid, and the
 // sum if valid.  Returns 0 and true if nothing is passed in.
 func ValidateAmounts(amts ...uint64) (uint64, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidValidateAmounts.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var sum int64
 	for _, amt := range amts {
 		if int64(amt) < 0 {
@@ -239,6 +329,11 @@ func ValidateAmounts(amts ...uint64) (uint64, error) {
 }
 
 func (t Transaction) TotalInputs() (sum uint64, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionTotalInputs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(t.Inputs) > 255 {
 		return 0, fmt.Errorf("The number of inputs must be less than 255")
 	}
@@ -252,6 +347,11 @@ func (t Transaction) TotalInputs() (sum uint64, err error) {
 }
 
 func (t Transaction) TotalOutputs() (sum uint64, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionTotalOutputs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(t.Outputs) > 255 {
 		return 0, fmt.Errorf("The number of outputs must be less than 255")
 	}
@@ -265,6 +365,11 @@ func (t Transaction) TotalOutputs() (sum uint64, err error) {
 }
 
 func (t Transaction) TotalECs() (sum uint64, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionTotalECs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(t.OutECs) > 255 {
 		return 0, fmt.Errorf("The number of Entry Credit outputs must be less than 255")
 	}
@@ -300,6 +405,11 @@ func (t Transaction) TotalECs() (sum uint64, err error) {
 // be used to identify the transaction. Otherwise it simply must be > 0
 // to indicate it isn't a coinbase transaction.
 func (t Transaction) Validate(index int) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Inputs, outputs, and ecoutputs, must be valid,
 	tInputs, err := t.TotalInputs()
 	if err != nil {
@@ -360,6 +470,11 @@ func (t Transaction) Validate(index int) error {
 // transaction.
 //
 func (t Transaction) ValidateSignatures() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionValidateSignatures.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if !t.sigValid {
 		missingCnt := 0
 		sigBlks := t.GetSignatureBlocks()
@@ -376,12 +491,44 @@ func (t Transaction) ValidateSignatures() error {
 	return nil
 }
 
-func (t Transaction) GetInputs() []interfaces.ITransAddress    { return t.Inputs }
-func (t Transaction) GetOutputs() []interfaces.ITransAddress   { return t.Outputs }
-func (t Transaction) GetECOutputs() []interfaces.ITransAddress { return t.OutECs }
-func (t Transaction) GetRCDs() []interfaces.IRCD               { return t.RCDs }
+func (t Transaction) GetInputs() []interfaces.ITransAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetInputs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+	return t.Inputs
+}
+
+func (t Transaction) GetOutputs() []interfaces.ITransAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetOutputs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+	return t.Outputs
+}
+
+func (t Transaction) GetECOutputs() []interfaces.ITransAddress {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetECOutputs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+	return t.OutECs
+}
+
+func (t Transaction) GetRCDs() []interfaces.IRCD {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetRCDs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+	return t.RCDs
+}
 
 func (t *Transaction) GetSignatureBlocks() []interfaces.ISignatureBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetSignatureBlocks.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(t.SigBlocks) > len(t.Inputs) { // If too long, nil out
 		for i := len(t.Inputs); i < len(t.SigBlocks); i++ { // the extra entries, and
 			t.SigBlocks[i] = nil // cut it to length.
@@ -396,6 +543,11 @@ func (t *Transaction) GetSignatureBlocks() []interfaces.ISignatureBlock {
 }
 
 func (t *Transaction) GetInput(i int) (interfaces.ITransAddress, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetInput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if i > len(t.Inputs) {
 		return nil, fmt.Errorf("Index out of Range")
 	}
@@ -403,6 +555,11 @@ func (t *Transaction) GetInput(i int) (interfaces.ITransAddress, error) {
 }
 
 func (t *Transaction) GetOutput(i int) (interfaces.ITransAddress, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetOutput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if i > len(t.Outputs) {
 		return nil, fmt.Errorf("Index out of Range")
 	}
@@ -410,6 +567,11 @@ func (t *Transaction) GetOutput(i int) (interfaces.ITransAddress, error) {
 }
 
 func (t *Transaction) GetECOutput(i int) (interfaces.ITransAddress, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetECOutput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if i > len(t.OutECs) {
 		return nil, fmt.Errorf("Index out of Range")
 	}
@@ -417,6 +579,11 @@ func (t *Transaction) GetECOutput(i int) (interfaces.ITransAddress, error) {
 }
 
 func (t *Transaction) GetRCD(i int) (interfaces.IRCD, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionGetRCD.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if i > len(t.RCDs) {
 		return nil, fmt.Errorf("Index out of Range")
 	}
@@ -426,6 +593,11 @@ func (t *Transaction) GetRCD(i int) (interfaces.IRCD, error) {
 // UnmarshalBinary assumes that the Binary is all good.  We do error
 // out if there isn't enough data, or the transaction is too large.
 func (t *Transaction) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// To catch memory errors, I capture the panic and turn it into
 	// a reported error.
 	defer func() {
@@ -496,6 +668,11 @@ func (t *Transaction) UnmarshalBinaryData(data []byte) (newData []byte, err erro
 }
 
 func (t *Transaction) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err = t.UnmarshalBinaryData(data)
 	return err
 }
@@ -503,6 +680,11 @@ func (t *Transaction) UnmarshalBinary(data []byte) (err error) {
 // This is what Gets Signed.  Yet signature blocks are part of the transaction.
 // We don't include them here, and tack them on later.
 func (t *Transaction) MarshalBinarySig() (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionMarshalBinarySig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	primitives.EncodeVarInt(&out, t.GetVersion())
@@ -546,6 +728,11 @@ func (t *Transaction) MarshalBinarySig() (newData []byte, err error) {
 // This just Marshals what gets signed, i.e. MarshalBinarySig(), then
 // Marshals the signatures and the RCDs for this transaction.
 func (t Transaction) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 
 	data, err := t.MarshalBinarySig()
@@ -585,6 +772,11 @@ func (t Transaction) MarshalBinary() ([]byte, error) {
 // will need, so I'll default to 5.  Of course, go will grow
 // past that if needed.
 func (t *Transaction) AddInput(input interfaces.IAddress, amount uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionAddInput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if t.Inputs == nil {
 		t.Inputs = make([]interfaces.ITransAddress, 0, 5)
 	}
@@ -598,6 +790,11 @@ func (t *Transaction) AddInput(input interfaces.IAddress, amount uint64) {
 // will need, so I'll default to 5.  Of course, go will grow
 // past that if needed.
 func (t *Transaction) AddOutput(output interfaces.IAddress, amount uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionAddOutput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if t.Outputs == nil {
 		t.Outputs = make([]interfaces.ITransAddress, 0, 5)
 	}
@@ -610,6 +807,11 @@ func (t *Transaction) AddOutput(output interfaces.IAddress, amount uint64) {
 // access to the exchange rate.  This is literally how many entry
 // credits are being added to the specified Entry Credit address.
 func (t *Transaction) AddECOutput(ecoutput interfaces.IAddress, amount uint64) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionAddECOutput.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if t.OutECs == nil {
 		t.OutECs = make([]interfaces.ITransAddress, 0, 5)
 	}
@@ -620,6 +822,11 @@ func (t *Transaction) AddECOutput(ecoutput interfaces.IAddress, amount uint64) {
 
 // Marshal to text.  Largely a debugging thing.
 func (t *Transaction) CustomMarshalText() (text []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data, err := t.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -675,6 +882,11 @@ func (t *Transaction) CustomMarshalText() (text []byte, err error) {
 // transaction.  DOES NO VALIDATION.  Not the job of construction.
 // That's why we have a validation call.
 func (t *Transaction) AddAuthorization(auth interfaces.IRCD) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionAddAuthorization.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if t.RCDs == nil {
 		t.RCDs = make([]interfaces.IRCD, 0, 5)
 	}
@@ -682,14 +894,29 @@ func (t *Transaction) AddAuthorization(auth interfaces.IRCD) {
 }
 
 func (e *Transaction) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *Transaction) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *Transaction) HasUserAddress(userAddr string) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidTransactionHasUserAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	//  do any of the inputs or outputs of this transaction belong to the inputed user address
 	// Other than a minimal length check, this does not address validation of the requested user address
 	// in some cases, the useraddress is not being filled in the address struct.  if it is blank, convert the address (hash)

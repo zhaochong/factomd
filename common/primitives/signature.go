@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives/random"
+	"time"
 )
 
 /*
@@ -28,6 +29,11 @@ var _ interfaces.BinaryMarshallable = (*Signature)(nil)
 var _ interfaces.IFullSignature = (*Signature)(nil)
 
 func (e *Signature) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.Pub == nil {
 		e.Pub = new(PublicKey)
 	}
@@ -37,16 +43,31 @@ func (e *Signature) Init() {
 }
 
 func (sig *Signature) GetPubBytes() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureGetPubBytes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sig.Init()
 	return sig.Pub[:]
 }
 
 func (sig *Signature) GetSigBytes() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureGetSigBytes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sig.Init()
 	return sig.Sig[:]
 }
 
 func RandomSignatureSet() ([]byte, interfaces.Signer, interfaces.IFullSignature) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesRandomSignatureSet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	priv := RandomPrivateKey()
 	data := random.RandNonEmptyByteSlice()
 	sig := priv.Sign(data)
@@ -55,6 +76,11 @@ func RandomSignatureSet() ([]byte, interfaces.Signer, interfaces.IFullSignature)
 }
 
 func (a *Signature) IsSameAs(b interfaces.IFullSignature) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if b == nil {
 		return false
 	}
@@ -80,11 +106,21 @@ func (a *Signature) IsSameAs(b interfaces.IFullSignature) bool {
 }
 
 func (sig *Signature) CustomMarshalText() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureCustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sig.Init()
 	return ([]byte)(sig.Pub.String() + hex.EncodeToString(sig.Sig[:])), nil
 }
 
 func (sig *Signature) Bytes() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureBytes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if sig.Sig == nil {
 		return nil
 	}
@@ -92,16 +128,31 @@ func (sig *Signature) Bytes() []byte {
 }
 
 func (sig *Signature) SetPub(publicKey []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureSetPub.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sig.Pub = new(PublicKey)
 	sig.Pub.UnmarshalBinary(publicKey)
 }
 
 func (sig *Signature) GetKey() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureGetKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sig.Init()
 	return sig.Pub[:]
 }
 
 func (sig *Signature) SetSignature(signature []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureSetSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(signature) != ed25519.SignatureSize {
 		return fmt.Errorf("Signature wrong size")
 	}
@@ -111,11 +162,21 @@ func (sig *Signature) SetSignature(signature []byte) error {
 }
 
 func (sig *Signature) GetSignature() *[ed25519.SignatureSize]byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureGetSignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sig.Init()
 	return (*[ed25519.SignatureSize]byte)(sig.Sig)
 }
 
 func (s *Signature) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.Sig == nil {
 		return nil, fmt.Errorf("Signature not complete")
 	}
@@ -124,6 +185,11 @@ func (s *Signature) MarshalBinary() ([]byte, error) {
 }
 
 func (sig *Signature) UnmarshalBinaryData(data []byte) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if data == nil || len(data) < ed25519.SignatureSize+ed25519.PublicKeySize {
 		return nil, fmt.Errorf("Not enough data to unmarshal")
 	}
@@ -140,26 +206,51 @@ func (sig *Signature) UnmarshalBinaryData(data []byte) ([]byte, error) {
 }
 
 func (s *Signature) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := s.UnmarshalBinaryData(data)
 	return err
 }
 
 /*
 func (sig *Signature) DetachSig() *DetachedSignature {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureDetachSig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return (*DetachedSignature)(sig.Sig)
 }
 
 func (ds *DetachedSignature) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesDetachedSignatureString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return hex.EncodeToString(ds[:])
 }*/
 
 // Verify returns true iff sig is a valid signature of msg by PublicKey.
 func (sig *Signature) Verify(msg []byte) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignatureVerify.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	sig.Init()
 	return ed25519.VerifyCanonical((*[32]byte)(sig.Pub), msg, (*[ed25519.SignatureSize]byte)(sig.Sig))
 }
 
 func SignSignable(priv []byte, data interfaces.ISignable) ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSignSignable.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	d, err := data.MarshalBinarySig()
 	if err != nil {
 		return nil, err
@@ -168,6 +259,11 @@ func SignSignable(priv []byte, data interfaces.ISignable) ([]byte, error) {
 }
 
 func Sign(priv, data []byte) []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesSign.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	priv2 := [64]byte{}
 	if len(priv) == 64 {
 		copy(priv2[:], priv[:])
@@ -183,6 +279,11 @@ func Sign(priv, data []byte) []byte {
 }
 
 func VerifySignature(data, publicKey, signature []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdprimitivesVerifySignature.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	pub := [32]byte{}
 	sig := [64]byte{}
 

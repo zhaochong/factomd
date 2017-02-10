@@ -36,6 +36,11 @@ type MessageBase struct {
 }
 
 func resend(state interfaces.IState, msg interfaces.IMsg, cnt int, delay int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesresend.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i := 0; i < cnt; i++ {
 		state.NetworkOutMsgQueue() <- msg
 		time.Sleep(time.Duration(delay) * time.Second)
@@ -43,6 +48,10 @@ func resend(state interfaces.IState, msg interfaces.IMsg, cnt int, delay int) {
 }
 
 func (m *MessageBase) SendOut(state interfaces.IState, msg interfaces.IMsg) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSendOut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
 
 	// Dont' resend if we are behind
 	if m.ResendCnt > 1 && state.GetHighestKnownBlock()-state.GetHighestSavedBlk() > 4 {
@@ -74,33 +83,68 @@ func (m *MessageBase) SendOut(state interfaces.IState, msg interfaces.IMsg) {
 }
 
 func (m *MessageBase) GetNoResend() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseGetNoResend.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.NoResend
 }
 
 func (m *MessageBase) SetNoResend(v bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetNoResend.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.NoResend = v
 }
 
 func (m *MessageBase) IsValid() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseIsValid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Sigvalid
 }
 
 func (m *MessageBase) SetValid() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetValid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.Sigvalid = true
 }
 
 // To suppress how many messages are sent to the NetworkInvalid Queue, we mark them, and only
 // send them once.
 func (m *MessageBase) MarkSentInvalid(b bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseMarkSentInvalid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.MarkInvalid = b
 }
 
 func (m *MessageBase) SentInvlaid() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSentInvlaid.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.MarkInvalid
 }
 
 // Try and Resend.  Return true if we should keep the message, false if we should give up.
 func (m *MessageBase) Resend(s interfaces.IState) (rtn bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseResend.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	now := s.GetTimestamp().GetTimeMilli()
 	if m.resend == 0 {
 		m.resend = now
@@ -115,6 +159,11 @@ func (m *MessageBase) Resend(s interfaces.IState) (rtn bool) {
 
 // Try and Resend.  Return true if we should keep the message, false if we should give up.
 func (m *MessageBase) Expire(s interfaces.IState) (rtn bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseExpire.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	now := s.GetTimestamp().GetTimeMilli()
 	if m.expire == 0 {
 		m.expire = now
@@ -126,13 +175,28 @@ func (m *MessageBase) Expire(s interfaces.IState) (rtn bool) {
 }
 
 func (m *MessageBase) IsStalled() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseIsStalled.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Stalled
 }
 func (m *MessageBase) SetStall(b bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetStall.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.Stalled = b
 }
 
 func (m *MessageBase) GetFullMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseGetFullMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.FullMsgHash == nil {
 		m.FullMsgHash = primitives.NewZeroHash()
 	}
@@ -140,44 +204,94 @@ func (m *MessageBase) GetFullMsgHash() interfaces.IHash {
 }
 
 func (m *MessageBase) SetFullMsgHash(hash interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetFullMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.GetFullMsgHash().SetBytes(hash.Bytes())
 }
 
 func (m *MessageBase) GetOrigin() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseGetOrigin.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Origin
 }
 
 func (m *MessageBase) SetOrigin(o int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetOrigin.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.Origin = o
 }
 
 func (m *MessageBase) GetNetworkOrigin() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseGetNetworkOrigin.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.NetworkOrigin
 }
 
 func (m *MessageBase) SetNetworkOrigin(o string) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetNetworkOrigin.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.NetworkOrigin = o
 }
 
 // Returns true if this is a response to a peer to peer
 // request.
 func (m *MessageBase) IsPeer2Peer() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseIsPeer2Peer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Peer2Peer
 }
 
 func (m *MessageBase) SetPeer2Peer(f bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetPeer2Peer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.Peer2Peer = f
 }
 
 func (m *MessageBase) IsLocal() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseIsLocal.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.LocalOnly
 }
 
 func (m *MessageBase) SetLocal(v bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetLocal.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.LocalOnly = v
 }
 
 func (m *MessageBase) GetLeaderChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseGetLeaderChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.LeaderChainID == nil {
 		m.LeaderChainID = primitives.NewZeroHash()
 	}
@@ -185,30 +299,65 @@ func (m *MessageBase) GetLeaderChainID() interfaces.IHash {
 }
 
 func (m *MessageBase) SetLeaderChainID(hash interfaces.IHash) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetLeaderChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.LeaderChainID = hash
 }
 
 func (m *MessageBase) GetVMIndex() (index int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseGetVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	index = m.VMIndex
 	return
 }
 
 func (m *MessageBase) SetVMIndex(index int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.VMIndex = index
 }
 
 func (m *MessageBase) GetVMHash() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseGetVMHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.VMHash
 }
 
 func (m *MessageBase) SetVMHash(vmhash []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetVMHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.VMHash = vmhash
 }
 
 func (m *MessageBase) GetMinute() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseGetMinute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Minute
 }
 
 func (m *MessageBase) SetMinute(minute byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageBaseSetMinute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.Minute = minute
 }

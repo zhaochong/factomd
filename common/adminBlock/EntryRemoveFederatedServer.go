@@ -7,6 +7,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 // DB Signature Entry -------------------------
@@ -19,12 +20,22 @@ var _ interfaces.IABEntry = (*RemoveFederatedServer)(nil)
 var _ interfaces.BinaryMarshallable = (*RemoveFederatedServer)(nil)
 
 func (e *RemoveFederatedServer) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if e.IdentityChainID == nil {
 		e.IdentityChainID = primitives.NewZeroHash()
 	}
 }
 
 func (e *RemoveFederatedServer) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var out primitives.Buffer
 	out.WriteString(fmt.Sprintf("    E: %35s -- %17s %8x %12s %8d",
@@ -37,6 +48,11 @@ func (e *RemoveFederatedServer) String() string {
 }
 
 func (c *RemoveFederatedServer) UpdateState(state interfaces.IState) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerUpdateState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	if len(state.GetFedServers(c.DBHeight)) != 0 {
 		state.RemoveFedServer(c.DBHeight, c.IdentityChainID)
@@ -53,6 +69,11 @@ func (c *RemoveFederatedServer) UpdateState(state interfaces.IState) error {
 
 // Create a new DB Signature Entry
 func NewRemoveFederatedServer(identityChainID interfaces.IHash, dbheight uint32) (e *RemoveFederatedServer) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockNewRemoveFederatedServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if identityChainID == nil {
 		return nil
 	}
@@ -63,10 +84,20 @@ func NewRemoveFederatedServer(identityChainID interfaces.IHash, dbheight uint32)
 }
 
 func (e *RemoveFederatedServer) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.TYPE_REMOVE_FED_SERVER
 }
 
 func (e *RemoveFederatedServer) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var buf primitives.Buffer
 
@@ -82,6 +113,11 @@ func (e *RemoveFederatedServer) MarshalBinary() (data []byte, err error) {
 }
 
 func (e *RemoveFederatedServer) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Remove Federated Server: %v", r)
@@ -106,27 +142,57 @@ func (e *RemoveFederatedServer) UnmarshalBinaryData(data []byte) (newData []byte
 }
 
 func (e *RemoveFederatedServer) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = e.UnmarshalBinaryData(data)
 	return
 }
 
 func (e *RemoveFederatedServer) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RemoveFederatedServer) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *RemoveFederatedServer) IsInterpretable() bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerIsInterpretable.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return false
 }
 
 func (e *RemoveFederatedServer) Interpret() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerInterpret.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return ""
 }
 
 func (e *RemoveFederatedServer) Hash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdadminBlockRemoveFederatedServerHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	bin, err := e.MarshalBinary()
 	if err != nil {
 		panic(err)

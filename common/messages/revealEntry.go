@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 //A placeholder structure for messages
@@ -33,6 +34,11 @@ type RevealEntryMsg struct {
 var _ interfaces.IMsg = (*RevealEntryMsg)(nil)
 
 func (m *RevealEntryMsg) IsSameAs(msg interfaces.IMsg) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgIsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m2, ok := msg.(*RevealEntryMsg)
 	if !ok {
 		return false
@@ -44,22 +50,47 @@ func (m *RevealEntryMsg) IsSameAs(msg interfaces.IMsg) bool {
 }
 
 func (m *RevealEntryMsg) Process(dbheight uint32, state interfaces.IState) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgProcess.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return state.ProcessRevealEntry(dbheight, m)
 }
 
 func (m *RevealEntryMsg) GetRepeatHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgGetRepeatHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Entry.GetHash()
 }
 
 func (m *RevealEntryMsg) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Entry.GetHash()
 }
 
 func (m *RevealEntryMsg) GetMsgHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgGetMsgHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return m.Entry.GetHash()
 }
 
 func (m *RevealEntryMsg) GetChainIDHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgGetChainIDHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.chainIDHash == nil {
 		m.chainIDHash = primitives.Sha(m.Entry.GetChainID().Bytes())
 	}
@@ -67,6 +98,11 @@ func (m *RevealEntryMsg) GetChainIDHash() interfaces.IHash {
 }
 
 func (m *RevealEntryMsg) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.Timestamp == nil {
 		m.Timestamp = new(primitives.Timestamp)
 	}
@@ -74,6 +110,11 @@ func (m *RevealEntryMsg) GetTimestamp() interfaces.Timestamp {
 }
 
 func (m *RevealEntryMsg) Type() byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgType.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return constants.REVEAL_ENTRY_MSG
 }
 
@@ -83,6 +124,11 @@ func (m *RevealEntryMsg) Type() byte {
 //  1   -- Message is valid
 // Also return the matching commit, if 1 (Don't put it back into the Commit List)
 func (m *RevealEntryMsg) ValidateRTN(state interfaces.IState) (interfaces.IMsg, int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgValidateRTN.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	commit := state.NextCommit(m.Entry.GetHash())
 
 	if commit == nil {
@@ -134,6 +180,11 @@ func (m *RevealEntryMsg) ValidateRTN(state interfaces.IState) (interfaces.IMsg, 
 }
 
 func (m *RevealEntryMsg) Validate(state interfaces.IState) int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgValidate.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	commit, rtn := m.ValidateRTN(state)
 	if rtn == 1 {
 		// Don't lose the commit that validates the entry
@@ -145,31 +196,66 @@ func (m *RevealEntryMsg) Validate(state interfaces.IState) int {
 // Returns true if this is a message for this server to execute as
 // a leader.
 func (m *RevealEntryMsg) ComputeVMIndex(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgComputeVMIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	m.VMIndex = state.ComputeVMIndex(m.Entry.GetChainID().Bytes())
 }
 
 // Execute the leader functions of the given message
 func (m *RevealEntryMsg) LeaderExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgLeaderExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.LeaderExecuteRevealEntry(m)
 }
 
 func (m *RevealEntryMsg) FollowerExecute(state interfaces.IState) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgFollowerExecute.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	state.FollowerExecuteRevealEntry(m)
 }
 
 func (e *RevealEntryMsg) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RevealEntryMsg) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func NewRevealEntryMsg() *RevealEntryMsg {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesNewRevealEntryMsg.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return new(RevealEntryMsg)
 }
 
 func (m *RevealEntryMsg) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling: %v", r)
@@ -199,11 +285,21 @@ func (m *RevealEntryMsg) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func (m *RevealEntryMsg) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := m.UnmarshalBinaryData(data)
 	return err
 }
 
 func (m *RevealEntryMsg) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var buf primitives.Buffer
 
 	binary.Write(&buf, binary.BigEndian, m.Type())
@@ -225,6 +321,11 @@ func (m *RevealEntryMsg) MarshalBinary() (data []byte, err error) {
 }
 
 func (m *RevealEntryMsg) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesRevealEntryMsgString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if m.GetLeaderChainID() == nil {
 		m.SetLeaderChainID(primitives.NewZeroHash())
 	}

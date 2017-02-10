@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/FactomProject/factomd/state"
 	"github.com/FactomProject/factomd/util"
 	"github.com/FactomProject/factomd/wsapi"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var _ = fmt.Print
@@ -41,6 +43,11 @@ var p2pNetwork *p2p.Controller
 var logPort string
 
 func NetStart(s *state.State) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdengineNetStart.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	enablenetPtr := flag.Bool("enablenet", true, "Enable or disable networking")
 	listenToPtr := flag.Int("node", 0, "Node Number the simulator will set as the focus")
 	cntPtr := flag.Int("count", 1, "The number of nodes to generate")
@@ -475,6 +482,13 @@ func NetStart(s *state.State) {
 		startServers(true)
 	}
 
+	state.InitPrometheus()
+	InitPrometheus()
+	wsapi.InitPrometheus()
+
+	http.Handle("/metrics", prometheus.Handler())
+	go http.ListenAndServe(":9876", nil)
+
 	// Start the webserver
 	go wsapi.Start(fnodes[0].State)
 
@@ -488,6 +502,11 @@ func NetStart(s *state.State) {
 // and start the servers.
 //**********************************************************************
 func makeServer(s *state.State) *FactomNode {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginemakeServer.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// All other states are clones of the first state.  Which this routine
 	// gets passed to it.
 	newState := s
@@ -507,6 +526,11 @@ func makeServer(s *state.State) *FactomNode {
 }
 
 func startServers(load bool) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginestartServers.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for i, fnode := range fnodes {
 		if i > 0 {
 			fnode.State.Init()
@@ -521,6 +545,11 @@ func startServers(load bool) {
 }
 
 func setupFirstAuthority(s *state.State) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginesetupFirstAuthority.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var id state.Identity
 	if networkIdentity := s.GetNetworkBootStrapIdentity(); networkIdentity != nil {
 		id.IdentityChainID = networkIdentity
@@ -555,6 +584,11 @@ func setupFirstAuthority(s *state.State) {
 }
 
 func networkHousekeeping() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdenginenetworkHousekeeping.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	for {
 		time.Sleep(1 * time.Second)
 		p2pProxy.SetWeight(p2pNetwork.GetNumberConnections())

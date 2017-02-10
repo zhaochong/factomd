@@ -8,6 +8,8 @@ import (
 	"sort"
 	"sync"
 
+	"time"
+
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/util"
 )
@@ -20,10 +22,20 @@ type MapDB struct {
 var _ interfaces.IDatabase = (*MapDB)(nil)
 
 func (MapDB) Close() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbClose.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 func (db *MapDB) ListAllBuckets() ([][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBListAllBuckets.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if db.Cache == nil {
 		db.Sem.Lock()
 		db.Cache = map[string]map[string][]byte{}
@@ -43,9 +55,19 @@ func (db *MapDB) ListAllBuckets() ([][]byte, error) {
 
 // Don't do anything here.
 func (db *MapDB) Trim() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBTrim.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 }
 
 func (db *MapDB) createCache(bucket []byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBcreateCache.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if db.Cache == nil {
 		db.Sem.Lock()
 		db.Cache = map[string]map[string][]byte{}
@@ -62,6 +84,11 @@ func (db *MapDB) createCache(bucket []byte) {
 }
 
 func (db *MapDB) Init(bucketList [][]byte) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -72,6 +99,11 @@ func (db *MapDB) Init(bucketList [][]byte) {
 }
 
 func (db *MapDB) Put(bucket, key []byte, data interfaces.BinaryMarshallable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBPut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -79,6 +111,11 @@ func (db *MapDB) Put(bucket, key []byte, data interfaces.BinaryMarshallable) err
 }
 
 func (db *MapDB) RawPut(bucket, key []byte, data interfaces.BinaryMarshallable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBRawPut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -86,6 +123,11 @@ func (db *MapDB) RawPut(bucket, key []byte, data interfaces.BinaryMarshallable) 
 }
 
 func (db *MapDB) rawPut(bucket, key []byte, data interfaces.BinaryMarshallable) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBrawPut.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if db.Cache == nil {
 		db.Cache = map[string]map[string][]byte{}
 	}
@@ -106,6 +148,11 @@ func (db *MapDB) rawPut(bucket, key []byte, data interfaces.BinaryMarshallable) 
 }
 
 func (db *MapDB) PutInBatch(records []interfaces.Record) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBPutInBatch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -119,6 +166,11 @@ func (db *MapDB) PutInBatch(records []interfaces.Record) error {
 }
 
 func (db *MapDB) Get(bucket, key []byte, destination interfaces.BinaryMarshallable) (interfaces.BinaryMarshallable, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBGet.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.createCache(bucket)
 
 	db.Sem.RLock()
@@ -146,6 +198,11 @@ func (db *MapDB) Get(bucket, key []byte, destination interfaces.BinaryMarshallab
 }
 
 func (db *MapDB) Delete(bucket, key []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBDelete.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -161,6 +218,11 @@ func (db *MapDB) Delete(bucket, key []byte) error {
 }
 
 func (db *MapDB) ListAllKeys(bucket []byte) ([][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBListAllKeys.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.createCache(bucket)
 
 	db.Sem.RLock()
@@ -184,6 +246,11 @@ func (db *MapDB) ListAllKeys(bucket []byte) ([][]byte, error) {
 }
 
 func (db *MapDB) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAndCopyable) ([]interfaces.BinaryMarshallableAndCopyable, [][]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBGetAll.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.createCache(bucket)
 
 	db.Sem.RLock()
@@ -216,6 +283,11 @@ func (db *MapDB) GetAll(bucket []byte, sample interfaces.BinaryMarshallableAndCo
 }
 
 func (db *MapDB) Clear(bucket []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBClear.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.Sem.Lock()
 	defer db.Sem.Unlock()
 
@@ -227,6 +299,11 @@ func (db *MapDB) Clear(bucket []byte) error {
 }
 
 func (db *MapDB) DoesKeyExist(bucket, key []byte) (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmapdbMapDBDoesKeyExist.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	db.createCache(bucket)
 
 	db.Sem.RLock()

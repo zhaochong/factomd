@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 /**************************
@@ -32,23 +33,48 @@ var _ interfaces.IRCD = (*RCD_1)(nil)
  ***************************************/
 
 func (b RCD_1) IsSameAs(rcd interfaces.IRCD) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1IsSameAs.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.String() == rcd.String()
 }
 
 func (b RCD_1) UnmarshalBinary(data []byte) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1UnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err := b.UnmarshalBinaryData(data)
 	return err
 }
 
 func (e *RCD_1) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1JSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *RCD_1) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1JSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (b RCD_1) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1String.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	txt, err := b.CustomMarshalText()
 	if err != nil {
 		return "<error>"
@@ -57,10 +83,20 @@ func (b RCD_1) String() string {
 }
 
 func (r *RCD_1) MarshalText() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1MarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return []byte(hex.EncodeToString(r.PublicKey[:])), nil
 }
 
 func (w RCD_1) CheckSig(trans interfaces.ITransaction, sigblk interfaces.ISignatureBlock) bool {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1CheckSig.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if w.validSig {
 		return true
 	}
@@ -86,26 +122,51 @@ func (w RCD_1) CheckSig(trans interfaces.ITransaction, sigblk interfaces.ISignat
 }
 
 func (w RCD_1) Clone() interfaces.IRCD {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1Clone.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c := new(RCD_1)
 	copy(c.PublicKey[:], w.PublicKey[:])
 	return c
 }
 
 func (w RCD_1) GetAddress() (interfaces.IAddress, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1GetAddress.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	data := []byte{1}
 	data = append(data, w.PublicKey[:]...)
 	return CreateAddress(primitives.Shad(data)), nil
 }
 
 func (a RCD_1) GetPublicKey() []byte {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1GetPublicKey.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return a.PublicKey[:]
 }
 
 func (w1 RCD_1) NumberOfSignatures() int {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1NumberOfSignatures.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return 1
 }
 
 func (t *RCD_1) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1UnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if data == nil || len(data) < 1+constants.ADDRESS_LENGTH {
 		return nil, fmt.Errorf("Not enough data to unmarshal")
 	}
@@ -127,6 +188,11 @@ func (t *RCD_1) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
 }
 
 func (a RCD_1) MarshalBinary() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1MarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 	out.WriteByte(byte(1)) // The First Authorization method
 	out.Write(a.PublicKey[:])
@@ -135,6 +201,11 @@ func (a RCD_1) MarshalBinary() ([]byte, error) {
 }
 
 func (a RCD_1) CustomMarshalText() (text []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdfactoidRCD_1CustomMarshalText.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var out primitives.Buffer
 	out.WriteString("RCD 1: ")
 	primitives.WriteNumber8(&out, uint8(1)) // Type Zero Authorization

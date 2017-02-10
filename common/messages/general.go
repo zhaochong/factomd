@@ -12,14 +12,25 @@ import (
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
+	"time"
 )
 
 func UnmarshalMessage(data []byte) (interfaces.IMsg, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesUnmarshalMessage.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, msg, err := UnmarshalMessageData(data)
 	return msg, err
 }
 
 func UnmarshalMessageData(data []byte) (newdata []byte, msg interfaces.IMsg, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesUnmarshalMessageData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if data == nil {
 		return nil, nil, fmt.Errorf("No data provided")
 	}
@@ -97,6 +108,11 @@ func UnmarshalMessageData(data []byte) (newdata []byte, msg interfaces.IMsg, err
 }
 
 func MessageName(Type byte) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesMessageName.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	switch Type {
 	case constants.EOM_MSG:
 		return "EOM"
@@ -160,6 +176,11 @@ type Signable interface {
 }
 
 func SignSignable(s Signable, key interfaces.Signer) (interfaces.IFullSignature, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesSignSignable.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	toSign, err := s.MarshalForSignature()
 	if err != nil {
 		return nil, err
@@ -169,6 +190,11 @@ func SignSignable(s Signable, key interfaces.Signer) (interfaces.IFullSignature,
 }
 
 func VerifyMessage(s Signable) (bool, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdmessagesVerifyMessage.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if s.IsValid() {
 		return true, nil
 	}

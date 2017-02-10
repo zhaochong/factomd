@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 var _ = fmt.Print
@@ -33,6 +34,11 @@ var _ interfaces.DatabaseBatchable = (*DirectoryBlock)(nil)
 var _ interfaces.DatabaseBlockWithEntries = (*DirectoryBlock)(nil)
 
 func (c *DirectoryBlock) Init() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockInit.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if c.Header == nil {
 		h := new(DBlockHeader)
 		h.Init()
@@ -41,6 +47,11 @@ func (c *DirectoryBlock) Init() {
 }
 
 func (c *DirectoryBlock) SetEntryHash(hash, chainID interfaces.IHash, index int) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockSetEntryHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if len(c.DBEntries) < index {
 		ent := make([]interfaces.IDBEntry, index)
 		copy(ent, c.DBEntries)
@@ -53,24 +64,44 @@ func (c *DirectoryBlock) SetEntryHash(hash, chainID interfaces.IHash, index int)
 }
 
 func (c *DirectoryBlock) SetABlockHash(aBlock interfaces.IAdminBlock) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockSetABlockHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hash := aBlock.DatabasePrimaryIndex()
 	c.SetEntryHash(hash, aBlock.GetChainID(), 0)
 	return nil
 }
 
 func (c *DirectoryBlock) SetECBlockHash(ecBlock interfaces.IEntryCreditBlock) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockSetECBlockHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hash := ecBlock.DatabasePrimaryIndex()
 	c.SetEntryHash(hash, ecBlock.GetChainID(), 1)
 	return nil
 }
 
 func (c *DirectoryBlock) SetFBlockHash(fBlock interfaces.IFBlock) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockSetFBlockHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hash := fBlock.DatabasePrimaryIndex()
 	c.SetEntryHash(hash, fBlock.GetChainID(), 2)
 	return nil
 }
 
 func (c *DirectoryBlock) GetEntryHashes() []interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetEntryHashes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entries := c.DBEntries[:]
 	answer := make([]interfaces.IHash, len(entries))
 	for i, entry := range entries {
@@ -80,10 +111,20 @@ func (c *DirectoryBlock) GetEntryHashes() []interfaces.IHash {
 }
 
 func (c *DirectoryBlock) GetEntrySigHashes() []interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetEntrySigHashes.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return nil
 }
 
 func (c *DirectoryBlock) Sort() {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockSort.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	done := false
 	for i := 3; !done && i < len(c.DBEntries)-1; i++ {
 		done = true
@@ -101,6 +142,11 @@ func (c *DirectoryBlock) Sort() {
 }
 
 func (c *DirectoryBlock) GetEntryHashesForBranch() []interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetEntryHashesForBranch.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	entries := c.DBEntries[:]
 	answer := make([]interfaces.IHash, 2*len(entries))
 	for i, entry := range entries {
@@ -111,10 +157,20 @@ func (c *DirectoryBlock) GetEntryHashesForBranch() []interfaces.IHash {
 }
 
 func (c *DirectoryBlock) GetDBEntries() []interfaces.IDBEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetDBEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.DBEntries
 }
 
 func (c *DirectoryBlock) GetEBlockDBEntries() []interfaces.IDBEntry {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetEBlockDBEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	answer := []interfaces.IDBEntry{}
 	for _, v := range c.DBEntries {
 		if v.GetChainID().String() == "000000000000000000000000000000000000000000000000000000000000000a" {
@@ -132,6 +188,11 @@ func (c *DirectoryBlock) GetEBlockDBEntries() []interfaces.IDBEntry {
 }
 
 func (c *DirectoryBlock) GetKeyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	keyMR, err := c.BuildKeyMerkleRoot()
 	if err != nil {
 		panic("Failed to build the key MR")
@@ -143,15 +204,30 @@ func (c *DirectoryBlock) GetKeyMR() interfaces.IHash {
 }
 
 func (c *DirectoryBlock) GetHeader() interfaces.IDirectoryBlockHeader {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	return c.Header
 }
 
 func (c *DirectoryBlock) SetHeader(header interfaces.IDirectoryBlockHeader) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockSetHeader.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Header = header
 }
 
 func (c *DirectoryBlock) SetDBEntries(dbEntries []interfaces.IDBEntry) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockSetDBEntries.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.DBEntries = dbEntries
 	c.GetHeader().SetBlockCount(uint32(len(dbEntries)))
 	_, err := c.BuildBodyMR()
@@ -162,6 +238,11 @@ func (c *DirectoryBlock) SetDBEntries(dbEntries []interfaces.IDBEntry) error {
 }
 
 func (c *DirectoryBlock) New() interfaces.BinaryMarshallableAndCopyable {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockNew.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dBlock := new(DirectoryBlock)
 	dBlock.Header = NewDBlockHeader()
 	dBlock.DBHash = primitives.NewZeroHash()
@@ -170,31 +251,66 @@ func (c *DirectoryBlock) New() interfaces.BinaryMarshallableAndCopyable {
 }
 
 func (c *DirectoryBlock) GetDatabaseHeight() uint32 {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetDatabaseHeight.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	c.Init()
 	return c.GetHeader().GetDBHeight()
 }
 
 func (c *DirectoryBlock) GetChainID() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetChainID.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.NewHash(constants.D_CHAINID)
 }
 
 func (c *DirectoryBlock) DatabasePrimaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockDatabasePrimaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.GetKeyMR()
 }
 
 func (c *DirectoryBlock) DatabaseSecondaryIndex() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockDatabaseSecondaryIndex.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return c.GetHash()
 }
 
 func (e *DirectoryBlock) JSONByte() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockJSONByte.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSON(e)
 }
 
 func (e *DirectoryBlock) JSONString() (string, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockJSONString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return primitives.EncodeJSONString(e)
 }
 
 func (e *DirectoryBlock) String() string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockString.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.Init()
 	var out primitives.Buffer
 
@@ -218,6 +334,11 @@ func (e *DirectoryBlock) String() string {
 }
 
 func (b *DirectoryBlock) MarshalBinary() (data []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockMarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	b.Init()
 	var buf primitives.Buffer
 
@@ -246,6 +367,11 @@ func (b *DirectoryBlock) MarshalBinary() (data []byte, err error) {
 }
 
 func (b *DirectoryBlock) BuildBodyMR() (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockBuildBodyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	hashes := make([]interfaces.IHash, len(b.GetDBEntries()))
 	for i, entry := range b.GetDBEntries() {
 		data, err := entry.MarshalBinary()
@@ -268,6 +394,11 @@ func (b *DirectoryBlock) BuildBodyMR() (interfaces.IHash, error) {
 }
 
 func (b *DirectoryBlock) HeaderHash() (interfaces.IHash, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockHeaderHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	binaryEBHeader, err := b.GetHeader().MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -276,11 +407,21 @@ func (b *DirectoryBlock) HeaderHash() (interfaces.IHash, error) {
 }
 
 func (b *DirectoryBlock) BodyKeyMR() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockBodyKeyMR.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	key, _ := b.BuildBodyMR()
 	return key
 }
 
 func (b *DirectoryBlock) BuildKeyMerkleRoot() (keyMR interfaces.IHash, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockBuildKeyMerkleRoot.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	// Create the Entry Block Key Merkle Root from the hash of Header and the Body Merkle Root
 
 	hashes := make([]interfaces.IHash, 0, 2)
@@ -302,6 +443,11 @@ func (b *DirectoryBlock) BuildKeyMerkleRoot() (keyMR interfaces.IHash, err error
 }
 
 func UnmarshalDBlock(data []byte) (interfaces.IDirectoryBlock, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockUnmarshalDBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	dBlock := new(DirectoryBlock)
 	dBlock.Header = NewDBlockHeader()
 	dBlock.DBHash = primitives.NewZeroHash()
@@ -314,6 +460,11 @@ func UnmarshalDBlock(data []byte) (interfaces.IDirectoryBlock, error) {
 }
 
 func (b *DirectoryBlock) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockUnmarshalBinaryData.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("Error unmarshalling Directory Block: %v", r)
@@ -349,19 +500,39 @@ func (b *DirectoryBlock) UnmarshalBinaryData(data []byte) (newData []byte, err e
 }
 
 func (h *DirectoryBlock) GetTimestamp() interfaces.Timestamp {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetTimestamp.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return h.GetHeader().GetTimestamp()
 }
 
 func (b *DirectoryBlock) UnmarshalBinary(data []byte) (err error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockUnmarshalBinary.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	_, err = b.UnmarshalBinaryData(data)
 	return
 }
 
 func (b *DirectoryBlock) GetHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	return b.GetFullHash()
 }
 
 func (b *DirectoryBlock) GetFullHash() interfaces.IHash {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockGetFullHash.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	binaryDblock, err := b.MarshalBinary()
 	if err != nil {
 		return nil
@@ -371,6 +542,11 @@ func (b *DirectoryBlock) GetFullHash() interfaces.IHash {
 }
 
 func (b *DirectoryBlock) AddEntry(chainID interfaces.IHash, keyMR interfaces.IHash) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockAddEntry.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	var dbentry interfaces.IDBEntry
 	dbentry = new(DBEntry)
 	dbentry.SetChainID(chainID)
@@ -388,6 +564,11 @@ func (b *DirectoryBlock) AddEntry(chainID interfaces.IHash, keyMR interfaces.IHa
  *********************************************************************/
 
 func NewDirectoryBlock(prev interfaces.IDirectoryBlock) interfaces.IDirectoryBlock {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockNewDirectoryBlock.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	newdb := new(DirectoryBlock)
 
 	newdb.Header = new(DBlockHeader)
@@ -413,6 +594,11 @@ func NewDirectoryBlock(prev interfaces.IDirectoryBlock) interfaces.IDirectoryBlo
 }
 
 func CheckBlockPairIntegrity(block interfaces.IDirectoryBlock, prev interfaces.IDirectoryBlock) error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockCheckBlockPairIntegrity.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if block == nil {
 		return fmt.Errorf("No block specified")
 	}
@@ -445,6 +631,11 @@ func CheckBlockPairIntegrity(block interfaces.IDirectoryBlock, prev interfaces.I
 type ExpandedDBlock DirectoryBlock
 
 func (e DirectoryBlock) MarshalJSON() ([]byte, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomddirectoryBlockDirectoryBlockMarshalJSON.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	e.GetKeyMR()
 	e.GetFullHash()
 

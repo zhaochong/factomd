@@ -16,6 +16,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/common/primitives"
+	"time"
 )
 
 var ControlPanelAllowedSize int = 2
@@ -65,6 +66,11 @@ type EntryTransaction struct {
 }
 
 func NewDisplayState() *DisplayState {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateNewDisplayState.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	d := new(DisplayState)
 	d.Identities = make([]*Identity, 0)
 	d.Authorities = make([]*Authority, 0)
@@ -78,6 +84,11 @@ func NewDisplayState() *DisplayState {
 
 // Sends the copy of State over channel to control panel
 func (s *State) CopyStateToControlPanel() error {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateStateCopyStateToControlPanel.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	if !s.ControlPanelDataRequest {
 		return nil
 	}
@@ -96,6 +107,11 @@ func (s *State) CopyStateToControlPanel() error {
 }
 
 func DeepStateDisplayCopy(s *State) (*DisplayState, error) {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDeepStateDisplayCopy.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ds := NewDisplayState()
 
 	ds.NodeName = s.GetFactomNodeName()
@@ -221,6 +237,11 @@ func DeepStateDisplayCopy(s *State) (*DisplayState, error) {
 
 // Used for display dump. Allows a clone of the display state to be made
 func (d *DisplayState) Clone() *DisplayState {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstateDisplayStateClone.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	ds := NewDisplayState()
 
 	ds.NodeName = d.NodeName
@@ -255,6 +276,11 @@ func (d *DisplayState) Clone() *DisplayState {
 
 // Data Dump String Creation
 func messageLists(fnodes []*State) string {
+	/////START PROMETHEUS/////
+	callTime := time.Now().UnixNano()
+	defer factomdstatemessageLists.Observe(float64(time.Now().UnixNano() - callTime))
+	/////STOP PROMETHEUS/////
+
 	prt := ""
 	list := ""
 	fmtstr := "%22s%s\n"
