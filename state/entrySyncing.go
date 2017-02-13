@@ -10,11 +10,11 @@ import (
 	"github.com/FactomProject/factomd/common/messages"
 )
 
-func (s *State) setTimersMakeRequests() {
+func (s *State) setTimersMakeRequests() (look bool) {
 	now := s.GetTimestamp()
 
 	// If we have no Entry Blocks in our queue, reset our timer.
-	if len(s.MissingEntryBlocks) == 0 || s.MissingEntryBlockRepeat == nil {
+	if  s.MissingEntryBlockRepeat == nil {
 		s.MissingEntryBlockRepeat = now
 	}
 
@@ -25,34 +25,17 @@ func (s *State) setTimersMakeRequests() {
 
 		for _, eb := range s.MissingEntryBlocks {
 			eBlockRequest := messages.NewMissingData(s, eb.ebhash)
-			s.NetworkOutMsgQueue() <- eBlockRequest
+			eBlockRequest.SendOut(s,eBlockRequest)
 		}
+
+		for _, e := range s.MissingEntries {
+			entryRequest := messages.NewMissingData(s, e.entryhash)
+			entryRequest.SendOut(s,entryRequest)
+		}
+
+		return true
 	}
-
-	if len(s.MissingEntries) == 0 {
-		s.MissingEntryRepeat = nil
-		s.EntryDBHeightComplete = s.EntryBlockDBHeightComplete
-		s.EntryDBHeightComplete = s.EntryDBHeightComplete
-	} else {
-		if s.MissingEntryRepeat == nil {
-			s.MissingEntryRepeat = now
-		}
-
-		// If our delay has been reached, then ask for some missing Entry blocks
-		// This is a replay, because sometimes requests are ignored or lost.
-		if now.GetTimeSeconds()-s.MissingEntryRepeat.GetTimeSeconds() > 5 {
-			s.MissingEntryRepeat = now
-
-			for i, eb := range s.MissingEntries {
-				if i > 200 {
-					// Only send out 200 requests at a time.
-					break
-				}
-				entryRequest := messages.NewMissingData(s, eb.entryhash)
-				s.NetworkOutMsgQueue() <- entryRequest
-			}
-		}
-	}
+	return false
 }
 
 func (s *State) syncEntryBlocks() {
@@ -60,7 +43,7 @@ func (s *State) syncEntryBlocks() {
 	// missing, we stop moving the bookmark, and rely on caching to keep us from thrashing the disk as we
 	// review the directory block over again the next time.
 	alldone := true
-	for s.EntryBlockDBHeightProcessing < s.GetHighestCompletedBlk() && len(s.MissingEntryBlocks) < 10 {
+	for s.EntryBlockDBHeightProcessing < s.GetHighestCompletedBlk() && len(s.MissingEntryBlocks) < 1000{
 		db := s.GetDirectoryBlockByHeight(s.EntryBlockDBHeightProcessing)
 
 		if db == nil {
@@ -109,8 +92,8 @@ func (s *State) syncEntries(eights bool) {
 
 	var keep []MissingEntry
 	for _,v := range s.MissingEntries {
-		e, _ := s.DB.FetchEntry(v.entryhash)
-		if e == nil {
+		e, err := s.DB.FetchEntry(v.entryhash)
+		if err != nil || e == nil {
 			keep = append(keep,v)
 		}
 	}
@@ -140,6 +123,7 @@ func (s *State) syncEntries(eights bool) {
 
 			for i, entryhash := range eBlock.GetEntryHashes() {
 				if entryhash.IsMinuteMarker() {
+					fmt.Printf("SyncSync %4d eb: %x Minute %x\n", i, eBlock.GetHash().Bytes(), entryhash.Bytes()[31:])
 					continue
 				}
 				e, _ := s.DB.FetchEntry(entryhash)
@@ -171,7 +155,7 @@ func (s *State) syncEntries(eights bool) {
 							eBlock.GetHash().Bytes(),
 							len(eBlock.GetEntryHashes()))
 					}
-					fmt.Printf("SyncSync eb: %x e: %x\n", eBlock.GetHash().Bytes(), e.GetHash().Bytes())
+					fmt.Printf("SyncSync %4d eb: %x e: %x\n", i, eBlock.GetHash().Bytes(), entryhash.Bytes())
 				}
 				// Save the entry hash, and remove from commits IF this hash is valid in this current timeframe.
 				s.Replay.SetHashNow(constants.REVEAL_REPLAY, entryhash.Fixed(), db.GetTimestamp())
@@ -197,11 +181,11 @@ func (s *State) syncEntries(eights bool) {
 // called.
 
 func (s *State) catchupEBlocks() {
-	s.setTimersMakeRequests()
+	if s.setTimersMakeRequests() {
 
-	// If we still have blocks that we are asking for, then let's not add to the list.
+		// If we still have blocks that we are asking for, then let's not add to the list.
 
-	s.syncEntryBlocks()
-	s.syncEntries(false)
-
+		s.syncEntryBlocks()
+		s.syncEntries(false)
+	}
 }
