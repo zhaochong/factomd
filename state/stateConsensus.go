@@ -666,6 +666,9 @@ func (s *State) FollowerExecuteDataResponse(m interfaces.IMsg) {
 			return
 		}
 
+		s.MissingEntriesMutex.Lock()
+		defer s.MissingEntriesMutex.Unlock()
+
 		for i, missing := range s.MissingEntryBlocks {
 			eb := missing.ebhash
 			if !eb.IsSameAs(ebKeyMR) {
@@ -692,6 +695,9 @@ func (s *State) FollowerExecuteDataResponse(m interfaces.IMsg) {
 		if !ok {
 			return
 		}
+
+		s.MissingEntriesMutex.Lock()
+		defer s.MissingEntriesMutex.Unlock()
 
 		for _, missing := range s.MissingEntries {
 			e := missing.entryhash
@@ -1518,7 +1524,7 @@ func (s *State) ProcessDBSig(dbheight uint32, msg interfaces.IMsg) bool {
 				pl.Reset()
 				s.DBSig = false
 			}
-			msg := messages.NewDBStateMissing(s, uint32(dbheight-1), uint32(dbheight-1))
+			msg := messages.NewDBStateMissing(s, uint32(dbheight-1), uint32(dbheight))
 
 			if msg != nil {
 				s.RunLeader = false

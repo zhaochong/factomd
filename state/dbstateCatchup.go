@@ -1,6 +1,9 @@
 package state
 
-import "github.com/FactomProject/factomd/common/messages"
+import (
+	"fmt"
+	"github.com/FactomProject/factomd/common/messages"
+)
 
 // Once a second at most, we check to see if we need to pull down some blocks to catch up.
 func (list *DBStateList) Catchup(justDoIt bool) {
@@ -24,6 +27,7 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 	end := hk
 
 	ask := func() {
+
 		if list.TimeToAsk != nil && hk-hs > 4 && now.GetTime().After(list.TimeToAsk.GetTime()) {
 
 			// Find the first dbstate we don't have.
@@ -41,9 +45,14 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 				}
 			}
 
+			for len(list.State.DBStatesReceived)+list.State.DBStatesReceivedBase <= hk {
+				list.State.DBStatesReceived = append(list.State.DBStatesReceived, nil)
+			}
+
 			//  Find the end of the dbstates that we don't have.
 			for i, v := range list.State.DBStatesReceived {
 				ix := i + list.State.DBStatesReceivedBase
+
 				if ix <= begin {
 					continue
 				}
@@ -56,7 +65,8 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 				}
 			}
 
-			msg := messages.NewDBStateMissing(list.State, uint32(begin), uint32(end+3))
+			msg := messages.NewDBStateMissing(list.State, uint32(begin), uint32(end+5))
+			fmt.Println("****", list.State.FactomNodeName, msg.String())
 
 			if msg != nil {
 				//		list.State.RunLeader = false
@@ -65,7 +75,7 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 				list.State.DBStateAskCnt++
 				list.TimeToAsk.SetTimeSeconds(now.GetTimeSeconds() + 3)
 				list.LastBegin = begin
-				list.LastEnd = end + 3
+				list.LastEnd = end
 			}
 		}
 	}
@@ -89,7 +99,7 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 	if list.TimeToAsk == nil {
 		// Okay, have nothing in play, so wait a bit just in case.
 		list.TimeToAsk = list.State.GetTimestamp()
-		list.TimeToAsk.SetTimeSeconds(now.GetTimeSeconds() + 5)
+		list.TimeToAsk.SetTimeSeconds(now.GetTimeSeconds() + 3)
 		list.LastBegin = begin
 		list.LastEnd = end
 		return

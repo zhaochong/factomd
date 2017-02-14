@@ -273,19 +273,13 @@ type State struct {
 	IsReplaying     bool
 	ReplayTimestamp interfaces.Timestamp
 
-	MissingEntryBlockRepeat interfaces.Timestamp
+	MissingEntriesMutex sync.Mutex
+
 	// DBlock Height at which node has a complete set of eblocks+entries
-	EntryBlockDBHeightComplete uint32
-	// DBlock Height at which we have started asking for entry blocks
 	EntryBlockDBHeightProcessing uint32
 	// Entry Blocks we don't have that we are asking our neighbors for
 	MissingEntryBlocks []MissingEntryBlock
 
-	MissingEntryRepeat interfaces.Timestamp
-	// DBlock Height at which node has a complete set of eblocks+entries
-	EntryDBHeightComplete uint32
-	// DBlock Height at which we have started asking for or have all entries
-	EntryDBHeightProcessing uint32
 	// Height in the Directory Block where we have
 	// Entries we don't have that we are asking our neighbors for
 	MissingEntries []MissingEntry
@@ -813,19 +807,11 @@ func (s *State) Init() {
 }
 
 func (s *State) GetEntryBlockDBHeightComplete() uint32 {
-	return s.EntryBlockDBHeightComplete
-}
-
-func (s *State) SetEntryBlockDBHeightComplete(newHeight uint32) {
-	s.EntryBlockDBHeightComplete = newHeight
+	return s.EntryBlockDBHeightProcessing - 1
 }
 
 func (s *State) GetEntryBlockDBHeightProcessing() uint32 {
 	return s.EntryBlockDBHeightProcessing
-}
-
-func (s *State) SetEntryBlockDBHeightProcessing(newHeight uint32) {
-	s.EntryBlockDBHeightProcessing = newHeight
 }
 
 func (s *State) GetLLeaderHeight() uint32 {
@@ -841,10 +827,12 @@ func (s *State) GetFaultWait() int {
 }
 
 func (s *State) GetEntryDBHeightComplete() uint32 {
-	return s.EntryDBHeightComplete
+	return s.EntryBlockDBHeightProcessing - 1
 }
 
 func (s *State) GetMissingEntryCount() uint32 {
+	s.MissingEntriesMutex.Lock()
+	defer s.MissingEntriesMutex.Unlock()
 	return uint32(len(s.MissingEntries))
 }
 
@@ -1470,8 +1458,6 @@ func (s *State) UpdateState() (progress bool) {
 
 	p2 := s.DBStates.UpdateState()
 	progress = progress || p2
-
-	s.catchupEBlocks()
 
 	s.SetString()
 	if s.ControlPanelDataRequest {

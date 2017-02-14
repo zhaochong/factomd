@@ -13,6 +13,9 @@ import (
 
 func (state *State) ValidatorLoop() {
 	timeStruct := new(Timer)
+
+	go state.catchupEBlocks()
+
 	for {
 		// Check if we should shut down.
 		select {

@@ -119,8 +119,11 @@ func (m *DirectoryBlockSignature) Type() byte {
 //  0   -- Cannot tell if message is Valid
 //  1   -- Message is valid
 func (m *DirectoryBlockSignature) Validate(state interfaces.IState) int {
-	if m.DBHeight < state.GetLLeaderHeight() {
-		state.AddStatus(fmt.Sprintf("DirectoryBlockSignature: Fail dbht: %v %s", state.GetLLeaderHeight(), m.String()))
+	if m.DBHeight < state.GetLLeaderHeight()-4 {
+		state.AddStatus(fmt.Sprintf("DirectoryBlockSignature: Fail dbht-4: %v > m.dbht %v : %s",
+			state.GetLLeaderHeight()-4,
+			m.DBHeight,
+			m.String()))
 		return -1
 	}
 
