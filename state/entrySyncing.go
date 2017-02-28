@@ -9,6 +9,7 @@ import (
 
 	"github.com/FactomProject/factomd/common/constants"
 	"github.com/FactomProject/factomd/common/messages"
+	"github.com/FactomProject/factomd/common/primitives"
 	"math"
 	"time"
 )
@@ -28,6 +29,7 @@ func (s *State) MakeMissingEntryRequests() {
 
 	type EntryTrack struct {
 		lastRequest time.Time
+		dbheight    uint32
 		cnt         int
 	}
 
@@ -98,6 +100,19 @@ func (s *State) MakeMissingEntryRequests() {
 
 		update()
 
+		for k := range InPlay {
+			if InPlay[k].dbheight < s.EntryDBHeightComplete {
+				delete(InPlay, k)
+			} else {
+				h := primitives.NewHash(k[:])
+				e, _ := s.DB.FetchEntry(h)
+				if e != nil {
+					delete(InPlay, k)
+				}
+			}
+
+		}
+
 		// Ask for missing entries.
 
 		feedback := func() {
@@ -117,21 +132,33 @@ func (s *State) MakeMissingEntryRequests() {
 				}
 			}
 
-			if min >= int(math.MaxInt32) {
-				min = 0
+			if min != math.MaxInt32 && min > 0 {
+				s.EntryDBHeightComplete = uint32(min - 1)
 			}
-
-			s.EntryDBHeightComplete = uint32(min)
 
 			foundstr := fmt.Sprint(newfound, "/", found)
 			newfound = 0
-			fmt.Printf("***es Looking for: %8d Found: %13s In Play: %6d Min Height: %8d Max Height: %8d Max Send: %3d \n",
+			mmin := min
+			if mmin == math.MaxInt32 {
+				mmin = 0
+			}
+			fmt.Printf("***es Looking for: %s %8d"+
+				" NewFound/Found: %13s"+
+				" In Play: %6d"+
+				" Min Height: %8d "+
+				" Max Height: %8d "+
+				" Max Send: %3d"+
+				" Highest Saved %d "+
+				" Entry complete %d\n",
+				s.FactomNodeName,
 				len(keep),
 				foundstr,
 				len(InPlay),
-				min,
+				mmin,
 				max,
-				maxcnt)
+				maxcnt,
+				s.EntryDBHeightComplete,
+				s.GetHighestSavedBlk())
 		}
 
 		var loopList []MissingEntry
@@ -162,6 +189,7 @@ func (s *State) MakeMissingEntryRequests() {
 
 				if entryTrack == nil {
 					entryTrack = new(EntryTrack)
+					entryTrack.dbheight = v.dbheight
 					InPlay[v.entryhash.Fixed()] = entryTrack
 				}
 				entryTrack.lastRequest = now
@@ -173,7 +201,7 @@ func (s *State) MakeMissingEntryRequests() {
 		}
 
 		if len(InPlay) == 0 {
-			time.Sleep(60 * time.Second)
+			time.Sleep(3 * time.Second)
 		}
 		update()
 		feedback()
@@ -236,9 +264,10 @@ func (s *State) SyncEntries() {
 	for {
 
 		s.MissingEntryMutex.Lock()
-
+		lenEntries := len(s.MissingEntries)
+		s.MissingEntryMutex.Unlock()
 	scanEntries:
-		for scan <= s.GetHighestSavedBlk() && len(s.MissingEntries) < 10000 {
+		for scan <= s.GetHighestSavedBlk() && lenEntries < 10000 {
 
 			db := s.GetDirectoryBlockByHeight(scan)
 
@@ -271,12 +300,14 @@ func (s *State) SyncEntries() {
 						alldone = false
 						//Check lists and not add if already there.
 						addit := true
+						s.MissingEntryMutex.Lock()
 						for _, e := range s.MissingEntries {
 							if e.entryhash.Fixed() == entryhash.Fixed() {
 								addit = false
 								break
 							}
 						}
+						s.MissingEntryMutex.Unlock()
 
 						if addit {
 							var v MissingEntry
@@ -284,8 +315,9 @@ func (s *State) SyncEntries() {
 							v.dbheight = eBlock.GetHeader().GetDBHeight()
 							v.entryhash = entryhash
 							v.ebhash = ebKeyMR
-
+							s.MissingEntryMutex.Lock()
 							s.MissingEntries = append(s.MissingEntries, v)
+							s.MissingEntryMutex.Unlock()
 						}
 					}
 					// Save the entry hash, and remove from commits IF this hash is valid in this current timeframe.
@@ -301,11 +333,18 @@ func (s *State) SyncEntries() {
 			}
 			scan++
 		}
+
+		s.MissingEntryMutex.Lock()
+		if len(s.MissingEntries) == 0 {
+			s.EntryDBHeightComplete = s.GetHighestSavedBlk()
+		}
 		s.MissingEntryMutex.Unlock()
+
 		if scan == s.GetHighestSavedBlk() {
-			time.Sleep(60 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 		time.Sleep(5 * time.Second)
+
 	}
 }
 
