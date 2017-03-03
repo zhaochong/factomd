@@ -12,4 +12,7 @@ type IManagerController interface {
 	IsBufferEmpty() bool
 	FetchFromBuffer() []byte
 	SetSigningKey(sec []byte) error
+
+	// Plugin Control
+	Alive() error
 }

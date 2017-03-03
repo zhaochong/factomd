@@ -87,6 +87,10 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 		case <-quit:
 			return
 		default:
+			if err := man.Alive() {
+				log.Println("ERROR: Connection lost to torrent plugin")
+				return
+			}
 			if !man.IsBufferEmpty() {
 				var data []byte
 				// Exit conditions: If empty, quit. If length == 1 and first/only byte it 0x00
