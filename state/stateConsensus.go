@@ -697,18 +697,7 @@ func (s *State) FollowerExecuteDataResponse(m interfaces.IMsg) {
 		if !ok {
 			return
 		}
-
-		s.MissingEntryMutex.Lock()
-		defer s.MissingEntryMutex.Unlock()
-
-		for _, missing := range s.MissingEntries {
-			e := missing.entryhash
-
-			if e.Fixed() == entry.GetHash().Fixed() {
-				s.DB.InsertEntry(entry)
-				break
-			}
-		}
+		s.WriteEntry <- entry
 	}
 }
 

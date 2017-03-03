@@ -292,6 +292,10 @@ type State struct {
 	// Entries we don't have that we are asking our neighbors for
 	MissingEntries []MissingEntry
 
+	// Holds leaders and followers up until all missing entries are processed, if true
+	WaitForEntries  bool
+	UpdateEntryHash chan *EntryUpdate // Channel for updating entry Hashes tracking (repeats and such)
+	WriteEntry      chan interfaces.IEBEntry
 	// MessageTally causes the node to keep track of (and display) running totals of each
 	// type of message received during the tally interval
 	MessageTally           bool
@@ -317,6 +321,11 @@ type State struct {
 	useDBStateManager  bool
 	torrentUploadQueue chan interfaces.IMsg
 	DBStateManager     interfaces.IManagerController
+}
+
+type EntryUpdate struct {
+	Hash      interfaces.IHash
+	Timestamp interfaces.Timestamp
 }
 
 type MissingEntryBlock struct {
@@ -701,13 +710,15 @@ func (s *State) Init() {
 	s.TimeOffset = new(primitives.Timestamp)                     //interfaces.Timestamp(int64(rand.Int63() % int64(time.Microsecond*10)))
 	s.networkInvalidMsgQueue = make(chan interfaces.IMsg, 10000) //incoming message queue from the network messages
 	s.InvalidMessages = make(map[[32]byte]interfaces.IMsg, 0)
-	s.networkOutMsgQueue = make(chan interfaces.IMsg, 10000)  //Messages to be broadcast to the network
-	s.inMsgQueue = make(chan interfaces.IMsg, 10000)          //incoming message queue for factom application messages
-	s.apiQueue = make(chan interfaces.IMsg, 10000)            //incoming message queue from the API
-	s.ackQueue = make(chan interfaces.IMsg, 10000)            //queue of Leadership messages
-	s.msgQueue = make(chan interfaces.IMsg, 10000)            //queue of Follower messages
+	s.networkOutMsgQueue = make(chan interfaces.IMsg, 10000) //Messages to be broadcast to the network
+	s.inMsgQueue = make(chan interfaces.IMsg, 10000)         //incoming message queue for factom application messages
+	s.apiQueue = make(chan interfaces.IMsg, 10000)           //incoming message queue from the API
+	s.ackQueue = make(chan interfaces.IMsg, 10000)           //queue of Leadership messages
+	s.msgQueue = make(chan interfaces.IMsg, 10000)           //queue of Follower messages
+	s.ShutdownChan = make(chan int, 1)                       //Channel to gracefully shut down.
+	s.UpdateEntryHash = make(chan *EntryUpdate, 10000)       //Handles entry hashes and updating Commit maps.
+	s.WriteEntry = make(chan interfaces.IEBEntry, 20000)     //Entries to be written to the database
 	s.torrentUploadQueue = make(chan interfaces.IMsg, 100000) // Channel used if torrents enabled. Queue of torrents to upload
-	s.ShutdownChan = make(chan int, 1)                        //Channel to gracefully shut down.
 
 	er := os.MkdirAll(s.LogPath, 0777)
 	if er != nil {
@@ -1495,6 +1506,21 @@ func (s *State) UpdateState() (progress bool) {
 	// check to see ig a holding queue list request has been made
 	s.fillHoldingMap()
 	s.fillAcksMap()
+
+entryHashProcessing:
+	for {
+		select {
+		case e := <-s.UpdateEntryHash:
+			// Save the entry hash, and remove from commits IF this hash is valid in this current timeframe.
+			s.Replay.SetHashNow(constants.REVEAL_REPLAY, e.Hash.Fixed(), e.Timestamp)
+			// If the save worked, then remove any commit that might be around.
+			if !s.Replay.IsHashUnique(constants.REVEAL_REPLAY, e.Hash.Fixed()) {
+				delete(s.Commits, e.Hash.Fixed())
+			}
+		default:
+			break entryHashProcessing
+		}
+	}
 
 	return
 }
