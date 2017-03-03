@@ -100,7 +100,7 @@ type IManagerPluginRPCServer struct {
 }
 
 func (s *IManagerPluginRPCServer) Alive(args interface{}, resp *error) error {
-	*resp = s.Impl.Alive(height)
+	*resp = s.Impl.Alive()
 	return *resp
 }
 

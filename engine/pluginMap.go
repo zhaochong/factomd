@@ -87,7 +87,7 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 		case <-quit:
 			return
 		default:
-			if err := man.Alive() {
+			if err := man.Alive(); err != nil {
 				log.Println("ERROR: Connection lost to torrent plugin")
 				return
 			}
