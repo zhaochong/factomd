@@ -88,7 +88,7 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 			return
 		default:
 			if err := man.Alive(); err != nil {
-				log.Println("ERROR: Connection lost to torrent plugin")
+				log.Fatal("ERROR: Connection lost to torrent plugin")
 				return
 			}
 			if !man.IsBufferEmpty() {
