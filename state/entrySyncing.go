@@ -14,7 +14,31 @@ import (
 
 var _ = fmt.Print
 
-func fetchByTorrent(s *State, height uint32) {
+func (s *State) TorrentMissingEntries() {
+	for {
+		// Copy missing list
+		var missinge []MissingEntry
+		s.MissingEntryMutex.Lock()
+		missinge = append(missinge, s.MissingEntries...)
+		s.MissingEntryMutex.Unlock()
+
+		var prev uint32 = 0
+		for _, e := range missinge {
+			if e.dbheight != prev {
+				fmt.Printf("Torrenting Height %d\n", e.dbheight)
+				s.fetchByTorrent(e.dbheight)
+				prev = e.dbheight
+			}
+		}
+
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func (s *State) fetchByTorrent(height uint32) {
+	if height == 0 {
+		return
+	}
 	err := s.GetMissingDBState(height)
 	if err != nil {
 		fmt.Println("DEBUG: Error in torrent retrieve: " + err.Error())
@@ -69,11 +93,7 @@ func (s *State) MakeMissingEntryRequests() {
 				}
 
 				eBlockRequest := messages.NewMissingData(s, v.ebhash)
-				if s.UsingTorrent() {
-					fetchByTorrent(s, v.dbheight)
-				} else {
-					eBlockRequest.SendOut(s, eBlockRequest)
-				}
+				eBlockRequest.SendOut(s, eBlockRequest)
 			}
 		}
 
@@ -200,38 +220,40 @@ func (s *State) MakeMissingEntryRequests() {
 			}
 		}
 
-		var loopList []MissingEntry
-		loopList = append(loopList, keep...)
+		if !s.UsingTorrent() {
+			var loopList []MissingEntry
+			loopList = append(loopList, keep...)
 
-		for i, v := range loopList {
+			for i, v := range loopList {
 
-			if i > 2000 {
-				break
-			}
-
-			if (i+1)%100 == 0 {
-				update()
-				feedback()
-			}
-
-			et := InPlay[v.entryhash.Fixed()]
-
-			if et == nil {
-				et = new(EntryTrack)
-				et.dbheight = v.dbheight
-				InPlay[v.entryhash.Fixed()] = et
-			}
-
-			if et.cnt == 0 || now.Unix()-et.lastRequest.Unix() > 40 {
-				entryRequest := messages.NewMissingData(s, v.entryhash)
-				entryRequest.SendOut(s, entryRequest)
-				if len(s.WriteEntry) > 2000 {
-					time.Sleep(time.Duration(len(s.WriteEntry)/10) * time.Millisecond)
+				if i > 2000 {
+					break
 				}
-				et.lastRequest = now
-				et.cnt++
-				if et.cnt%25 == 25 {
-					fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", v.ebhash.Bytes(), v.entryhash.Bytes(), et.cnt)
+
+				if (i+1)%100 == 0 {
+					update()
+					feedback()
+				}
+
+				et := InPlay[v.entryhash.Fixed()]
+
+				if et == nil {
+					et = new(EntryTrack)
+					et.dbheight = v.dbheight
+					InPlay[v.entryhash.Fixed()] = et
+				}
+
+				if et.cnt == 0 || now.Unix()-et.lastRequest.Unix() > 40 {
+					entryRequest := messages.NewMissingData(s, v.entryhash)
+					entryRequest.SendOut(s, entryRequest)
+					if len(s.WriteEntry) > 2000 {
+						time.Sleep(time.Duration(len(s.WriteEntry)/10) * time.Millisecond)
+					}
+					et.lastRequest = now
+					et.cnt++
+					if et.cnt%25 == 25 {
+						fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", v.ebhash.Bytes(), v.entryhash.Bytes(), et.cnt)
+					}
 				}
 			}
 		}
