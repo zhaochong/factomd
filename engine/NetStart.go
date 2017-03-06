@@ -541,7 +541,6 @@ func startServers(load bool) {
 		}
 		go fnode.State.MakeMissingEntryRequests()
 		go fnode.State.GoSyncEntries()
-		go fnode.State.CatchupEBlocks()
 		go Timer(fnode.State)
 		go fnode.State.ValidatorLoop()
 	}
