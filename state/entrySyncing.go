@@ -281,6 +281,11 @@ func (s *State) MakeMissingEntryRequests() {
 					if len(InPlay) > 500 {
 						time.Sleep(time.Duration(len(InPlay)/10) * time.Millisecond)
 					}
+					et.lastRequest = now
+					et.cnt++
+					if et.cnt%25 == 25 {
+						fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", v.ebhash.Bytes(), v.entryhash.Bytes(), et.cnt)
+					}
 				}
 			}
 		}
