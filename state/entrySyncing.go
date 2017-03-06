@@ -26,7 +26,7 @@ func (s *State) TorrentMissingEntries() {
 		var prev uint32 = 0
 		for _, e := range missinge {
 			if e.dbheight != prev {
-				fmt.Printf("Torrenting Height %d\n", e.dbheight)
+				// fmt.Printf("Torrenting Height %d\n", e.dbheight)
 				s.fetchByTorrent(e.dbheight)
 				prev = e.dbheight
 			}
