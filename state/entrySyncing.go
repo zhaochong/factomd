@@ -22,13 +22,25 @@ func (s *State) TorrentMissingEntries() {
 		missinge = append(missinge, s.MissingEntries...)
 		s.MissingEntryMutex.Unlock()
 
+		var low uint32 = 99999
+		var high uint32 = 0
 		var prev uint32 = 0
+		amt := 0
 		for _, e := range missinge {
 			if e.dbheight != prev {
-				fmt.Printf("Torrenting Height %d\n", e.dbheight)
+				if e.dbheight < low {
+					low = e.dbheight
+				}
+				if e.dbheight > high {
+					high = e.dbheight
+				}
 				s.fetchByTorrent(e.dbheight)
+				amt++
 				prev = e.dbheight
 			}
+		}
+		if high != 0 {
+			fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
 		}
 
 		time.Sleep(5 * time.Second)
