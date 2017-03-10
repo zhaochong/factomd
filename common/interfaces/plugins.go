@@ -7,6 +7,7 @@ type IManagerController interface {
 	// Manager functions extended
 	RetrieveDBStateByHeight(height uint32) error
 	UploadDBStateBytes(data []byte, sign bool) error
+	RequestMoreUploads() int
 
 	// Control function
 	IsBufferEmpty() bool

@@ -3,50 +3,172 @@ package state
 import (
 	"fmt"
 	"time"
+	// "sync"
 
 	//"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 )
 
+type heightError struct {
+	Err    error
+	Height uint32
+}
+
+// Controls the flow of uploading torrents
+type UploadController struct {
+	// DO NOT USE THIS MAP OUTSIDE sortRequests()
+	// It is not concurrency safe
+	uploaded           map[uint32]struct{} // Map of uploaded heights
+	requestUploadQueue chan uint32
+	sendUploadQueue    chan uint32      // heights to be uploaded
+	failedQueue        chan heightError // Channel of heights that failed to upload
+
+	DBStateManager interfaces.IManagerController
+
+	quit chan int
+}
+
+func NewUploadController(dbsm interfaces.IManagerController) *UploadController {
+	u := new(UploadController)
+	u.requestUploadQueue = make(chan uint32, 100000) // Channel used if torrents enabled. Queue of torrents to upload
+	u.sendUploadQueue = make(chan uint32, 10000)
+	u.failedQueue = make(chan heightError, 1000)
+
+	u.uploaded = make(map[uint32]struct{})
+
+	u.quit = make(chan int, 10)
+	u.DBStateManager = dbsm
+
+	return u
+}
+
+func (s *State) RunUploadController() {
+	go s.Uploader.sortRequests()
+	go s.uploadBlocks()
+	go s.Uploader.handleErrors()
+	go s.Uploader.Status()
+}
+
+func (u *UploadController) Status() {
+	for {
+		select {
+		case <-u.quit:
+			u.quit <- 0
+			return
+		default:
+
+			time.Sleep(5 * time.Second)
+			fmt.Printf("Request: %d, Send: %d\n, failed: %d\n", len(u.requestUploadQueue), len(u.sendUploadQueue), len(u.failedQueue))
+		}
+	}
+}
+
+func (u *UploadController) Close() {
+	u.quit <- 0
+}
+
+// sortRequests sorts through the inital requests to toss out repeats
+func (u *UploadController) sortRequests() {
+	for {
+	backToTopSortRequests:
+		select {
+		// Avoid defering the lock, more overhead
+		case h := <-u.requestUploadQueue:
+			if _, ok := u.uploaded[h]; ok {
+				// Already uploaded, toss out
+				goto backToTopSortRequests
+			}
+
+			u.uploaded[h] = struct{}{}
+			u.sendUploadQueue <- h
+		case <-u.quit:
+			u.quit <- 0
+			return
+		}
+	}
+}
+
+func (s *State) uploadBlocks() {
+	u := s.Uploader
+	for {
+	backToTopUploadBlocks:
+		select {
+		case <-u.quit:
+			u.quit <- 0
+			return
+		default:
+			readyFor := u.DBStateManager.RequestMoreUploads()
+			// Need to check if we are able to upload any blocks. If we cannot, we will wait
+			if readyFor == 0 { // Not ready for anything
+				time.Sleep(1 * time.Second)
+				goto backToTopUploadBlocks
+			} else if readyFor < 0 {
+				// This is a crash....
+				return
+			} else {
+				// We can make some uploads. Only loop readyFor times
+				for i := 0; i < readyFor; i++ {
+					select { // We will block if nothing is in queue and chill here
+					case h := <-u.sendUploadQueue:
+						err := s.uploadDBState(h)
+						if err != nil {
+							u.failedQueue <- heightError{Height: h, Err: err}
+						}
+					case <-u.quit:
+						u.quit <- 0
+						return
+					}
+				}
+			}
+		}
+	}
+}
+
+func (u *UploadController) handleErrors() {
+	for {
+		select {
+		case <-u.quit:
+			u.quit <- 0
+			return
+		case <-u.failedQueue:
+			// TODO: Handle errors
+		}
+	}
+}
+
+/*****************
+	State Calls
+******************/
+
 // Only called once to set the torrent flag.
 func (s *State) SetUseTorrent(setVal bool) {
 	s.useDBStateManager = setVal
-	if setVal {
-		// Drain our upload queue for torrents
-		go s.drainUploads()
-	}
 }
 
 func (s *State) UsingTorrent() bool {
 	return s.useDBStateManager
 }
 
-func (s *State) UploadDBState(msg interfaces.IMsg) {
-	s.torrentUploadQueue <- msg
-}
-
-// drainUploads is a go routine that passes the msgs to the torrent to upload.
-// making it a goroutine maintains our fast bootup, and delegates the catchup work
-// to the plugin
-func (s *State) drainUploads() {
-	for {
-		select {
-		case msg := <-s.torrentUploadQueue:
-			s.uploadDBState(msg)
-		default:
-			time.Sleep(1 * time.Second)
+/*
+	msg, err := list.State.LoadDBState(uint32(dbheight))
+		if err != nil {
+			fmt.Println("[1] Error creating torrent in SaveDBStateToDB: " + err.Error())
 		}
-	}
+*/
+
+// All calls get sent here and redirected into the uploadcontroller queue.
+func (s *State) UploadDBState(dbheight uint32) {
+	s.Uploader.requestUploadQueue <- dbheight
 }
 
-func (s *State) uploadDBState(msg interfaces.IMsg) error {
+func (s *State) uploadDBState(height uint32) error {
 	// Create the torrent
 	if s.UsingTorrent() {
-		//msg, err := s.LoadDBState(uint32(dbheight))
-		//if err != nil {
-		//		panic("[1] Error creating torrent in SaveDBStateToDB: " + err.Error())
-		//	}
+		msg, err := s.LoadDBState(height)
+		if err != nil {
+			return err
+		}
 		d := msg.(*messages.DBStateMsg)
 		//fmt.Printf("Uploading DBState %d, Sigs: %d\n", d.DirectoryBlock.GetDatabaseHeight(), len(d.SignatureList.List))
 		block := NewWholeBlock()

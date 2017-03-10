@@ -318,9 +318,9 @@ type State struct {
 	AckChange uint32
 
 	// Plugins
-	useDBStateManager  bool
-	torrentUploadQueue chan interfaces.IMsg
-	DBStateManager     interfaces.IManagerController
+	useDBStateManager bool
+	Uploader          *UploadController // Controls the uploads of torrents. Prevents backups
+	DBStateManager    interfaces.IManagerController
 }
 
 type EntryUpdate struct {
@@ -718,7 +718,6 @@ func (s *State) Init() {
 	s.ShutdownChan = make(chan int, 1)                       //Channel to gracefully shut down.
 	s.UpdateEntryHash = make(chan *EntryUpdate, 100000)      //Handles entry hashes and updating Commit maps.
 	s.WriteEntry = make(chan interfaces.IEBEntry, 20000)     //Entries to be written to the database
-	s.torrentUploadQueue = make(chan interfaces.IMsg, 100000) // Channel used if torrents enabled. Queue of torrents to upload
 
 	er := os.MkdirAll(s.LogPath, 0777)
 	if er != nil {
@@ -1020,7 +1019,7 @@ func (s *State) LoadDBState(dbheight uint32) (interfaces.IMsg, error) {
 
 	// Create the torrent
 	if s.UsingTorrent() {
-		s.UploadDBState(msg)
+		s.UploadDBState(dbheight)
 	}
 
 	return msg, nil

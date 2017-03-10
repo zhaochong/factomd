@@ -76,6 +76,12 @@ func LaunchTorrentDBStateManagePlugin(path string, inQueue chan interfaces.IMsg,
 		manager.SetSigningKey(sigKey.Key[:32])
 	}
 
+	s.Uploader = state.NewUploadController(manager)
+	AddInterruptHandler(func() {
+		fmt.Println("State's Upload controller is now closing...")
+		s.Uploader.Close()
+	})
+
 	go manageDrain(inQueue, manager, s, stop)
 	go s.TorrentMissingEntries()
 

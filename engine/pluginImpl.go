@@ -37,9 +37,13 @@ func (g *IManagerPluginRPC) RetrieveDBStateByHeight(height uint32) error {
 	return resp
 }
 
-type UploadDBStateArgs struct {
-	Data []byte
-	Sign bool
+func (g *IManagerPluginRPC) RequestMoreUploads() int {
+	var resp int
+	err := g.client.Call("Plugin.RequestMoreUploads", new(interface{}), &resp)
+	if err != nil {
+		return -1
+	}
+	return resp
 }
 
 func (g *IManagerPluginRPC) Alive() error {
@@ -48,9 +52,14 @@ func (g *IManagerPluginRPC) Alive() error {
 	return err
 }
 
+type uploadDBStateArgs struct {
+	Data []byte
+	Sign bool
+}
+
 func (g *IManagerPluginRPC) UploadDBStateBytes(data []byte, sign bool) error {
 	var resp error
-	args := UploadDBStateArgs{
+	args := uploadDBStateArgs{
 		Data: data,
 		Sign: sign,
 	}
@@ -99,6 +108,10 @@ type IManagerPluginRPCServer struct {
 	Impl interfaces.IManagerController
 }
 
+func (s *IManagerPluginRPCServer) RequestMoreUploads(args interface{}, resp *int) error {
+	*resp = s.Impl.RequestMoreUploads()
+	return nil
+}
 func (s *IManagerPluginRPCServer) Alive(args interface{}, resp *error) error {
 	*resp = s.Impl.Alive()
 	return *resp
@@ -109,7 +122,7 @@ func (s *IManagerPluginRPCServer) RetrieveDBStateByHeight(height uint32, resp *e
 	return *resp
 }
 
-func (s *IManagerPluginRPCServer) UploadDBStateBytes(args *UploadDBStateArgs, resp *error) error {
+func (s *IManagerPluginRPCServer) UploadDBStateBytes(args *uploadDBStateArgs, resp *error) error {
 	*resp = s.Impl.UploadDBStateBytes(args.Data, args.Sign)
 	return *resp
 }
