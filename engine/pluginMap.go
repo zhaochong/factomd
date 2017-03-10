@@ -84,6 +84,7 @@ func LaunchTorrentDBStateManagePlugin(path string, inQueue chan interfaces.IMsg,
 
 	go manageDrain(inQueue, manager, s, stop)
 	go s.TorrentMissingEntries()
+	go s.RunUploadController()
 
 	return manager, nil
 }

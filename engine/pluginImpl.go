@@ -52,14 +52,14 @@ func (g *IManagerPluginRPC) Alive() error {
 	return err
 }
 
-type uploadDBStateArgs struct {
+type UploadDBStateArgs struct {
 	Data []byte
 	Sign bool
 }
 
 func (g *IManagerPluginRPC) UploadDBStateBytes(data []byte, sign bool) error {
 	var resp error
-	args := uploadDBStateArgs{
+	args := UploadDBStateArgs{
 		Data: data,
 		Sign: sign,
 	}
@@ -122,7 +122,7 @@ func (s *IManagerPluginRPCServer) RetrieveDBStateByHeight(height uint32, resp *e
 	return *resp
 }
 
-func (s *IManagerPluginRPCServer) UploadDBStateBytes(args *uploadDBStateArgs, resp *error) error {
+func (s *IManagerPluginRPCServer) UploadDBStateBytes(args *UploadDBStateArgs, resp *error) error {
 	*resp = s.Impl.UploadDBStateBytes(args.Data, args.Sign)
 	return *resp
 }

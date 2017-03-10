@@ -32,7 +32,7 @@ type UploadController struct {
 func NewUploadController(dbsm interfaces.IManagerController) *UploadController {
 	u := new(UploadController)
 	u.requestUploadQueue = make(chan uint32, 100000) // Channel used if torrents enabled. Queue of torrents to upload
-	u.sendUploadQueue = make(chan uint32, 10000)
+	u.sendUploadQueue = make(chan uint32, 100000)
 	u.failedQueue = make(chan heightError, 1000)
 
 	u.uploaded = make(map[uint32]struct{})
@@ -44,6 +44,7 @@ func NewUploadController(dbsm interfaces.IManagerController) *UploadController {
 }
 
 func (s *State) RunUploadController() {
+	fmt.Println("Starting upload controller")
 	go s.Uploader.sortRequests()
 	go s.uploadBlocks()
 	go s.Uploader.handleErrors()
@@ -58,8 +59,8 @@ func (u *UploadController) Status() {
 			return
 		default:
 
-			time.Sleep(5 * time.Second)
-			fmt.Printf("Request: %d, Send: %d\n, failed: %d\n", len(u.requestUploadQueue), len(u.sendUploadQueue), len(u.failedQueue))
+			time.Sleep(2 * time.Second)
+			fmt.Printf("[Uploader] Request: %d, Send: %d, failed: %d\n", len(u.requestUploadQueue), len(u.sendUploadQueue), len(u.failedQueue))
 		}
 	}
 }
