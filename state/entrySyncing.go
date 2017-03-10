@@ -6,11 +6,18 @@ package state
 
 import (
 	"fmt"
+	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/common/primitives"
+	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"math"
 	"time"
 )
+
+func has(s *State, entry interfaces.IHash) bool {
+	exists, _ := s.DB.DoesKeyExist(databaseOverlay.ENTRY, entry.Bytes())
+	return exists
+}
 
 var _ = fmt.Print
 
@@ -61,6 +68,12 @@ func (s *State) fetchByTorrent(height uint32) {
 // them if it finds entries in the missing lists.
 func (s *State) MakeMissingEntryRequests() {
 
+	startt := time.Now()
+
+	secs := func() int {
+		return int(time.Now().Unix() - startt.Unix())
+	}
+
 	type EntryTrack struct {
 		lastRequest time.Time
 		dbheight    uint32
@@ -74,6 +87,7 @@ func (s *State) MakeMissingEntryRequests() {
 	for {
 		now := time.Now()
 		newfound := 0
+		newrequest := 0
 		// Make a copy of Missing Entries while locked down, and do all the Entry Block syncing (because mostly
 		// we are not doing any engry block syncing because they are synced with DBStates, but we do so for
 		// sanity purposes.
@@ -123,8 +137,7 @@ func (s *State) MakeMissingEntryRequests() {
 			// Remove all Entries that we have already found and recorded. "keep" the ones we are still looking for.
 			for _, v := range missinge {
 
-				e, _ := s.DB.FetchEntry(v.entryhash)
-				if e == nil {
+				if !has(s, v.entryhash) {
 					keep = append(keep, v)
 				} else {
 					found++
@@ -132,7 +145,10 @@ func (s *State) MakeMissingEntryRequests() {
 					delete(InPlay, v.entryhash.Fixed())
 				}
 			}
-
+			delay := 1000 - newfound
+			if delay > 0 {
+				time.Sleep(time.Duration(delay) * time.Millisecond)
+			}
 			// Okay, so at this point we have what entries in the missingEntries we should keep, as of when we
 			// entered this routine.  But the scanner might have found some more missing entries.  They are on the
 			// end.  So we will get those in newStuff, and append that to the end of what we figured out we should
@@ -145,7 +161,9 @@ func (s *State) MakeMissingEntryRequests() {
 			// Let the outside world know which entries we are looking for.
 			newStuff := []MissingEntry{}
 			newStuff = append(newStuff, s.MissingEntries[len(missinge):]...)
-			s.MissingEntries = append(keep, newStuff...)
+			var newme []MissingEntry
+			keep = append(keep, newStuff...)
+			s.MissingEntries = append(newme, keep...)
 			s.MissingEntryMutex.Unlock()
 		}
 
@@ -200,25 +218,32 @@ func (s *State) MakeMissingEntryRequests() {
 				s.EntryDBHeightComplete = uint32(min - 1)
 			}
 
-			if newfound > 0 {
-				foundstr := fmt.Sprint(newfound, "/", found)
+			if true {
+				foundstr := fmt.Sprint(newrequest, "/", newfound, "/", found)
 				newfound = 0
+				newrequest = 0
 				mmin := min
 				if mmin == math.MaxInt32 {
 					mmin = 0
 				}
-
-				fmt.Printf("***es %s #missing: %4d"+
-					" NewFound/Found: %9s"+
+				zsecs := secs()
+				ss := zsecs % 60       // seconds
+				m := (zsecs / 60) % 60 // minutes
+				h := (zsecs / 60 / 60)
+				fmt.Printf("***es %s"+
+					" time %2d:%02d:%02d"+
+					" #missing: %4d"+
+					" Req/New/Found: %15s"+
 					" In Play: %4d"+
-					" Min Height: %d "+
-					" Max Height: %d "+
+					" Min Height: %6d "+
+					" Max Height: %6d "+
 					" Avg Send: %d.%03d"+
 					" Sending: %4d"+
 					" Max Send: %2d"+
-					" Highest Saved %d "+
-					" Entry complete %d\n",
+					" Highest Saved %6d "+
+					" Entry complete %6d\n",
 					s.FactomNodeName,
+					h, m, ss,
 					len(keep),
 					foundstr,
 					len(InPlay),
@@ -233,10 +258,7 @@ func (s *State) MakeMissingEntryRequests() {
 		}
 
 		if !s.UsingTorrent() {
-			var loopList []MissingEntry
-			loopList = append(loopList, keep...)
-
-			for i, v := range loopList {
+			for i, v := range keep {
 
 				if i > 2000 {
 					break
@@ -258,8 +280,9 @@ func (s *State) MakeMissingEntryRequests() {
 				if et.cnt == 0 || now.Unix()-et.lastRequest.Unix() > 40 {
 					entryRequest := messages.NewMissingData(s, v.entryhash)
 					entryRequest.SendOut(s, entryRequest)
-					if len(s.WriteEntry) > 2000 {
-						time.Sleep(time.Duration(len(s.WriteEntry)/10) * time.Millisecond)
+					newrequest++
+					if len(InPlay) > 500 {
+						time.Sleep(time.Duration(len(InPlay)/10) * time.Millisecond)
 					}
 					et.lastRequest = now
 					et.cnt++
@@ -270,6 +293,10 @@ func (s *State) MakeMissingEntryRequests() {
 			}
 		}
 
+		if len(keep) == 0 {
+			time.Sleep(1 * time.Second)
+		}
+
 		// slow down as the number of retries per message goes up
 		time.Sleep(time.Duration((avg - 1000)) * time.Millisecond)
 
@@ -278,65 +305,77 @@ func (s *State) MakeMissingEntryRequests() {
 	}
 }
 
-func (s *State) syncEntryBlocks() {
-	// All done is true, and as long as it says true, we walk our bookmark forward.  Once we find something
-	// missing, we stop moving the bookmark, and rely on caching to keep us from thrashing the disk as we
-	// review the directory block over again the next time.
-	alldone := true
+func (s *State) GoSyncEntryBlocks() {
 
-	var keep []MissingEntryBlock
-	var missingeb []MissingEntryBlock
+	for {
 
-	s.MissingEntryMutex.Lock()
-	missingeb = append(missingeb, s.MissingEntryBlocks...)
-	s.MissingEntryMutex.Unlock()
+		// All done is true, and as long as it says true, we walk our bookmark forward.  Once we find something
+		// missing, we stop moving the bookmark, and rely on caching to keep us from thrashing the disk as we
+		// review the directory block over again the next time.
+		alldone := true
 
-	for s.EntryBlockDBHeightProcessing <= s.GetHighestSavedBlk() && len(missingeb) < 1000 {
-
-		db := s.GetDirectoryBlockByHeight(s.EntryBlockDBHeightProcessing)
-
-		if db == nil {
-			return
-		}
-
-		for _, ebKeyMR := range db.GetEntryHashes()[3:] {
-			// The first three entries (0,1,2) in every directory block are blocks we already have by
-			// definition.  If we decide to not have Factoid blocks or Entry Credit blocks in some cases,
-			// then this assumption might not hold.  But it does for now.
-
-			eBlock, _ := s.DB.FetchEBlock(ebKeyMR)
-
-			// Ask for blocks we don't have.
-			if eBlock == nil {
-
-				// Check lists and not add if already there.
-				addit := true
-				for _, eb := range missingeb {
-					if eb.ebhash.Fixed() == ebKeyMR.Fixed() {
-						addit = false
-						break
-					}
-				}
-
-				if addit {
-					missingEntryBlock := MissingEntryBlock{ebhash: ebKeyMR, dbheight: s.EntryBlockDBHeightProcessing}
-					keep = append(keep, missingEntryBlock)
-				}
-				// Something missing, stop moving the bookmark.
-				alldone = false
-				continue
-			}
-		}
+		var keep []MissingEntryBlock
+		var missingeb []MissingEntryBlock
 
 		s.MissingEntryMutex.Lock()
-		s.MissingEntryBlocks = keep
+		missingeb = append(missingeb, s.MissingEntryBlocks...)
 		s.MissingEntryMutex.Unlock()
 
-		if alldone {
-			// we had three bookmarks.  Now they are all in lockstep. TODO: get rid of extra bookmarks.
-			s.EntryBlockDBHeightComplete++
-			s.EntryBlockDBHeightProcessing++
+		for s.EntryBlockDBHeightProcessing <= s.GetHighestSavedBlk() && len(missingeb) < 1000 {
+
+			db := s.GetDirectoryBlockByHeight(s.EntryBlockDBHeightProcessing)
+
+			if db == nil {
+				return
+			}
+
+			for _, ebKeyMR := range db.GetEntryHashes()[3:] {
+				// The first three entries (0,1,2) in every directory block are blocks we already have by
+				// definition.  If we decide to not have Factoid blocks or Entry Credit blocks in some cases,
+				// then this assumption might not hold.  But it does for now.
+
+				eBlock, _ := s.DB.FetchEBlock(ebKeyMR)
+
+				// Ask for blocks we don't have.
+				if eBlock == nil {
+
+					// Check lists and not add if already there.
+					addit := true
+					for _, eb := range missingeb {
+						if eb.ebhash.Fixed() == ebKeyMR.Fixed() {
+							addit = false
+							break
+						}
+					}
+
+					if addit {
+						missingEntryBlock := MissingEntryBlock{ebhash: ebKeyMR, dbheight: s.EntryBlockDBHeightProcessing}
+						keep = append(keep, missingEntryBlock)
+					}
+					// Something missing, stop moving the bookmark.
+					alldone = false
+					continue
+				}
+			}
+
+			s.MissingEntryMutex.Lock()
+			s.MissingEntryBlocks = keep
+			s.MissingEntryMutex.Unlock()
+
+			if alldone {
+				// we had three bookmarks.  Now they are all in lockstep. TODO: get rid of extra bookmarks.
+				s.EntryBlockDBHeightComplete++
+				s.EntryBlockDBHeightProcessing++
+			}
 		}
+		s.MissingEntryMutex.Lock()
+		t := len(s.MissingEntryBlocks)
+		s.MissingEntryMutex.Unlock()
+		if t <= 3 {
+			time.Sleep(3 * time.Second)
+		}
+		time.Sleep(time.Duration(t/10) * time.Millisecond)
+
 	}
 }
 
@@ -376,6 +415,7 @@ func (s *State) GoWriteEntries() {
 func (s *State) GoSyncEntries() {
 
 	go s.GoWriteEntries() // Start a go routine to write the Entries to the DB
+	go s.GoSyncEntryBlocks()
 
 	starting := uint32(0)
 
@@ -389,7 +429,7 @@ func (s *State) GoSyncEntries() {
 		missinge = append(missinge, s.MissingEntries...)
 		s.MissingEntryMutex.Unlock()
 	scanentries:
-		for scan <= s.GetHighestSavedBlk() && len(missinge) < 10000 {
+		for scan <= s.GetHighestSavedBlk() {
 
 			db := s.GetDirectoryBlockByHeight(scan)
 
@@ -410,17 +450,22 @@ func (s *State) GoSyncEntries() {
 					break scanentries
 				}
 
+				if len(newentries)+len(missinge) > 4000 {
+					alldone = false
+					break scanentries
+				}
+
 				for _, entryhash := range eBlock.GetEntryHashes() {
 
 					// slow down if we are behind.
-					time.Sleep(time.Duration(len(s.WriteEntry)) * time.Millisecond)
+					time.Sleep(time.Duration(len(s.WriteEntry)/10) * time.Millisecond)
 
 					if entryhash.IsMinuteMarker() {
 						continue
 					}
-					e, _ := s.DB.FetchEntry(entryhash)
+
 					// If I have the entry, then remove it from the Missing Entries list.
-					if e != nil {
+					if has(s, entryhash) {
 						// If I am missing the entry, add it to th eMissing Entries list
 					} else {
 						//Check lists and not add if already there.
@@ -453,7 +498,9 @@ func (s *State) GoSyncEntries() {
 
 			if alldone && len(s.MissingEntries) == 0 && len(newentries) == 0 {
 				starting = scan
-				s.EntryDBHeightComplete = scan
+				if scan > s.EntryDBHeightComplete {
+					s.EntryDBHeightComplete = scan
+				}
 			}
 			scan++
 			s.MissingEntryMutex.Unlock()
@@ -466,24 +513,14 @@ func (s *State) GoSyncEntries() {
 		if len(s.MissingEntries) == 0 {
 			s.EntryDBHeightComplete = s.GetHighestSavedBlk()
 			starting = s.GetHighestSavedBlk()
+			s.MissingEntryMutex.Unlock()
+			time.Sleep(1 * time.Second)
+		} else {
+			s.MissingEntryMutex.Unlock()
 		}
-
-		s.MissingEntryMutex.Unlock()
 
 		// sleep some time no matter what.
 		time.Sleep(1 * time.Second)
 
-	}
-}
-
-// This routine walks through the directory blocks, looking for missing entry blocks and entries.
-// Once it finds something missing, it keeps that as a mark, and starts there the next time it is
-// called.
-
-func (s *State) CatchupEBlocks() {
-
-	for {
-		s.syncEntryBlocks()
-		time.Sleep(time.Duration(len(s.WriteEntry)/100) * time.Second)
 	}
 }
