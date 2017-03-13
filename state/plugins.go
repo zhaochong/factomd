@@ -15,6 +15,10 @@ type heightError struct {
 	Height uint32
 }
 
+/**********************
+ *       Uploads      *
+ **********************/
+
 // Controls the flow of uploading torrents
 type UploadController struct {
 	// DO NOT USE THIS MAP OUTSIDE sortRequests()
@@ -48,7 +52,7 @@ func (s *State) RunUploadController() {
 	go s.Uploader.sortRequests()
 	go s.uploadBlocks()
 	go s.Uploader.handleErrors()
-	go s.Uploader.Status()
+	// go s.Uploader.Status()
 }
 
 func (u *UploadController) Status() {
