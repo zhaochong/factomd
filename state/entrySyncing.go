@@ -68,6 +68,7 @@ func (s *State) fetchByTorrent(height uint32) {
 // them if it finds entries in the missing lists.
 func (s *State) MakeMissingEntryRequests() {
 
+	lastFeedback := 0
 	startt := time.Now()
 
 	secs := func() int {
@@ -264,9 +265,11 @@ func (s *State) MakeMissingEntryRequests() {
 					break
 				}
 
-				if (i+1)%100 == 0 {
+				thesecs := secs()
+				if thesecs-lastFeedback > 3 {
 					update()
 					feedback()
+					lastFeedback = thesecs
 				}
 
 				et := InPlay[v.entryhash.Fixed()]
@@ -281,27 +284,22 @@ func (s *State) MakeMissingEntryRequests() {
 					entryRequest := messages.NewMissingData(s, v.entryhash)
 					entryRequest.SendOut(s, entryRequest)
 					newrequest++
-					if len(InPlay) > 500 {
-						time.Sleep(time.Duration(len(InPlay)/10) * time.Millisecond)
-					}
-					et.lastRequest = now
-					et.cnt++
-					if et.cnt%25 == 25 {
-						fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", v.ebhash.Bytes(), v.entryhash.Bytes(), et.cnt)
+					if len(InPlay) > 50 {
+						time.Sleep(time.Duration((len(InPlay)-50)/10) * time.Millisecond)
 					}
 				}
 			}
 		}
 
-		if len(keep) == 0 {
-			time.Sleep(1 * time.Second)
-		}
+		update()
+		feedback()
 
+		if len(keep) == 0 {
+			time.Sleep(300 * time.Millisecond)
+		}
 		// slow down as the number of retries per message goes up
 		time.Sleep(time.Duration((avg - 1000)) * time.Millisecond)
 
-		update()
-		feedback()
 	}
 }
 
@@ -381,7 +379,7 @@ func (s *State) GoSyncEntryBlocks() {
 
 func (s *State) GoWriteEntries() {
 	for {
-		time.Sleep(1 * time.Second)
+		time.Sleep(300 * time.Millisecond)
 
 	entryWrite:
 		for {
@@ -450,7 +448,7 @@ func (s *State) GoSyncEntries() {
 					break scanentries
 				}
 
-				if len(newentries)+len(missinge) > 4000 {
+				if len(newentries)+len(missinge) > 1000 {
 					alldone = false
 					break scanentries
 				}
@@ -498,29 +496,28 @@ func (s *State) GoSyncEntries() {
 
 			if alldone && len(s.MissingEntries) == 0 && len(newentries) == 0 {
 				starting = scan
-				if scan > s.EntryDBHeightComplete {
-					s.EntryDBHeightComplete = scan
-				}
 			}
 			scan++
 			s.MissingEntryMutex.Unlock()
 		}
 
+		zerolen := false
 		s.MissingEntryMutex.Lock()
-
 		s.MissingEntries = append(s.MissingEntries, newentries...)
+		zerolen = len(s.MissingEntries) == 0
 
-		if len(s.MissingEntries) == 0 {
+		if zerolen {
 			s.EntryDBHeightComplete = s.GetHighestSavedBlk()
 			starting = s.GetHighestSavedBlk()
-			s.MissingEntryMutex.Unlock()
-			time.Sleep(1 * time.Second)
-		} else {
-			s.MissingEntryMutex.Unlock()
+		}
+		s.MissingEntryMutex.Unlock()
+
+		if zerolen {
+			time.Sleep(300 * time.Millisecond)
 		}
 
 		// sleep some time no matter what.
-		time.Sleep(1 * time.Second)
+		time.Sleep(200 * time.Millisecond)
 
 	}
 }
