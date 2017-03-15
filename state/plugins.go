@@ -230,3 +230,7 @@ func (s *State) uploadDBState(height uint32) error {
 func (s *State) GetMissingDBState(height uint32) error {
 	return s.DBStateManager.RetrieveDBStateByHeight(height)
 }
+
+func (s *State) SetDBStateManagerCompletedHeight(height uint32) error {
+	return s.DBStateManager.CompletedHeightTo(height)
+}

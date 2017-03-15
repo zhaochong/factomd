@@ -37,6 +37,16 @@ func (g *IManagerPluginRPC) RetrieveDBStateByHeight(height uint32) error {
 	return resp
 }
 
+func (g *IManagerPluginRPC) CompletedHeightTo(height uint32) error {
+	var resp error
+	err := g.client.Call("Plugin.CompletedHeightTo", height, &resp)
+	if err != nil {
+		return err
+	}
+
+	return resp
+}
+
 func (g *IManagerPluginRPC) RequestMoreUploads() int {
 	var resp int
 	err := g.client.Call("Plugin.RequestMoreUploads", new(interface{}), &resp)
@@ -119,6 +129,11 @@ func (s *IManagerPluginRPCServer) Alive(args interface{}, resp *error) error {
 
 func (s *IManagerPluginRPCServer) RetrieveDBStateByHeight(height uint32, resp *error) error {
 	*resp = s.Impl.RetrieveDBStateByHeight(height)
+	return *resp
+}
+
+func (s *IManagerPluginRPCServer) CompletedHeightTo(height uint32, resp *error) error {
+	*resp = s.Impl.CompletedHeightTo(height)
 	return *resp
 }
 

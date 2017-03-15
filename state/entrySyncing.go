@@ -50,6 +50,7 @@ func (s *State) TorrentMissingEntries() {
 			fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
 		}
 
+		s.SetDBStateManagerCompletedHeight(s.EntryDBHeightComplete)
 		time.Sleep(5 * time.Second)
 	}
 }
@@ -231,7 +232,7 @@ func (s *State) MakeMissingEntryRequests() {
 				ss := zsecs % 60       // seconds
 				m := (zsecs / 60) % 60 // minutes
 				h := (zsecs / 60 / 60)
-				fmt.Printf("***es %s"+
+				fmt.Sprintf("***es %s"+
 					" time %2d:%02d:%02d"+
 					" #missing: %4d"+
 					" Req/New/Found: %15s"+
