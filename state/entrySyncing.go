@@ -19,43 +19,6 @@ func has(s *State, entry interfaces.IHash) bool {
 
 var _ = fmt.Print
 
-func (s *State) TorrentMissingEntries() {
-	for {
-		// Copy missing list
-		var low uint32 = 99999999
-		var high uint32 = 0
-		var prev uint32 = 0
-		amt := 0
-
-		s.MissingEntryMutex.Lock()
-		for k := range s.MissingEntryMap {
-			et := s.MissingEntryMap[k]
-			s.MissingEntryMutex.Unlock()
-			if et.DBHeight != prev {
-				if et.DBHeight < low {
-					low = et.DBHeight
-				}
-				if et.DBHeight > high {
-					high = et.DBHeight
-				}
-				s.fetchByTorrent(et.DBHeight)
-				amt++
-				prev = et.DBHeight
-			}
-
-			s.MissingEntryMutex.Lock()
-		}
-		s.MissingEntryMutex.Unlock()
-
-		if high != 0 {
-			fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
-		}
-
-		s.SetDBStateManagerCompletedHeight(s.EntryDBHeightComplete)
-		time.Sleep(5 * time.Second)
-	}
-}
-
 func (s *State) fetchByTorrent(height uint32) {
 	if height == 0 {
 		return
@@ -74,6 +37,7 @@ func (s *State) MakeMissingEntryRequests() {
 	found := 0
 
 	pause := time.Now().Add(60 * time.Second)
+	last := time.Now()
 
 	for {
 
@@ -132,9 +96,45 @@ func (s *State) MakeMissingEntryRequests() {
 			}
 		}
 
-		// Make requests for entries we don't have.
-		for k := range MissingEntryMap {
-			et := MissingEntryMap[k]
+		if s.UsingTorrent() { // torrent solution
+			// Copy missing list
+			var low uint32 = 99999999
+			var high uint32 = 0
+			var prev uint32 = 0
+			amt := 0
+
+			// Only do once per 5 seconds, anything more is wasted calls to torrent
+			if !last.Before(now.Add(-5 * time.Second)) {
+				goto skipTorrent
+			}
+			last = now
+
+			for k := range MissingEntryMap {
+				et := MissingEntryMap[k]
+				if et.DBHeight != prev {
+					if et.DBHeight < low {
+						low = et.DBHeight
+					}
+					if et.DBHeight > high {
+						high = et.DBHeight
+					}
+					s.fetchByTorrent(et.DBHeight)
+					amt++
+					prev = et.DBHeight
+				}
+
+			}
+
+			if high != 0 {
+				fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
+			}
+
+			s.SetDBStateManagerCompletedHeight(low) // Should be s.EntryDBHeightComplete, needs to be fixed
+		skipTorrent:
+		} else { // Non-torrent Solution
+			// Make requests for entries we don't have.
+			for k := range MissingEntryMap {
+				et := MissingEntryMap[k]
 
 				if et.Cnt == 0 || now.Unix()-et.LastTime.Unix() > 40 {
 					entryRequest := messages.NewMissingData(s, et.EntryHash)
@@ -146,10 +146,9 @@ func (s *State) MakeMissingEntryRequests() {
 						fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", et.EBHash.Bytes(), et.EntryHash.Bytes(), et.Cnt)
 					}
 				}
-				s.MissingEntryMutex.Lock()
-			}
-			if len(s.WriteEntry) > 200 {
-				time.Sleep(time.Duration(len(s.WriteEntry)) * time.Millisecond)
+				if len(s.WriteEntry) > 200 {
+					time.Sleep(time.Duration(len(s.WriteEntry)) * time.Millisecond)
+				}
 			}
 		}
 
