@@ -3,9 +3,7 @@ package state
 import (
 	"fmt"
 	"time"
-	// "sync"
 
-	//"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 )
@@ -52,26 +50,15 @@ func (s *State) RunUploadController() {
 	go s.Uploader.sortRequests()
 	go s.uploadBlocks()
 	go s.Uploader.handleErrors()
-	// go s.Uploader.Status()
-}
-
-func (u *UploadController) Status() {
-	for {
-		select {
-		case <-u.quit:
-			u.quit <- 0
-			return
-		default:
-
-			time.Sleep(2 * time.Second)
-			fmt.Printf("[Uploader] Request: %d, Send: %d, failed: %d\n", len(u.requestUploadQueue), len(u.sendUploadQueue), len(u.failedQueue))
-		}
-	}
 }
 
 func (u *UploadController) Close() {
 	u.quit <- 0
 }
+
+/*****************
+	Go Routines
+******************/
 
 // sortRequests sorts through the inital requests to toss out repeats
 func (u *UploadController) sortRequests() {
@@ -109,7 +96,7 @@ func (s *State) uploadBlocks() {
 				time.Sleep(1 * time.Second)
 				goto backToTopUploadBlocks
 			} else if readyFor < 0 {
-				// This is a crash....
+				// This is a plugin crash....
 				return
 			} else {
 				// We can make some uploads. Only loop readyFor times
@@ -155,12 +142,9 @@ func (s *State) UsingTorrent() bool {
 	return s.useDBStateManager
 }
 
-/*
-	msg, err := list.State.LoadDBState(uint32(dbheight))
-		if err != nil {
-			fmt.Println("[1] Error creating torrent in SaveDBStateToDB: " + err.Error())
-		}
-*/
+/*****************
+	Implementation for routines
+******************/
 
 // All calls get sent here and redirected into the uploadcontroller queue.
 func (s *State) UploadDBState(dbheight uint32) {

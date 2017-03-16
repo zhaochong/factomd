@@ -27,19 +27,7 @@ func (s *State) TorrentMissingEntries() {
 		var high uint32 = 0
 		var prev uint32 = 0
 		amt := 0
-		/*for _, e := range missinge {
-			if e.DBHeight != prev {
-				if e.DBHeight < low {
-					low = e.DBHeight
-				}
-				if e.DBHeight > high {
-					high = e.DBHeight
-				}
-				s.fetchByTorrent(e.DBHeight)
-				amt++
-				prev = e.DBHeight
-			}
-		}*/
+
 		s.MissingEntryMutex.Lock()
 		for k := range s.MissingEntryMap {
 			et := s.MissingEntryMap[k]

@@ -31,7 +31,7 @@ var pluginMap = map[string]plugin.Plugin{
 // LaunchDBStateManagePlugin launches the plugin and returns an interface that
 // can be interacted with like a usual interface. The client returned must be
 // killed before we exit
-func LaunchTorrentDBStateManagePlugin(path string, inQueue chan interfaces.IMsg, s *state.State, sigKey *primitives.PrivateKey) (interfaces.IManagerController, error) {
+func LaunchDBStateManagePlugin(path string, inQueue chan interfaces.IMsg, s *state.State, sigKey *primitives.PrivateKey) (interfaces.IManagerController, error) {
 	//log.SetOutput(ioutil.Discard)
 
 	var managerHandshakeConfig = plugin.HandshakeConfig{
@@ -118,7 +118,6 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 					for _, e := range dbMsg.Entries {
 						s.WriteEntry <- e
 						//db.InsertEntry(e)
-						var _ = e
 					}
 				}
 			}
