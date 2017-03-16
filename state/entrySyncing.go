@@ -23,7 +23,6 @@ func (s *State) TorrentMissingEntries() {
 	for {
 		// Copy missing list
 		var low uint32 = 99999999
-		var setLow bool = false
 		var high uint32 = 0
 		var prev uint32 = 0
 		amt := 0
@@ -39,7 +38,6 @@ func (s *State) TorrentMissingEntries() {
 				if et.DBHeight > high {
 					high = et.DBHeight
 				}
-				setLow = true
 				s.fetchByTorrent(et.DBHeight)
 				amt++
 				prev = et.DBHeight
@@ -53,9 +51,7 @@ func (s *State) TorrentMissingEntries() {
 			fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
 		}
 
-		if low < 99999999 && setLow {
-			s.SetDBStateManagerCompletedHeight(low)
-		}
+		s.SetDBStateManagerCompletedHeight(s.EntryDBHeightComplete)
 		time.Sleep(5 * time.Second)
 	}
 }
