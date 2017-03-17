@@ -22,8 +22,10 @@ import (
 // (defined below).
 type Connection struct {
 	conn           net.Conn
-	SendChannel    chan interface{} // Send means "towards the network" Channel sends Parcels and ConnectionCommands
-	ReceiveChannel chan interface{} // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
+	Errors         chan error             // handle errors from connections.
+	Commands       chan ConnectionCommand // handle connection commands
+	SendChannel    chan interface{}       // Send means "towards the network" Channel sends Parcels and ConnectionCommands
+	ReceiveChannel chan interface{}       // Recieve means "from the network" Channel recieves Parcels and ConnectionCommands
 	// and as "address" for sending messages to specific nodes.
 	encoder         *gob.Encoder      // Wire format is gobs in this version, may switch to binary
 	decoder         *gob.Decoder      // Wire format is gobs in this version, may switch to binary
@@ -188,6 +190,8 @@ func (c *Connection) commonInit(peer Peer) {
 	c.state = ConnectionInitialized
 	c.peer = peer
 	c.setNotes("commonInit()")
+	c.Errors = make(chan error, StandardChannelSize)
+	c.Commands = make(chan ConnectionCommand, StandardChannelSize)
 	c.SendChannel = make(chan interface{}, StandardChannelSize)
 	c.ReceiveChannel = make(chan interface{}, StandardChannelSize)
 	c.metrics = ConnectionMetrics{MomentConnected: time.Now()}
@@ -203,14 +207,17 @@ func (c *Connection) Start() {
 // runloop OWNs the connection.  It is the only goroutine that can change values in the connection struct
 // runLoop operates the state machine and routes messages out to network (messages from network are routed in processReceives)
 func (c *Connection) runLoop() {
+	go c.processSends()
+
 	for ConnectionClosed != c.state { // loop exits when we hit shutdown state
 		// time.Sleep(time.Second * 1) // This can be a tight loop, don't want to starve the application
-		time.Sleep(time.Millisecond * 10) // This can be a tight loop, don't want to starve the application
-		c.updateStats()                   // Update controller with metrics
+		c.updateStats() // Update controller with metrics
 		c.connectionStatusReport()
 		// if 2 == rand.Intn(100) {
 		debug(c.peer.PeerFixedIdent(), "Connection.runloop() STATE IS: %s", connectionStateStrings[c.state])
 		// }
+		c.handleNetErrors()
+		c.handleCommand()
 		switch c.state {
 		case ConnectionInitialized:
 			if MinumumQualityScore > c.peer.QualityScore && !c.isPersistent {
@@ -222,7 +229,7 @@ func (c *Connection) runLoop() {
 				c.dialLoop() // dialLoop dials until it connects or shuts down.
 			}
 		case ConnectionOnline:
-			c.processSends()
+
 			c.processReceives() // We may get messages that change state (Eg: loopback error)
 			if ConnectionOnline == c.state {
 				c.pingPeer() // sends a ping periodically if things have been quiet
@@ -371,59 +378,62 @@ func (c *Connection) goShutdown() {
 
 // processSends gets all the messages from the application and sends them out over the network
 func (c *Connection) processSends() {
-	// note(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
-	for 0 < len(c.SendChannel) && ConnectionOnline == c.state {
-		message := <-c.SendChannel
-		switch message.(type) {
-		case ConnectionParcel:
-			verbose(c.peer.PeerIdent(), "processSends() ConnectionParcel")
-			parameters := message.(ConnectionParcel)
-			parameters.Parcel.Trace("Connection.processSends()", "e")
-			c.sendParcel(parameters.Parcel)
-		case ConnectionCommand:
-			verbose(c.peer.PeerIdent(), "processSends() ConnectionCommand")
-			parameters := message.(ConnectionCommand)
-			c.handleCommand(parameters)
-		default:
-			logfatal(c.peer.PeerIdent(), "processSends() unknown message?: %+v ", message)
+	for ConnectionClosed != c.state && c.state != ConnectionShuttingDown {
+		// note(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
+		for ConnectionOnline == c.state {
+			message := <-c.SendChannel
+			switch message.(type) {
+			case ConnectionParcel:
+				parameters := message.(ConnectionParcel)
+				c.sendParcel(parameters.Parcel)
+			case ConnectionCommand:
+				parameters := message.(ConnectionCommand)
+				c.Commands <- parameters
+			default:
+			}
 		}
+		time.Sleep(300 * time.Millisecond)
 	}
 }
 
-func (c *Connection) handleCommand(command ConnectionCommand) {
-	switch command.Command {
-	case ConnectionShutdownNow:
-		c.setNotes(fmt.Sprintf("Connection(%s) shutting down due to ConnectionShutdownNow message.", c.peer.AddressPort()))
-		c.goShutdown()
-	case ConnectionUpdatingPeer: // at this level we're only updating the quality score, to pass on application level demerits
-		debug(c.peer.PeerIdent(), "handleCommand() ConnectionUpdatingPeer")
-		peer := command.Peer
-		if peer.QualityScore < c.peer.QualityScore {
-			c.peer.QualityScore = peer.QualityScore
-		}
-	case ConnectionAdjustPeerQuality:
-		delta := command.Delta
-		note(c.peer.PeerIdent(), "handleCommand() ConnectionAdjustPeerQuality: Current Score: %d Delta: %d", c.peer.QualityScore, delta)
-		c.peer.QualityScore = c.peer.QualityScore + delta
-		if MinumumQualityScore > c.peer.QualityScore {
-			debug(c.peer.PeerIdent(), "handleCommand() disconnecting peer: %s for quality score: %d", c.peer.PeerIdent(), c.peer.QualityScore)
-			c.updatePeer()
-			c.setNotes(fmt.Sprintf("Connection(%s) shutting down due to QualityScore %d being below MinumumQualityScore: %d.", c.peer.AddressPort(), c.peer.QualityScore, MinumumQualityScore))
+func (c *Connection) handleCommand() {
+	select {
+	case command := <-c.Commands:
+
+		switch command.Command {
+		case ConnectionShutdownNow:
+			c.setNotes(fmt.Sprintf("Connection(%s) shutting down due to ConnectionShutdownNow message.", c.peer.AddressPort()))
 			c.goShutdown()
+		case ConnectionUpdatingPeer: // at this level we're only updating the quality score, to pass on application level demerits
+			debug(c.peer.PeerIdent(), "handleCommand() ConnectionUpdatingPeer")
+			peer := command.Peer
+			if peer.QualityScore < c.peer.QualityScore {
+				c.peer.QualityScore = peer.QualityScore
+			}
+		case ConnectionAdjustPeerQuality:
+			delta := command.Delta
+			note(c.peer.PeerIdent(), "handleCommand() ConnectionAdjustPeerQuality: Current Score: %d Delta: %d", c.peer.QualityScore, delta)
+			c.peer.QualityScore = c.peer.QualityScore + delta
+			if MinumumQualityScore > c.peer.QualityScore {
+				debug(c.peer.PeerIdent(), "handleCommand() disconnecting peer: %s for quality score: %d", c.peer.PeerIdent(), c.peer.QualityScore)
+				c.updatePeer()
+				c.setNotes(fmt.Sprintf("Connection(%s) shutting down due to QualityScore %d being below MinumumQualityScore: %d.", c.peer.AddressPort(), c.peer.QualityScore, MinumumQualityScore))
+				c.goShutdown()
+			}
+		case ConnectionGoOffline:
+			debug(c.peer.PeerIdent(), "handleCommand() disconnecting peer: %s goOffline command recieved", c.peer.PeerIdent())
+			c.goOffline()
+		default:
+			logfatal(c.peer.PeerIdent(), "handleCommand() unknown command?: %+v ", command)
 		}
-	case ConnectionGoOffline:
-		debug(c.peer.PeerIdent(), "handleCommand() disconnecting peer: %s goOffline command recieved", c.peer.PeerIdent())
-		c.goOffline()
 	default:
-		logfatal(c.peer.PeerIdent(), "handleCommand() unknown command?: %+v ", command)
 	}
 }
 
 func (c *Connection) sendParcel(parcel Parcel) {
-	debug(c.peer.PeerIdent(), "sendParcel() sending message to network of type: %s", parcel.MessageType())
 	parcel.Header.NodeID = NodeID // Send it out with our ID for loopback.
 	verbose(c.peer.PeerIdent(), "sendParcel() Sanity check. State: %s Encoder: %+v, Parcel: %s", c.ConnectionState(), c.encoder, parcel.MessageType())
-	c.conn.SetWriteDeadline(time.Now().Add(NetworkDeadline * 2))
+	c.conn.SetWriteDeadline(time.Now().Add(NetworkDeadline*2))
 
 	//deadline := time.Now().Add(NetworkDeadline)
 	//if len(parcel.Payload) > 1000*10 {
@@ -431,15 +441,17 @@ func (c *Connection) sendParcel(parcel Parcel) {
 	//	deadline = time.Now().Add(time.Duration(ms)*time.Millisecond)
 	//}
 	//c.conn.SetWriteDeadline(deadline)
-
-	parcel.Trace("Connection.sendParcel().encoder.Encode(parcel)", "f")
-	err := c.encoder.Encode(parcel)
+	encode := c.encoder
+	if encode == nil {
+		return
+	}
+	err := encode.Encode(parcel)
 	switch {
 	case nil == err:
 		c.metrics.BytesSent += parcel.Header.Length
 		c.metrics.MessagesSent += 1
 	default:
-		c.handleNetErrors(err)
+		c.Errors <- err
 	}
 }
 
@@ -463,34 +475,38 @@ func (c *Connection) processReceives() {
 			message.Header.PeerAddress = c.peer.Address
 			c.handleParcel(message)
 		default:
-			c.handleNetErrors(err)
+			time.Sleep(100 * time.Millisecond)
+			c.Errors <- err
 			return
 		}
 	}
 }
 
 //handleNetErrors Reacts to errors we get from encoder or decoder
-func (c *Connection) handleNetErrors(err error) {
-	nerr, isNetError := err.(net.Error)
-	verbose(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got error: %+v", c.ConnectionState(), err)
-	switch {
-	case isNetError && nerr.Timeout(): /// buffer empty
-		return
-	case isNetError && nerr.Temporary(): /// Temporary error, try to reconnect.
-		c.setNotes(fmt.Sprintf("handleNetErrors() Temporary error: %+v", nerr))
-		c.goOffline()
-	case io.EOF == err, io.ErrClosedPipe == err: // Remote hung up
-		c.setNotes(fmt.Sprintf("handleNetErrors() Remote hung up - error: %+v", err))
-		c.goOffline()
-	case err == syscall.EPIPE: // "write: broken pipe"
-		c.setNotes(fmt.Sprintf("handleNetErrors() Broken Pipe: %+v", err))
-		c.goOffline()
+func (c *Connection) handleNetErrors() {
+	select {
+	case err := <-c.Errors:
+		nerr, isNetError := err.(net.Error)
+		verbose(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got error: %+v", c.ConnectionState(), err)
+		switch {
+		case isNetError && nerr.Timeout(): /// buffer empty
+			return
+		case isNetError && nerr.Temporary(): /// Temporary error, try to reconnect.
+			c.setNotes(fmt.Sprintf("handleNetErrors() Temporary error: %+v", nerr))
+			c.goOffline()
+		case io.EOF == err, io.ErrClosedPipe == err: // Remote hung up
+			c.setNotes(fmt.Sprintf("handleNetErrors() Remote hung up - error: %+v", err))
+			c.goOffline()
+		case err == syscall.EPIPE: // "write: broken pipe"
+			c.setNotes(fmt.Sprintf("handleNetErrors() Broken Pipe: %+v", err))
+			c.goOffline()
+		default:
+			significant(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got unhandled coding error: %+v", c.ConnectionState(), err)
+			c.setNotes(fmt.Sprintf("handleNetErrors() Unhandled error: %+v", err))
+			c.goOffline()
+		}
 	default:
-		significant(c.peer.PeerIdent(), "Connection.handleNetErrors() State: %s We got unhandled coding error: %+v", c.ConnectionState(), err)
-		c.setNotes(fmt.Sprintf("handleNetErrors() Unhandled error: %+v", err))
-		c.goOffline()
 	}
-
 }
 
 // handleParcel checks the parcel command type, and either generates a response, or passes it along.
