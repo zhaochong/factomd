@@ -156,7 +156,7 @@ func (s *State) GoSyncEntries() {
 			" MissingMap %6d"+
 			" FirstMissing %6d\n",
 			s.FactomNodeName,
-			s.NetworkControler.NumConnections,
+			//s.NetworkControler.NumConnections,
 			time.Now().Unix()-now,
 			s.EntryDBHeightComplete,
 			start,
