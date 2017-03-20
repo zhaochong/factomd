@@ -4,6 +4,7 @@ import (
 	"github.com/FactomProject/factomd/common/entryBlock"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"fmt"
 )
 
 // InsertEntry inserts an entry
@@ -25,6 +26,7 @@ func (db *Overlay) InsertEntry(entry interfaces.IEBEntry) error {
 		return err
 	}
 	if entry.GetHash().String() == AnchorBlockID {
+		fmt.Println("e", entry.GetChainIDHash().String(), entry.DatabasePrimaryIndex().String(), entry.GetChainID().String())
 		db.SaveAnchorInfoFromEntry(entry)
 	}
 	return nil
