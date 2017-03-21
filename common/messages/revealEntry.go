@@ -5,6 +5,7 @@
 package messages
 
 import (
+	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 
@@ -126,6 +127,18 @@ func (m *RevealEntryMsg) ValidateRTN(state interfaces.IState) (interfaces.IMsg, 
 		m.IsEntry = false
 		ECs := int(m.commitChain.CommitChain.Credits)
 		if m.Entry.KSize()+10 > ECs { // Discard commits that are not funded properly
+			return m.ValidateRTN(state)
+		}
+
+		checkHash := new(primitives.Hash)
+		sum := sha256.New()
+		for _, v := range m.Entry.ExternalIDs() {
+			x := sha256.Sum256(v)
+			sum.Write(x[:])
+		}
+		checkHash.SetBytes(sum.Sum(nil))
+
+		if !m.commitChain.CommitChain.ChainIDHash.IsSameAs(checkHash) { // Discard commits that don't have extIDs matching ChainIDHash
 			return m.ValidateRTN(state)
 		}
 	}
