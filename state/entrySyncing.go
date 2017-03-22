@@ -125,7 +125,16 @@ func (s *State) MakeMissingEntryRequests() {
 				fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
 			}
 
-			s.SetDBStateManagerCompletedHeight(low) // Should be s.EntryDBHeightComplete, needs to be fixed
+			if low > 100 && low < 100000 { // Sloppy temp solution
+				lowest := low
+				if s.EntryDBHeightComplete < lowest {
+					lowest = s.EntryDBHeightComplete
+				}
+				s.SetDBStateManagerCompletedHeight(lowest) // Should be s.EntryDBHeightComplete, needs to be fixed
+				if low < s.EntryDBHeightComplete {
+					s.fetchByTorrent(s.EntryDBHeightComplete)
+				}
+			}
 		skipTorrent:
 		} else { // Non-torrent Solution
 			if len(s.inMsgQueue) < 500 {
