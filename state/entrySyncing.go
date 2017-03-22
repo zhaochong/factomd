@@ -97,8 +97,9 @@ func (s *State) MakeMissingEntryRequests() {
 			// Copy missing list
 			var low uint32 = 99999999
 			var high uint32 = 0
-			var prev uint32 = 0
 			amt := 0
+			// Only fetch unique heights.
+			heightsRequested := make(map[uint32]struct{})
 
 			// Only do once per 5 seconds, anything more is wasted calls to torrent
 			if !last.Before(now.Add(-5 * time.Second)) {
@@ -108,31 +109,40 @@ func (s *State) MakeMissingEntryRequests() {
 
 			for k := range MissingEntryMap {
 				et := MissingEntryMap[k]
-				if et.DBHeight != prev {
-					if et.DBHeight < low {
-						low = et.DBHeight
-					}
-					if et.DBHeight > high {
-						high = et.DBHeight
-					}
-					s.fetchByTorrent(et.DBHeight)
-					amt++
-					prev = et.DBHeight
+				if _, ok := heightsRequested[et.DBHeight]; ok {
+					continue // Already requested this
 				}
+
+				// This is for printing out
+				if et.DBHeight < low {
+					low = et.DBHeight
+				}
+				if et.DBHeight > high {
+					high = et.DBHeight
+				}
+				// The entries in this height will be returned on a channel
+				s.fetchByTorrent(et.DBHeight)
+				amt++                                      // For printout
+				heightsRequested[et.DBHeight] = struct{}{} // Only request each height once per batch of requests
+
 			}
 
+			// Some debug information
 			if high != 0 {
 				fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
 			}
 
-			if low > 100 && low < 100000 { // Sloppy temp solution
+			// Sometimes the s.EntryDBHeightComplete is incorrect, and sometimes the lowest height requested is not accurate either.
+			// To come up with a temporary solution, we will take the lowest of both and assume that is our completed height. This means
+			// the completed height might not strictly increase.
+			if low > 100 && low < 900000 { // Sloppy way to tell if the loop had missing entries
 				lowest := low
 				if s.EntryDBHeightComplete < lowest {
 					lowest = s.EntryDBHeightComplete
 				}
 				s.SetDBStateManagerCompletedHeight(lowest) // Should be s.EntryDBHeightComplete, needs to be fixed
-				if low < s.EntryDBHeightComplete {
-					s.fetchByTorrent(s.EntryDBHeightComplete)
+				if low < s.EntryDBHeightComplete+1 && s.EntryDBHeightComplete+1 < s.GetLeaderHeight() {
+					s.fetchByTorrent(s.EntryDBHeightComplete + 1) // We should also fetch the completed height+1 if we did not request it already
 				}
 			}
 		skipTorrent:
