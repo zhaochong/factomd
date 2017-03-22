@@ -379,6 +379,15 @@ func (c *Connection) goShutdown() {
 
 // processSends gets all the messages from the application and sends them out over the network
 func (c *Connection) processSends() {
+
+	defer func() {
+		if r := recover(); r != nil {
+			// Just ignore the possible nil pointer error that can occur because
+			// we have cleared the pointer to the encoder or decoder outside this
+			// go routine.
+		}
+	}()
+
 	for ConnectionClosed != c.state && c.state != ConnectionShuttingDown {
 		// note(c.peer.PeerIdent(), "Connection.processSends() called. Items in send channel: %d State: %s", len(c.SendChannel), c.ConnectionState())
 	conloop:
@@ -386,7 +395,7 @@ func (c *Connection) processSends() {
 			message := <-c.SendChannel
 			switch message.(type) {
 			case ConnectionParcel:
-				if nil == c.encoder || nil == c.conn {
+				if nil == c.decoder || nil == c.conn {
 					break conloop
 				}
 				parameters := message.(ConnectionParcel)
@@ -463,25 +472,27 @@ func (c *Connection) sendParcel(parcel Parcel) {
 // -- something causes our state to be offline
 func (c *Connection) processReceives() {
 	for ConnectionClosed != c.state && c.state != ConnectionShuttingDown {
-		var message Parcel
+		for c.state == ConnectionOnline {
+			var message Parcel
 
-		if nil == c.conn || nil == c.decoder {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		}
+			if nil == c.conn || nil == c.decoder {
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
 
-		c.conn.SetReadDeadline(time.Now().Add(NetworkDeadline))
-		err := c.decoder.Decode(&message)
-		switch {
-		case nil == err:
-			c.metrics.BytesReceived += message.Header.Length
-			c.metrics.MessagesReceived += 1
-			message.Header.PeerAddress = c.peer.Address
-			c.handleParcel(message)
-		default:
-			c.Errors <- err
+			c.conn.SetReadDeadline(time.Now().Add(NetworkDeadline))
+			err := c.decoder.Decode(&message)
+			switch {
+			case nil == err:
+				c.metrics.BytesReceived += message.Header.Length
+				c.metrics.MessagesReceived += 1
+				message.Header.PeerAddress = c.peer.Address
+				c.handleParcel(message)
+			default:
+				c.Errors <- err
+			}
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 	}
 }
 
