@@ -17,14 +17,14 @@ import (
 var _ = fmt.Print
 
 type DirectoryBlock struct {
-	//Marshalized
-	Header    interfaces.IDirectoryBlockHeader
-	DBEntries []interfaces.IDBEntry
-
 	//Not Marshalized
 	DBHash   interfaces.IHash
 	KeyMR    interfaces.IHash
-	KeyMRset bool
+	keyMRset bool
+
+	//Marshalized
+	Header    interfaces.IDirectoryBlockHeader
+	DBEntries []interfaces.IDBEntry
 }
 
 var _ interfaces.Printable = (*DirectoryBlock)(nil)
@@ -133,14 +133,14 @@ func (c *DirectoryBlock) GetEBlockDBEntries() []interfaces.IDBEntry {
 }
 
 func (c *DirectoryBlock) GetKeyMR() interfaces.IHash {
-	if !c.KeyMRset {
+	if !c.keyMRset {
 		keyMR, err := c.BuildKeyMerkleRoot()
 		if err != nil {
 			panic("Failed to build the key MR")
 		}
 
 		c.KeyMR = keyMR
-		c.KeyMRset = true
+		c.keyMRset = true
 	}
 	return c.KeyMR
 }
@@ -271,6 +271,7 @@ func (b *DirectoryBlock) BuildBodyMR() (interfaces.IHash, error) {
 }
 
 func (b *DirectoryBlock) HeaderHash() (interfaces.IHash, error) {
+	b.Header.SetBlockCount(uint32(len(b.GetDBEntries())))
 	binaryEBHeader, err := b.GetHeader().MarshalBinary()
 	if err != nil {
 		return nil, err
