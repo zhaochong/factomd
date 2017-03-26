@@ -125,7 +125,7 @@ func (s *State) MakeMissingEntryRequests() {
 			time.Sleep(5 * time.Second)
 		}
 		if s.EntryDBHeightComplete == s.GetHighestSavedBlk() {
-			time.Sleep(20 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 	}
 }
