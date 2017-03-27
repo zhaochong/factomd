@@ -22,6 +22,7 @@ import (
 	"github.com/FactomProject/factomd/state"
 
 	//"fmt"
+	"flag"
 )
 
 var BlockCount int = 10
@@ -71,8 +72,9 @@ func CreateAndPopulateTestState() *state.State {
 func CreateAndPopulateActiveTestState() *state.State {
 	s := new(state.State)
 	s.SetLeaderTimestamp(primitives.NewTimestampFromMilliseconds(0))
+	flag.Set("enablenet", "false")
 
-	engine.NetStart(s, false)
+	engine.NetStart(s, false, nil)
 
 	return s
 }
@@ -81,8 +83,21 @@ func CreateAndPopulateFrozenTestState() *state.State {
 	s := new(state.State)
 	s.SetLeaderTimestamp(primitives.NewTimestampFromMilliseconds(0))
 	s.DirectoryBlockInSeconds = 8
+	flags := new(engine.Flags)
+	flags.BlkTime = 5
+	flags.Cnt = 1
+	flags.DB = "Map"
+	flags.StartDelay=1
+	flags.Network ="LOCAL"
+	flags.Journal = ""
+	flags.EnableNet = false
+	flags.Leader=true
 
-	engine.NetStart(s, false)
+	fmt.Println("STARTING FACTOMD ***********************")
+
+	go engine.NetStart(s, false, flags)
+
+	fmt.Println("Started....")
 
 	// Wait for 2 minutes, so that some blocks have time to be built
 	time.Sleep(80 * time.Second)
