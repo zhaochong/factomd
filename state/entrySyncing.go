@@ -263,7 +263,7 @@ func (s *State) GoSyncEntries() {
 		firstMissing = -1
 
 		if s.GetHighestKnownBlock()-s.GetHighestSavedBlk() > 100 {
-			time.Sleep(5 * time.Second)
+			time.Sleep(20 * time.Second)
 		} else {
 			time.Sleep(1 * time.Second)
 		}
