@@ -69,7 +69,7 @@ func (s *State) MakeMissingEntryRequests() {
 
 		// Keep our map of entries that we are asking for filled up.
 	fillMap:
-		for len(MissingEntryMap) < 10000 {
+		for len(MissingEntryMap) < 3000 {
 			select {
 			case et := <-s.MissingEntries:
 				if !has(s, et.EntryHash) {
@@ -98,7 +98,7 @@ func (s *State) MakeMissingEntryRequests() {
 				}
 			}
 		} else {
-			time.Sleep(10 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 
 		// Insert the entries we have found into the database.
