@@ -42,6 +42,7 @@ type Connection struct {
 	isPersistent    bool              // Persistent connections we always redail.
 	notes           string            // Notes about the connection, for debugging (eg: error)
 	metrics         ConnectionMetrics // Metrics about this connection
+	prometheus      PrometheusDetails
 }
 
 // Each connection is a simple state machine.  The state is managed by a single goroutine which also does netowrking.
@@ -207,6 +208,44 @@ func (c *Connection) Start() {
 	go c.runLoop()
 }
 
+type PrometheusDetails struct {
+	Set  bool
+	Last uint8
+}
+
+func (c *Connection) managePrometheus() {
+	if c.state == c.prometheus.Last && c.prometheus.Set {
+		return
+	}
+
+	switch c.state {
+	case ConnectionInitialized:
+		p2pConnectionRunLoopInitalized.Inc()
+	case ConnectionOnline:
+		p2pConnectionRunLoopOffline.Inc()
+	case ConnectionOffline:
+		p2pConnectionRunLoopOffline.Inc()
+	case ConnectionShuttingDown:
+		p2pConnectionRunLoopShutdown.Inc()
+	}
+
+	if c.prometheus.Set {
+		switch c.prometheus.Last {
+		case ConnectionInitialized:
+			p2pConnectionRunLoopInitalized.Dec()
+		case ConnectionOnline:
+			p2pConnectionRunLoopOffline.Dec()
+		case ConnectionOffline:
+			p2pConnectionRunLoopOffline.Dec()
+		case ConnectionShuttingDown:
+			p2pConnectionRunLoopShutdown.Dec()
+		}
+	} else {
+		c.prometheus.Set = true
+		c.prometheus.Last = c.state
+	}
+}
+
 // runloop OWNs the connection.  It is the only goroutine that can change values in the connection struct
 // runLoop operates the state machine and routes messages out to network (messages from network are routed in processReceives)
 func (c *Connection) runLoop() {
@@ -214,6 +253,7 @@ func (c *Connection) runLoop() {
 	go c.processReceives()
 	p2pConnectionsRunLoop.Inc()
 	defer p2pConnectionsRunLoop.Dec()
+	c.managePrometheus()
 
 	for ConnectionClosed != c.state { // loop exits when we hit shutdown state
 		time.Sleep(100 * time.Millisecond)
@@ -410,6 +450,7 @@ func (c *Connection) goShutdown() {
 func (c *Connection) processSends() {
 	p2pProcessSendsGuage.Inc()
 	defer p2pProcessSendsGuage.Dec()
+	c.managePrometheus()
 
 	defer func() {
 		if r := recover(); r != nil {
