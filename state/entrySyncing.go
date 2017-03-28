@@ -9,6 +9,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
+	"math/rand"
 	"time"
 )
 
@@ -93,74 +94,26 @@ func (s *State) MakeMissingEntryRequests() {
 			}
 		}
 
-		if s.UsingTorrent() { // torrent solution
-			// Copy missing list
-			var low uint32 = 99999999
-			var high uint32 = 0
-			amt := 0
-			// Only fetch unique heights.
-			heightsRequested := make(map[uint32]struct{})
-
-			// Only do once per 5 seconds, anything more is wasted calls to torrent
-			if !last.Before(now.Add(-5 * time.Second)) {
-				goto skipTorrent
-			}
-			last = now
-
+		sent := 0
+		if len(s.inMsgQueue) < 500 {
+			// Make requests for entries we don't have.
 			for k := range MissingEntryMap {
+
 				et := MissingEntryMap[k]
 				if _, ok := heightsRequested[et.DBHeight]; ok {
 					continue // Already requested this
 				}
 
-				// This is for printing out
-				if et.DBHeight < low {
-					low = et.DBHeight
-				}
-				if et.DBHeight > high {
-					high = et.DBHeight
-				}
-				// The entries in this height will be returned on a channel
-				s.fetchByTorrent(et.DBHeight)
-				amt++                                      // For printout
-				heightsRequested[et.DBHeight] = struct{}{} // Only request each height once per batch of requests
-
-			}
-
-			// Some debug information
-			if high != 0 {
-				fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
-			}
-
-			// Sometimes the s.EntryDBHeightComplete is incorrect, and sometimes the lowest height requested is not accurate either.
-			// To come up with a temporary solution, we will take the lowest of both and assume that is our completed height. This means
-			// the completed height might not strictly increase.
-			if low > 100 && low < 900000 { // Sloppy way to tell if the loop had missing entries
-				lowest := low
-				if s.EntryDBHeightComplete < lowest {
-					lowest = s.EntryDBHeightComplete
-				}
-				s.SetDBStateManagerCompletedHeight(lowest) // Should be s.EntryDBHeightComplete, needs to be fixed
-				if low < s.EntryDBHeightComplete+1 && s.EntryDBHeightComplete+1 < s.GetLeaderHeight() {
-					s.fetchByTorrent(s.EntryDBHeightComplete + 1) // We should also fetch the completed height+1 if we did not request it already
-				}
-			}
-		skipTorrent:
-		} else { // Non-torrent Solution
-			if len(s.inMsgQueue) < 500 {
-				// Make requests for entries we don't have.
-				for k := range MissingEntryMap {
-					et := MissingEntryMap[k]
-
-					if et.Cnt == 0 || now.Unix()-et.LastTime.Unix() > 60 {
-						entryRequest := messages.NewMissingData(s, et.EntryHash)
-						entryRequest.SendOut(s, entryRequest)
-						newrequest++
-						et.LastTime = now
-						et.Cnt++
-						if et.Cnt%25 == 25 {
-							fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", et.EBHash.Bytes(), et.EntryHash.Bytes(), et.Cnt)
-						}
+				if et.Cnt == 0 || now.Unix()-et.LastTime.Unix() > 5 && sent < 100 {
+					sent++
+					entryRequest := messages.NewMissingData(s, et.EntryHash)
+					entryRequest.SendOut(s, entryRequest)
+					fmt.Println("***es ASKING FOR: ", et.EntryHash.String())
+					newrequest++
+					et.LastTime = now.Add(time.Duration(rand.Int()%5+1) * time.Second)
+					et.Cnt++
+					if et.Cnt%25 == 25 {
+						fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", et.EBHash.Bytes(), et.EntryHash.Bytes(), et.Cnt)
 					}
 				}
 			} else {
@@ -187,13 +140,15 @@ func (s *State) MakeMissingEntryRequests() {
 				break InsertLoop
 			}
 		}
-		if s.GetHighestKnownBlock()-s.GetHighestSavedBlk() > 100 {
-			time.Sleep(30 * time.Second)
-		} else {
-			time.Sleep(5 * time.Second)
-		}
-		if s.EntryDBHeightComplete == s.GetHighestSavedBlk() {
-			time.Sleep(20 * time.Second)
+		if sent == 0 {
+			if s.GetHighestKnownBlock()-s.GetHighestSavedBlk() > 100 {
+				time.Sleep(30 * time.Second)
+			} else {
+				time.Sleep(1 * time.Second)
+			}
+			if s.EntryDBHeightComplete == s.GetHighestSavedBlk() {
+				time.Sleep(20 * time.Second)
+			}
 		}
 	}
 }
