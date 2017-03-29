@@ -83,11 +83,17 @@ func LaunchDBStateManagePlugin(path string, inQueue chan interfaces.IMsg, s *sta
 	})
 
 	go manageDrain(inQueue, manager, s, stop)
+	// RunUploadController controls our uploading to ensure not overloading queues and consuming too
+	// much memory
 	go s.RunUploadController()
+	// StartTorrentSyncing will use torrents to sync past our current height if we are not synced up
+	go s.StartTorrentSyncing()
 
 	return manager, nil
 }
 
+// manageDrain handles messages being returned by the plugin, since our requests are asyncronous
+// When we make a request via a retrieve, this function will pick up the return
 func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController, s *state.State, quit chan int) {
 	for {
 		select {

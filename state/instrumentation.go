@@ -28,6 +28,16 @@ var (
 		Name: "factomd_state_entrysyncing_missing_entry_loop_ns",
 		Help: "Record the time is takes for the main loop in MakeMissingEntryRequests to complete.",
 	})
+
+	stateTorrentSyncingLower = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "factomd_state_torrentsync_lower_gauge",
+		Help: "The lower limit of torrent sync",
+	})
+
+	stateTorrentSyncingUpper = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "factomd_state_torrentsync_upper_gauge",
+		Help: "The upper limit of torrent sync",
+	})
 )
 
 var registered bool = false
@@ -46,4 +56,8 @@ func RegisterPrometheus() {
 	prometheus.MustRegister(stateEntrySyncWriteEntryCounter)
 	prometheus.MustRegister(stateEntrySyncRequestEntryCounter)
 	prometheus.MustRegister(stateEntrySyncMakeMissingEntryRequestsLoopTime)
+
+	// TorrentSyncing
+	prometheus.MustRegister(stateTorrentSyncingLower)
+	prometheus.MustRegister(stateTorrentSyncingUpper)
 }

@@ -95,8 +95,35 @@ func (s *State) MakeMissingEntryRequests() {
 		}
 
 		sent := 0
+		if !s.UsingTorrent() { // Non-torrent Solution
+			if len(s.inMsgQueue) < 500 {
+				// Make requests for entries we don't have.
+				for k := range MissingEntryMap {
 
-		if s.UsingTorrent() { // torrent solution
+					et := MissingEntryMap[k]
+
+					if et.Cnt == 0 {
+						et.Cnt = 1
+						et.LastTime = now.Add(time.Duration((rand.Int() % 5000)) * time.Millisecond)
+					} else {
+						if now.Unix()-et.LastTime.Unix() > 5 && sent < 100 {
+							sent++
+							entryRequest := messages.NewMissingData(s, et.EntryHash)
+							entryRequest.SendOut(s, entryRequest)
+							fmt.Println("***es ASKING FOR: ", et.EntryHash.String())
+							newrequest++
+							et.LastTime = now.Add(time.Duration((rand.Int() % 5000)) * time.Millisecond)
+							et.Cnt++
+							if et.Cnt%25 == 25 {
+								fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", et.EBHash.Bytes(), et.EntryHash.Bytes(), et.Cnt)
+							}
+						}
+					}
+				}
+			} else {
+				time.Sleep(20 * time.Second)
+			}
+		} else { // Torrent solution
 			// Copy missing list
 			var low uint32 = 99999999
 			var high uint32 = 0
@@ -149,29 +176,6 @@ func (s *State) MakeMissingEntryRequests() {
 				}
 			}
 		skipTorrent:
-		} else { // Non-torrent Solution
-			if len(s.inMsgQueue) < 500 {
-				// Make requests for entries we don't have.
-				for k := range MissingEntryMap {
-
-					et := MissingEntryMap[k]
-
-					if et.Cnt == 0 || now.Unix()-et.LastTime.Unix() > 5 && sent < 100 {
-						sent++
-						entryRequest := messages.NewMissingData(s, et.EntryHash)
-						entryRequest.SendOut(s, entryRequest)
-						fmt.Println("***es ASKING FOR: ", et.EntryHash.String())
-						newrequest++
-						et.LastTime = now.Add(time.Duration(rand.Int()%5+1) * time.Second)
-						et.Cnt++
-						if et.Cnt%25 == 25 {
-							fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", et.EBHash.Bytes(), et.EntryHash.Bytes(), et.Cnt)
-						}
-					}
-				}
-			} else {
-				time.Sleep(20 * time.Second)
-			}
 		}
 
 		// Insert the entries we have found into the database.
