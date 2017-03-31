@@ -70,6 +70,8 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 		}
 	}
 
+	stateDBStateListHave.Set(float64(end))
+
 	if end-begin > 200 {
 		end = begin + 200
 	}

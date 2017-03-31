@@ -59,6 +59,12 @@ var (
 		Name: "factomd_state_torrentsync_upper_gauge",
 		Help: "The upper limit of torrent sync",
 	})
+
+	// DBState Catchup
+	stateDBStateListHave = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "factomd_state_dbstate_list_have_height",
+		Help: "Height we have DB States up to",
+	})
 )
 
 var registered bool = false
@@ -83,4 +89,8 @@ func RegisterPrometheus() {
 
 	prometheus.MustRegister(stateTorrentSyncingLower)
 	prometheus.MustRegister(stateTorrentSyncingUpper)
+
+	// DBState Catchup
+	prometheus.MustRegister(stateDBStateListHave)
+
 }

@@ -16,7 +16,7 @@ func (s *State) StartTorrentSyncing() error {
 
 	for {
 		// How many requests we can send to the plugin
-		allowed := 2500
+		allowed := 3000
 
 		dblock, err := s.DB.FetchDBlockHead()
 		if err != nil || dblock == nil {
@@ -62,6 +62,7 @@ func (s *State) StartTorrentSyncing() error {
 		//} else {
 		s.DBStateManager.CompletedHeightTo(s.EntryDBHeightComplete)
 		//}
+		s.DBStateManager.RetrieveDBStateByHeight(s.EntryDBHeightComplete + 1)
 
 		time.Sleep(5 * time.Second)
 	}
