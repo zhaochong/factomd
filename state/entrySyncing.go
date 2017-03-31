@@ -111,10 +111,6 @@ func (s *State) MakeMissingEntryRequests() {
 		}
 
 		if s.UsingTorrent() { // Torrent solution to assist
-			// Copy missing list
-			var low uint32 = 99999999
-			var high uint32 = 0
-			amt := 0
 			// Only fetch unique heights.
 			heightsRequested := make(map[uint32]struct{})
 
@@ -130,28 +126,9 @@ func (s *State) MakeMissingEntryRequests() {
 					continue // Already requested this
 				}
 
-				// This is for printing out
-				if et.DBHeight < low {
-					low = et.DBHeight
-				}
-				if et.DBHeight > high {
-					high = et.DBHeight
-				}
-
-				if amt > 100 {
-					break // Only request 100 at a time
-				}
-
 				// The entries in this height will be returned on a channel
-				s.fetchByTorrent(et.DBHeight)
-				amt++                                      // For printout
+				s.fetchByTorrent(et.DBHeight)              // For printout
 				heightsRequested[et.DBHeight] = struct{}{} // Only request each height once per batch of requests
-
-			}
-
-			// Some debug information
-			if high != 0 {
-				fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
 			}
 		skipTorrent:
 		}

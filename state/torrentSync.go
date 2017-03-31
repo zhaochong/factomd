@@ -57,11 +57,11 @@ func (s *State) StartTorrentSyncing() error {
 			}
 		}
 
-		if upper-lower > 100 {
-			s.DBStateManager.CompletedHeightTo(lower)
-		} else {
-			s.DBStateManager.CompletedHeightTo(s.EntryDBHeightComplete)
-		}
+		//if upper-lower > 100 {
+		//	s.DBStateManager.CompletedHeightTo(lower)
+		//} else {
+		s.DBStateManager.CompletedHeightTo(s.EntryDBHeightComplete)
+		//}
 
 		time.Sleep(5 * time.Second)
 	}

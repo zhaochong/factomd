@@ -25,16 +25,6 @@ var (
 		Name: "factomd_state_es_found_entries",
 		Help: "Number of known missing entries found.",
 	})
-
-	stateTorrentSyncingLower = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "factomd_state_torrentsync_lower_gauge",
-		Help: "The lower limit of torrent sync",
-	})
-
-	stateTorrentSyncingUpper = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "factomd_state_torrentsync_upper_gauge",
-		Help: "The upper limit of torrent sync",
-	})
 	ESAsking = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "factomd_state_es_asking_missing_entries",
 		Help: "Number we are asking for of the known missing entries.",
@@ -59,6 +49,16 @@ var (
 		Name: "factomd_state_es_average_requests",
 		Help: "Average number of times we have had to request a missing entry",
 	})
+
+	stateTorrentSyncingLower = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "factomd_state_torrentsync_lower_gauge",
+		Help: "The lower limit of torrent sync",
+	})
+
+	stateTorrentSyncingUpper = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "factomd_state_torrentsync_upper_gauge",
+		Help: "The upper limit of torrent sync",
+	})
 )
 
 var registered bool = false
@@ -80,6 +80,7 @@ func RegisterPrometheus() {
 	prometheus.MustRegister(ESMissing)
 	prometheus.MustRegister(ESFound)
 	prometheus.MustRegister(ESDBHTComplete)
+
 	prometheus.MustRegister(stateTorrentSyncingLower)
 	prometheus.MustRegister(stateTorrentSyncingUpper)
 }
