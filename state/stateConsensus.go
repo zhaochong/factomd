@@ -462,7 +462,12 @@ func (s *State) FollowerExecuteAck(msg interfaces.IMsg) {
 	}
 }
 
+var avgs [4]float64
+
 func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
+	//calltime := time.Now().UnixNano() // Prometheus
+	//defer stateExecuteDBState.Observe(float64(time.Now().Nanosecond() - calltime)) // Prometheus
+
 	dbstatemsg, _ := msg.(*messages.DBStateMsg)
 	cntFail := func() {
 		if !dbstatemsg.IsInDB {
@@ -475,7 +480,7 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 	dbheight := dbstatemsg.DirectoryBlock.GetHeader().GetDBHeight()
 
 	// ignore if too old.
-	if dbheight < s.GetHighestSavedBlk() && dbheight < s.EntryDBHeightComplete {
+	if dbheight < saved && dbheight < s.EntryDBHeightComplete {
 		return
 	}
 
@@ -488,7 +493,7 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 		s.AddStatus(fmt.Sprintf("FollowerExecuteDBState(): DBState might be valid %d", dbheight))
 
 		// Don't add duplicate dbstate messages.
-		if s.DBStatesReceivedBase < int(s.GetHighestSavedBlk()) {
+		if s.DBStatesReceivedBase < int(saved) {
 			cut := int(s.GetHighestSavedBlk()) - s.DBStatesReceivedBase
 			if len(s.DBStatesReceived) > cut {
 				s.DBStatesReceived = append(make([]*messages.DBStateMsg, 0), s.DBStatesReceived[cut:]...)
