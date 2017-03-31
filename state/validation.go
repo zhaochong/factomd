@@ -11,6 +11,26 @@ import (
 	"time"
 )
 
+func (state *State) SortOutAcks(msg interfaces.IMsg) {
+	// Sort the messages.
+	if msg != nil {
+		if state.IsReplaying == true {
+			state.ReplayTimestamp = msg.GetTimestamp()
+		}
+		if _, ok := msg.(*messages.Ack); ok {
+			state.ackQueue <- msg
+		} else {
+			state.msgQueue <- msg
+		}
+	}
+	for i := 0; i < 10; i++ {
+		p, b := state.Process(), state.UpdateState()
+		if !p && !b {
+			return
+		}
+	}
+}
+
 func (state *State) ValidatorLoop() {
 	timeStruct := new(Timer)
 	for {
@@ -26,54 +46,27 @@ func (state *State) ValidatorLoop() {
 
 		// Look for pending messages, and get one if there is one.
 		var msg interfaces.IMsg
-	loop:
+
 		for i := 0; i < 10; i++ {
 			// Process any messages we might have queued up.
-			for i = 0; i < 10; i++ {
-				p, b := state.Process(), state.UpdateState()
-				if !p && !b {
-					break
-				}
-				//fmt.Printf("dddd %20s %10s --- %10s %10v %10s %10v\n", "Validation", state.FactomNodeName, "Process", p, "Update", b)
-			}
 
 			for i := 0; i < 10; i++ {
 				select {
 				case min := <-state.tickerQueue:
 					timeStruct.timer(state, min)
-				default:
-				}
-
-				select {
 				case msg = <-state.TimerMsgQueue():
 					state.JournalMessage(msg)
-					break loop
-				default:
-				}
-
-				select {
+					state.SortOutAcks(msg)
 				case msg = <-state.InMsgQueue():
 					// Get message from the timer or input queue
 					state.JournalMessage(msg)
-					break loop
+					state.SortOutAcks(msg)
 				default:
 					// No messages? Sleep for a bit
 					for i := 0; i < 10 && len(state.InMsgQueue()) == 0; i++ {
 						time.Sleep(10 * time.Millisecond)
 					}
 				}
-			}
-		}
-
-		// Sort the messages.
-		if msg != nil {
-			if state.IsReplaying == true {
-				state.ReplayTimestamp = msg.GetTimestamp()
-			}
-			if _, ok := msg.(*messages.Ack); ok {
-				state.ackQueue <- msg
-			} else {
-				state.msgQueue <- msg
 			}
 		}
 	}
