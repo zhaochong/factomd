@@ -15,8 +15,13 @@ func (s *State) StartTorrentSyncing() error {
 	}
 
 	for {
+		if len(s.inMsgQueue) > 1000 {
+			time.Sleep(1 * time.Second)
+		}
+
+		rightDuration := time.Duration(time.Second * 1)
 		// How many requests we can send to the plugin
-		allowed := 3000
+		allowed := 2500
 
 		dblock, err := s.DB.FetchDBlockHead()
 		if err != nil || dblock == nil {
@@ -35,6 +40,9 @@ func (s *State) StartTorrentSyncing() error {
 			time.Sleep(5 * time.Second)
 			continue
 		}
+		if lower == upper {
+			rightDuration = time.Duration(20 * time.Second)
+		}
 
 		// Prometheus
 		stateTorrentSyncingLower.Set(float64(lower))
@@ -42,6 +50,7 @@ func (s *State) StartTorrentSyncing() error {
 
 		max := lower + uint32(allowed)
 		if upper < max {
+			rightDuration = time.Duration(5 * time.Second)
 			max = upper
 		}
 		var u uint32 = 0
@@ -64,6 +73,6 @@ func (s *State) StartTorrentSyncing() error {
 		//}
 		s.DBStateManager.RetrieveDBStateByHeight(s.EntryDBHeightComplete + 1)
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(rightDuration)
 	}
 }

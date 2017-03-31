@@ -65,6 +65,12 @@ var (
 		Name: "factomd_state_dbstate_list_have_height",
 		Help: "Height we have DB States up to",
 	})
+
+	//DBSate
+	stateExecuteDBState = prometheus.NewSummary(prometheus.SummaryOpts{
+		Name: "factomd_state_dbstate_execute_ns",
+		Help: "Time is takes to execute a dbstate",
+	})
 )
 
 var registered bool = false
@@ -90,7 +96,8 @@ func RegisterPrometheus() {
 	prometheus.MustRegister(stateTorrentSyncingLower)
 	prometheus.MustRegister(stateTorrentSyncingUpper)
 
-	// DBState Catchup
+	// DBState
 	prometheus.MustRegister(stateDBStateListHave)
+	prometheus.MustRegister(stateExecuteDBState)
 
 }
