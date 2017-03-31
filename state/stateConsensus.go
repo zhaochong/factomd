@@ -462,8 +462,10 @@ func (s *State) FollowerExecuteAck(msg interfaces.IMsg) {
 	}
 }
 
+var avgs [4]float64
+
 func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
-	//calltime := time.Now().Nanosecond() // Prometheus
+	//calltime := time.Now().UnixNano() // Prometheus
 	//defer stateExecuteDBState.Observe(float64(time.Now().Nanosecond() - calltime)) // Prometheus
 
 	dbstatemsg, _ := msg.(*messages.DBStateMsg)

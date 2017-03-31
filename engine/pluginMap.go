@@ -104,6 +104,7 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 				log.Fatal("ERROR: Connection lost to torrent plugin")
 				return
 			}
+
 			if !man.IsBufferEmpty() {
 				var data []byte
 				// Exit conditions: If empty, quit. If length == 1 and first/only byte it 0x00
@@ -117,8 +118,9 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 						continue
 					}
 
-					inQueue <- dbMsg
+					//fmt.Printf("Fetched %d from buffer\n", dbMsg.DirectoryBlock.GetDatabaseHeight())
 
+					inQueue <- dbMsg
 					// Write entries into DB
 					for _, e := range dbMsg.Entries {
 						s.WriteEntry <- e
@@ -126,6 +128,7 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 					}
 				}
 			}
+
 			time.Sleep(CHECK_BUFFER)
 		}
 	}

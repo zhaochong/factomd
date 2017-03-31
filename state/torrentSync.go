@@ -17,11 +17,12 @@ func (s *State) StartTorrentSyncing() error {
 	for {
 		if len(s.inMsgQueue) > 1000 {
 			time.Sleep(1 * time.Second)
+			continue
 		}
 
 		rightDuration := time.Duration(time.Second * 1)
 		// How many requests we can send to the plugin
-		allowed := 2500
+		allowed := 6000
 
 		dblock, err := s.DB.FetchDBlockHead()
 		if err != nil || dblock == nil {
@@ -62,7 +63,11 @@ func (s *State) StartTorrentSyncing() error {
 			totalNeed++
 			err := s.DBStateManager.RetrieveDBStateByHeight(u)
 			if err != nil {
-				log.Printf("[TorrentSync] Error while retrieving height %d by torrent, %s", u, err.Error())
+				if s.DBStateManager.Alive() == nil {
+					log.Printf("[TorrentSync] Error while retrieving height %d by torrent, %s", u, err.Error())
+				} else {
+					return fmt.Errorf("Torrent plugin stopped")
+				}
 			}
 		}
 

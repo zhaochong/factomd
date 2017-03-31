@@ -2371,6 +2371,15 @@ func (s *State) SetPendingSigningKey(p *primitives.PrivateKey) {
 }
 
 func (s *State) AddStatus(status string) {
+	return
+	// Uncomment to see it blocking
+	/*now := time.Now().UnixNano()
+	defer func(t int64) {
+		time := float64(time.Now().UnixNano()-t) / 1e9
+		if time > 0.0001 {
+			fmt.Printf("Status took %fs.\n", time)
+		}
+	}(now)*/
 	// Don't add duplicates.
 	last := s.GetLastStatus()
 	if last == status {
@@ -2389,6 +2398,8 @@ func (s *State) AddStatus(status string) {
 }
 
 func (s *State) GetStatus() []string {
+	return []string{}
+
 	s.StatusMutex.Lock()
 	defer s.StatusMutex.Unlock()
 
@@ -2398,6 +2409,8 @@ func (s *State) GetStatus() []string {
 }
 
 func (s *State) GetLastStatus() string {
+	return ""
+
 	s.StatusMutex.Lock()
 	defer s.StatusMutex.Unlock()
 
