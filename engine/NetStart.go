@@ -485,7 +485,7 @@ func NetStart(s *state.State) {
 	// any more nodes on sim control will use default method
 	if *tormanager {
 		fnodes[0].State.SetUseTorrent(true)
-		manager, err := LaunchDBStateManagePlugin(*pluginPath, fnodes[0].State.InMsgQueue(), fnodes[0].State, fnodes[0].State.GetServerPrivateKey())
+		manager, err := LaunchDBStateManagePlugin(*pluginPath, fnodes[0].State.InMsgQueue(), fnodes[0].State, fnodes[0].State.GetServerPrivateKey(), *memProfileRate)
 		if err != nil {
 			panic("Encountered an error while trying to use torrent DBState manager: " + err.Error())
 		}

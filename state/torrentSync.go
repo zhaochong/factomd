@@ -16,15 +16,13 @@ func (s *State) StartTorrentSyncing() error {
 
 	for {
 		// How many requests we can send to the plugin
-		allowed := s.DBStateManager.RequestMoreUploads()
-		if allowed == 0 {
-			time.Sleep(5 * time.Second)
-			continue
-		}
+		allowed := 2500
 
 		dblock, err := s.DB.FetchDBlockHead()
-		if err != nil {
-			log.Printf("[TorrentSync] Error while retrieving dblock head, %s", err.Error())
+		if err != nil || dblock == nil {
+			if err != nil {
+				log.Printf("[TorrentSync] Error while retrieving dblock head, %s", err.Error())
+			}
 			time.Sleep(5 * time.Second) // To prevent error spam
 			continue
 		}
@@ -32,6 +30,11 @@ func (s *State) StartTorrentSyncing() error {
 		// Range of heights to request
 		lower := dblock.GetDatabaseHeight()
 		upper := s.GetHighestKnownBlock()
+
+		if upper == 0 {
+			time.Sleep(5 * time.Second)
+			continue
+		}
 
 		// Prometheus
 		stateTorrentSyncingLower.Set(float64(lower))
@@ -42,11 +45,22 @@ func (s *State) StartTorrentSyncing() error {
 			max = upper
 		}
 		var u uint32 = 0
+
+		totalNeed := 0
 		// The torrent plugin handles dealing with lots of heights. It has it's own queueing system, so
 		// we can spam. The only things we have to be concerned about is overloading it's queueing system
 		for u = lower; u < max; u++ {
+			totalNeed++
 			err := s.DBStateManager.RetrieveDBStateByHeight(u)
-			log.Printf("[TorrentSync] Error while retrieving height %d by torrent, %s", u, err.Error())
+			if err != nil {
+				log.Printf("[TorrentSync] Error while retrieving height %d by torrent, %s", u, err.Error())
+			}
+		}
+
+		if upper-lower > 100 {
+			s.DBStateManager.CompletedHeightTo(lower)
+		} else {
+			s.DBStateManager.CompletedHeightTo(s.EntryDBHeightComplete)
 		}
 
 		time.Sleep(5 * time.Second)

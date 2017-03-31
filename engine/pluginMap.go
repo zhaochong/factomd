@@ -31,7 +31,7 @@ var pluginMap = map[string]plugin.Plugin{
 // LaunchDBStateManagePlugin launches the plugin and returns an interface that
 // can be interacted with like a usual interface. The client returned must be
 // killed before we exit
-func LaunchDBStateManagePlugin(path string, inQueue chan interfaces.IMsg, s *state.State, sigKey *primitives.PrivateKey) (interfaces.IManagerController, error) {
+func LaunchDBStateManagePlugin(path string, inQueue chan interfaces.IMsg, s *state.State, sigKey *primitives.PrivateKey, memProfileRate int) (interfaces.IManagerController, error) {
 	//log.SetOutput(ioutil.Discard)
 
 	var managerHandshakeConfig = plugin.HandshakeConfig{
@@ -44,7 +44,7 @@ func LaunchDBStateManagePlugin(path string, inQueue chan interfaces.IMsg, s *sta
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: managerHandshakeConfig,
 		Plugins:         pluginMap,
-		Cmd:             exec.Command(path+"factomd-torrent", "plugin"),
+		Cmd:             exec.Command(path+"factomd-torrent", fmt.Sprintf("-mpr=%d", memProfileRate)),
 	})
 
 	stop := make(chan int, 10)

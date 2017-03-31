@@ -8,6 +8,9 @@ import (
 	"github.com/FactomProject/factomd/common/messages"
 )
 
+// BATCH_SIZE is the amount of blocks per torrent
+const BATCH_SIZE uint32 = 250
+
 type heightError struct {
 	Err    error
 	Height uint32
@@ -148,64 +151,75 @@ func (s *State) UsingTorrent() bool {
 
 // All calls get sent here and redirected into the uploadcontroller queue.
 func (s *State) UploadDBState(dbheight uint32) {
-	s.Uploader.requestUploadQueue <- dbheight
+	s.Uploader.requestUploadQueue <- dbheight / BATCH_SIZE
 }
 
 func (s *State) uploadDBState(height uint32) error {
+	height = height * BATCH_SIZE
 	// Create the torrent
 	if s.UsingTorrent() {
-		msg, err := s.LoadDBState(height)
-		if err != nil {
-			return err
+		for s.EntryDBHeightComplete < height+BATCH_SIZE {
+			time.Sleep(2 * time.Second)
 		}
-		d := msg.(*messages.DBStateMsg)
-		//fmt.Printf("Uploading DBState %d, Sigs: %d\n", d.DirectoryBlock.GetDatabaseHeight(), len(d.SignatureList.List))
-		block := NewWholeBlock()
-		block.DBlock = d.DirectoryBlock
-		block.ABlock = d.AdminBlock
-		block.FBlock = d.FactoidBlock
-		block.ECBlock = d.EntryCreditBlock
-
-		eHashes := make([]interfaces.IHash, 0)
-		for _, e := range d.EBlocks {
-			block.AddEblock(e)
-			for _, eh := range e.GetEntryHashes() {
-				eHashes = append(eHashes, eh)
+		fullData := make([]byte, 0)
+		var i uint32
+		for i = 0; i < BATCH_SIZE; i++ {
+			msg, err := s.LoadDBState(height + i)
+			if err != nil {
+				return err
 			}
-		}
+			d := msg.(*messages.DBStateMsg)
+			//fmt.Printf("Uploading DBState %d, Sigs: %d\n", d.DirectoryBlock.GetDatabaseHeight(), len(d.SignatureList.List))
+			block := NewWholeBlock()
+			block.DBlock = d.DirectoryBlock
+			block.ABlock = d.AdminBlock
+			block.FBlock = d.FactoidBlock
+			block.ECBlock = d.EntryCreditBlock
 
-		if len(eHashes) == 0 {
-			// No hashes in the msg. Possibly not make torrent?
-			// If we only use torrents for entry syncing, then no need
-			// to make this torrent
-		}
-
-		for _, e := range eHashes {
-			if e.String()[:62] != "00000000000000000000000000000000000000000000000000000000000000" {
-				//} else {
-				ent, err := s.DB.FetchEntry(e)
-				if err != nil {
-					return fmt.Errorf("[2] Error creating torrent in SaveDBStateToDB: " + err.Error())
+			eHashes := make([]interfaces.IHash, 0)
+			for _, e := range d.EBlocks {
+				block.AddEblock(e)
+				for _, eh := range e.GetEntryHashes() {
+					eHashes = append(eHashes, eh)
 				}
-				block.AddIEBEntry(ent)
 			}
+
+			if len(eHashes) == 0 {
+				// No hashes in the msg. Possibly not make torrent?
+				// If we only use torrents for entry syncing, then no need
+				// to make this torrent
+			}
+
+			for _, e := range eHashes {
+				if e.String()[:62] != "00000000000000000000000000000000000000000000000000000000000000" {
+					//} else {
+					ent, err := s.DB.FetchEntry(e)
+					if err != nil {
+						return fmt.Errorf("[2] Error creating torrent in SaveDBStateToDB: " + err.Error())
+					}
+					block.AddIEBEntry(ent)
+				}
+			}
+
+			if len(d.SignatureList.List) == 0 {
+				return fmt.Errorf("No signatures given, signatures must be in to be able to torrent")
+			}
+			block.SigList = d.SignatureList.List
+
+			data, err := block.MarshalBinary()
+			if err != nil {
+				return fmt.Errorf("[3] Error creating torrent in SaveDBStateToDB: " + err.Error())
+
+			}
+			fullData = append(fullData, data...)
 		}
-
-		if len(d.SignatureList.List) == 0 {
-			return fmt.Errorf("No signatures given, signatures must be in to be able to torrent")
-		}
-		block.SigList = d.SignatureList.List
-
-		data, err := block.MarshalBinary()
-		if err != nil {
-			return fmt.Errorf("[3] Error creating torrent in SaveDBStateToDB: " + err.Error())
-
-		}
-
 		if s.IsLeader() {
-			s.DBStateManager.UploadDBStateBytes(data, true)
+			err := s.DBStateManager.UploadDBStateBytes(fullData, true)
+			if err != nil {
+				fmt.Printf("[TorrentUpload] Torrent failed to upload: %s\n", err.Error())
+			}
 		} else {
-			s.DBStateManager.UploadDBStateBytes(data, false)
+			// s.DBStateManager.UploadDBStateBytes(data, false)
 		}
 	}
 	return nil

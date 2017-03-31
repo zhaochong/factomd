@@ -95,35 +95,36 @@ func (s *State) MakeMissingEntryRequests() {
 		}
 
 		sent := 0
-		if !s.UsingTorrent() { // Non-torrent Solution
-			if len(s.inMsgQueue) < 500 {
-				// Make requests for entries we don't have.
-				for k := range MissingEntryMap {
 
-					et := MissingEntryMap[k]
+		if len(s.inMsgQueue) < 500 {
+			// Make requests for entries we don't have.
+			for k := range MissingEntryMap {
 
-					if et.Cnt == 0 {
-						et.Cnt = 1
+				et := MissingEntryMap[k]
+
+				if et.Cnt == 0 {
+					et.Cnt = 1
+					et.LastTime = now.Add(time.Duration((rand.Int() % 5000)) * time.Millisecond)
+				} else {
+					if now.Unix()-et.LastTime.Unix() > 5 && sent < 100 {
+						sent++
+						entryRequest := messages.NewMissingData(s, et.EntryHash)
+						entryRequest.SendOut(s, entryRequest)
+						//fmt.Println("***es ASKING FOR: ", et.EntryHash.String())
+						newrequest++
 						et.LastTime = now.Add(time.Duration((rand.Int() % 5000)) * time.Millisecond)
-					} else {
-						if now.Unix()-et.LastTime.Unix() > 5 && sent < 100 {
-							sent++
-							entryRequest := messages.NewMissingData(s, et.EntryHash)
-							entryRequest.SendOut(s, entryRequest)
-							fmt.Println("***es ASKING FOR: ", et.EntryHash.String())
-							newrequest++
-							et.LastTime = now.Add(time.Duration((rand.Int() % 5000)) * time.Millisecond)
-							et.Cnt++
-							if et.Cnt%25 == 25 {
-								fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", et.EBHash.Bytes(), et.EntryHash.Bytes(), et.Cnt)
-							}
+						et.Cnt++
+						if et.Cnt%25 == 25 {
+							fmt.Printf("***es Can't get Entry Block %x Entry %x in %v attempts.\n", et.EBHash.Bytes(), et.EntryHash.Bytes(), et.Cnt)
 						}
 					}
 				}
-			} else {
-				time.Sleep(20 * time.Second)
 			}
-		} else { // Torrent solution
+		} else {
+			time.Sleep(20 * time.Second)
+		}
+
+		if s.UsingTorrent() { // Torrent solution to assist
 			// Copy missing list
 			var low uint32 = 99999999
 			var high uint32 = 0
@@ -150,6 +151,11 @@ func (s *State) MakeMissingEntryRequests() {
 				if et.DBHeight > high {
 					high = et.DBHeight
 				}
+
+				if amt > 100 {
+					break // Only request 100 at a time
+				}
+
 				// The entries in this height will be returned on a channel
 				s.fetchByTorrent(et.DBHeight)
 				amt++                                      // For printout
@@ -160,20 +166,6 @@ func (s *State) MakeMissingEntryRequests() {
 			// Some debug information
 			if high != 0 {
 				fmt.Printf("{{ Torrenting heights: Low: %d, High %d, Total: %d }} \n", low, high, amt)
-			}
-
-			// Sometimes the s.EntryDBHeightComplete is incorrect, and sometimes the lowest height requested is not accurate either.
-			// To come up with a temporary solution, we will take the lowest of both and assume that is our completed height. This means
-			// the completed height might not strictly increase.
-			if low > 100 && low < 900000 { // Sloppy way to tell if the loop had missing entries
-				lowest := low
-				if s.EntryDBHeightComplete < lowest {
-					lowest = s.EntryDBHeightComplete
-				}
-				s.SetDBStateManagerCompletedHeight(lowest) // Should be s.EntryDBHeightComplete, needs to be fixed
-				if low < s.EntryDBHeightComplete+1 && s.EntryDBHeightComplete+1 < s.GetLeaderHeight() {
-					s.fetchByTorrent(s.EntryDBHeightComplete + 1) // We should also fetch the completed height+1 if we did not request it already
-				}
 			}
 		skipTorrent:
 		}
