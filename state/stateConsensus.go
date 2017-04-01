@@ -5,7 +5,6 @@
 package state
 
 import (
-	"bytes"
 	"fmt"
 	"hash"
 
@@ -466,6 +465,34 @@ func (s *State) FollowerExecuteAck(msg interfaces.IMsg) {
 
 var avgs [4]float64
 
+func executeEntriesInDBState(s *State, dbmsg *messages.DBStateMsg) {
+	height := dbmsg.DirectoryBlock.GetDatabaseHeight()
+	if s.EntryDBHeightComplete > height {
+		return
+	}
+	// If no Eblocks, leave
+	if len(dbmsg.EBlocks) == 0 {
+		return
+	}
+
+	// All DBStates that got here are valid, so just checking the DBlock hash works
+	dblock, err := s.DB.FetchDBlockByHeight(height)
+	if err != nil {
+		return // This is a werid case
+	}
+
+	if !dbmsg.DirectoryBlock.GetHash().IsSameAs(dblock.GetHash()) {
+		return // Bad DBlock
+	}
+
+	for _, e := range dbmsg.Entries {
+		if exists, _ := s.DB.DoesKeyExist(databaseOverlay.ENTRY, e.GetHash().Bytes()); !exists {
+			s.DB.InsertEntry(e)
+			fmt.Println("Added a missing entry woo!!")
+		}
+	}
+}
+
 func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 	//calltime := time.Now().UnixNano() // Prometheus
 	//defer stateExecuteDBState.Observe(float64(time.Now().Nanosecond() - calltime)) // Prometheus
@@ -504,48 +531,8 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 		}
 		ix := int(dbheight) - s.DBStatesReceivedBase
 		if ix < 0 {
-			// If we are missing entries at this DBState, we can look to see if the new one has the data we want
-			if dbheight > s.EntryDBHeightComplete {
-				go func(s *State, dbmsg *messages.DBStateMsg) {
-					// If no Eblocks, leave
-					if len(dbstatemsg.EBlocks) == 0 {
-						return
-					}
-
-					height := dbmsg.DirectoryBlock.GetDatabaseHeight()
-					dblock, err := s.DB.FetchDBlockByHeight(height)
-					if err != nil {
-						return // This is a werid case
-					}
-
-					blocks := dblock.GetEBlockDBEntries()
-					if len(blocks) == 3 {
-						return // No entry blocks
-					}
-
-					eblocks := blocks[3:]
-					for ib, eb := range eblocks {
-						ebdb, err := s.DB.FetchEBlock(eb.GetKeyMR())
-						if err != nil {
-							continue // Should be there...
-						}
-						ents := ebdb.GetEntryHashes()
-						// var msgEnts []interfaces.IHash
-						for ie, e := range ents {
-							// If the entry does not exist, look in the new DBState
-							if ok, _ := s.DB.DoesKeyExist(databaseOverlay.ENTRY, e.Bytes()); !ok {
-								// ib == entryblock index
-								// ie == entry index
-								newEnt := dbmsg.EBlocks[ib].GetEntryHashes()[ie]
-								if bytes.Compare(newEnt.Bytes(), e.Bytes()) == 0 {
-									// Same hash, check if the hash is valid, then write to db
-									//newEnt.
-								}
-							}
-						}
-					}
-				}(s, dbstatemsg)
-			}
+			// If we are missing entries at this DBState, we can apply the entries only
+			executeEntriesInDBState(s, dbstatemsg)
 			return
 		}
 		for len(s.DBStatesReceived) <= ix {
@@ -582,6 +569,7 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 		dbstatemsg.EBlocks,
 		dbstatemsg.Entries)
 	if dbstate == nil {
+		executeEntriesInDBState(s, dbstatemsg)
 		s.AddStatus(fmt.Sprintf("FollowerExecuteDBState(): dbstate fail at ht %d", dbheight))
 		cntFail()
 		return

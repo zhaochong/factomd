@@ -181,16 +181,9 @@ func (m *DBStateMsg) Validate(state interfaces.IState) int {
 		}
 	}
 
-	// Map of Entries and Eblocks in this DBState
-	ents := make(map[string]bool, len(m.Entries))
-	for _, e := range m.Entries {
-		ents[e.GetHash().String()] = false
-	}
-
-	eblocks := make(map[string]bool, len(m.EBlocks))
-	for _, eb := range m.EBlocks {
-		eblocks[eb.GetHash().String()] = false
-	}
+	// Map of Entries and Eblocks in this DBState dblock
+	eblocks := make(map[string]bool) //, len(m.EBlocks))
+	ents := make(map[string]bool)    //, len(m.Entries))
 
 	// Ensure blocks in the DBlock matches blocks in DBState
 	for _, b := range m.DirectoryBlock.GetEBlockDBEntries() {
@@ -216,11 +209,38 @@ func (m *DBStateMsg) Validate(state interfaces.IState) int {
 			}
 		default: // EBLOCK
 			// Eblocks in the DBlock. Not only check if the Eblocks in DBState list are good, but also entries
-			if v, ok := eblocks[b.GetKeyMR().String()]; !ok || !v {
-				return -1 // Not in Eblock list
-			}
-
+			eblocks[b.GetKeyMR().String()] = false
 		}
+	}
+
+	// Same number of Eblocks and DBlock Eblocks
+	if len(m.EBlocks) != len(eblocks) {
+		return -1
+	}
+
+	// Loop over eblocks and see if they fall in the map
+	for _, eb := range m.EBlocks {
+		keymr, err := eb.KeyMR()
+		if err != nil {
+			return -1
+		}
+
+		// true indicated a repeat
+		if v, ok := eblocks[keymr.String()]; !ok || v {
+			return -1
+		}
+		eblocks[keymr.String()] = true
+
+		for _, e := range eb.GetEntryHashes() {
+			ents[e.String()] = false
+		}
+	}
+
+	for _, e := range m.Entries {
+		if v, ok := ents[e.GetHash().String()]; !ok || v {
+			return -1
+		}
+		ents[e.GetHash().String()] = true
 	}
 
 	return 1
