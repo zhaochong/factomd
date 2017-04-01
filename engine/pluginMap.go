@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/go-plugin"
 )
 
-// How often to check the buffer
+// How often to check the plugin if it has messages ready
 var CHECK_BUFFER time.Duration = 2 * time.Second
 
 var _ log.Logger
@@ -76,12 +76,15 @@ func LaunchDBStateManagePlugin(path string, inQueue chan interfaces.IMsg, s *sta
 		manager.SetSigningKey(sigKey.Key[:32])
 	}
 
+	// Upload controller controls how quickly we upload things. Keeping our rate similar to
+	// the torrent prevents data being backed up in memory
 	s.Uploader = state.NewUploadController(manager)
 	AddInterruptHandler(func() {
 		fmt.Println("State's Upload controller is now closing...")
 		s.Uploader.Close()
 	})
 
+	// We need to drain messages returned by the plugin.
 	go manageDrain(inQueue, manager, s, stop)
 	// RunUploadController controls our uploading to ensure not overloading queues and consuming too
 	// much memory
@@ -105,11 +108,15 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 				return
 			}
 
+			// If there is something for us to grab
 			if !man.IsBufferEmpty() {
 				var data []byte
 				// Exit conditions: If empty, quit. If length == 1 and first/only byte it 0x00
 				for !(man.IsBufferEmpty() || (len(data) == 1 && data[0] == 0x00)) {
-					// Msgs are waiting!
+					// If we have too much to process, do not spam inqueue, let the plugin hold it
+					for len(inQueue) > 400 {
+						time.Sleep(1 * time.Second)
+					}
 					data = man.FetchFromBuffer()
 					dbMsg := new(messages.DBStateMsg)
 					err := dbMsg.UnmarshalBinary(data)
@@ -118,13 +125,14 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 						continue
 					}
 
-					//fmt.Printf("Fetched %d from buffer\n", dbMsg.DirectoryBlock.GetDatabaseHeight())
-
+					// This pushes the message onward
 					inQueue <- dbMsg
-					// Write entries into DB
+					// Put entries into the write entry queue. This queue checks to see
+					// if it is an entry we have requested, if it is, we will add it. If we
+					// did not request it, they get tossed. This ensures no entries that are
+					// not valid make it into the DB
 					for _, e := range dbMsg.Entries {
 						s.WriteEntry <- e
-						//db.InsertEntry(e)
 					}
 				}
 			}

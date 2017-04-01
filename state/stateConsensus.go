@@ -5,6 +5,7 @@
 package state
 
 import (
+	"bytes"
 	"fmt"
 	"hash"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/messages"
 	"github.com/FactomProject/factomd/common/primitives"
+	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/util"
 )
 
@@ -502,6 +504,48 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 		}
 		ix := int(dbheight) - s.DBStatesReceivedBase
 		if ix < 0 {
+			// If we are missing entries at this DBState, we can look to see if the new one has the data we want
+			if dbheight > s.EntryDBHeightComplete {
+				go func(s *State, dbmsg *messages.DBStateMsg) {
+					// If no Eblocks, leave
+					if len(dbstatemsg.EBlocks) == 0 {
+						return
+					}
+
+					height := dbmsg.DirectoryBlock.GetDatabaseHeight()
+					dblock, err := s.DB.FetchDBlockByHeight(height)
+					if err != nil {
+						return // This is a werid case
+					}
+
+					blocks := dblock.GetEBlockDBEntries()
+					if len(blocks) == 3 {
+						return // No entry blocks
+					}
+
+					eblocks := blocks[3:]
+					for ib, eb := range eblocks {
+						ebdb, err := s.DB.FetchEBlock(eb.GetKeyMR())
+						if err != nil {
+							continue // Should be there...
+						}
+						ents := ebdb.GetEntryHashes()
+						// var msgEnts []interfaces.IHash
+						for ie, e := range ents {
+							// If the entry does not exist, look in the new DBState
+							if ok, _ := s.DB.DoesKeyExist(databaseOverlay.ENTRY, e.Bytes()); !ok {
+								// ib == entryblock index
+								// ie == entry index
+								newEnt := dbmsg.EBlocks[ib].GetEntryHashes()[ie]
+								if bytes.Compare(newEnt.Bytes(), e.Bytes()) == 0 {
+									// Same hash, check if the hash is valid, then write to db
+									//newEnt.
+								}
+							}
+						}
+					}
+				}(s, dbstatemsg)
+			}
 			return
 		}
 		for len(s.DBStatesReceived) <= ix {

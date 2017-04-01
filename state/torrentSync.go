@@ -15,15 +15,14 @@ func (s *State) StartTorrentSyncing() error {
 	}
 
 	for {
-		if len(s.inMsgQueue) > 1000 {
-			time.Sleep(1 * time.Second)
-			continue
-		}
-
+		// We can adjust the sleep at the end depending on what we do in the loop
+		// this pass
 		rightDuration := time.Duration(time.Second * 1)
-		// How many requests we can send to the plugin
-		allowed := 6000
 
+		// How many blocks ahead of the current we should request from the plugin
+		allowed := 5000
+
+		// What is the database at
 		dblock, err := s.DB.FetchDBlockHead()
 		if err != nil || dblock == nil {
 			if err != nil {
@@ -37,10 +36,13 @@ func (s *State) StartTorrentSyncing() error {
 		lower := dblock.GetDatabaseHeight()
 		upper := s.GetHighestKnownBlock()
 
+		// If the network is at block 0, we aren't on the network
 		if upper == 0 {
 			time.Sleep(5 * time.Second)
 			continue
 		}
+
+		// Synced up, sleep for awhile
 		if lower == upper {
 			rightDuration = time.Duration(20 * time.Second)
 		}
@@ -49,33 +51,33 @@ func (s *State) StartTorrentSyncing() error {
 		stateTorrentSyncingLower.Set(float64(lower))
 		stateTorrentSyncingUpper.Set(float64(upper))
 
+		// What is the end height we request
 		max := lower + uint32(allowed)
 		if upper < max {
 			rightDuration = time.Duration(5 * time.Second)
 			max = upper
 		}
-		var u uint32 = 0
 
-		totalNeed := 0
+		var u uint32 = 0
 		// The torrent plugin handles dealing with lots of heights. It has it's own queueing system, so
-		// we can spam. The only things we have to be concerned about is overloading it's queueing system
+		// we can spam and repeat heights
 		for u = lower; u < max; u++ {
-			totalNeed++
+			// Plugin handles repeat requests
 			err := s.DBStateManager.RetrieveDBStateByHeight(u)
 			if err != nil {
-				if s.DBStateManager.Alive() == nil {
+				if s.DBStateManager.Alive() == nil { // Some errors come from a plugin crash (like when you ctrl+c)
 					log.Printf("[TorrentSync] Error while retrieving height %d by torrent, %s", u, err.Error())
 				} else {
+					// Connection to plugin lost, exit as it won't return
 					return fmt.Errorf("Torrent plugin stopped")
 				}
 			}
 		}
 
-		//if upper-lower > 100 {
-		//	s.DBStateManager.CompletedHeightTo(lower)
-		//} else {
+		// This tells our plugin to ignore any heights below this for retrieval
 		s.DBStateManager.CompletedHeightTo(s.EntryDBHeightComplete)
-		//}
+
+		// Request the 2nd pass too, plugin will handle any repeats, and this makes our second pass catch up
 		s.DBStateManager.RetrieveDBStateByHeight(s.EntryDBHeightComplete + 1)
 
 		time.Sleep(rightDuration)

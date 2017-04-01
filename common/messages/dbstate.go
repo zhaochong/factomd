@@ -181,6 +181,48 @@ func (m *DBStateMsg) Validate(state interfaces.IState) int {
 		}
 	}
 
+	// Map of Entries and Eblocks in this DBState
+	ents := make(map[string]bool, len(m.Entries))
+	for _, e := range m.Entries {
+		ents[e.GetHash().String()] = false
+	}
+
+	eblocks := make(map[string]bool, len(m.EBlocks))
+	for _, eb := range m.EBlocks {
+		eblocks[eb.GetHash().String()] = false
+	}
+
+	// Ensure blocks in the DBlock matches blocks in DBState
+	for _, b := range m.DirectoryBlock.GetEBlockDBEntries() {
+		switch {
+		case bytes.Compare(b.GetChainID().Bytes(), constants.ADMIN_CHAINID) == 0:
+			// Validate ABlock
+			goodKeyMr, err := m.AdminBlock.GetKeyMR()
+			if err != nil {
+				return -1
+			}
+			if !b.GetKeyMR().IsSameAs(goodKeyMr) {
+				return -1
+			}
+		case bytes.Compare(b.GetChainID().Bytes(), constants.FACTOID_CHAINID) == 0:
+			// Validate FBlock
+			if !b.GetKeyMR().IsSameAs(m.FactoidBlock.GetKeyMR()) {
+				return -1
+			}
+		case bytes.Compare(b.GetChainID().Bytes(), constants.EC_CHAINID) == 0:
+			// Validate ECBlock
+			if !b.GetKeyMR().IsSameAs(m.EntryCreditBlock.GetHash()) {
+				return -1
+			}
+		default: // EBLOCK
+			// Eblocks in the DBlock. Not only check if the Eblocks in DBState list are good, but also entries
+			if v, ok := eblocks[b.GetKeyMR().String()]; !ok || !v {
+				return -1 // Not in Eblock list
+			}
+
+		}
+	}
+
 	return 1
 }
 
