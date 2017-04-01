@@ -465,7 +465,7 @@ func (s *State) FollowerExecuteAck(msg interfaces.IMsg) {
 
 var avgs [4]float64
 
-func executeEntriesInDBState(s *State, dbmsg *messages.DBStateMsg) {
+func (s *State) ExecuteEntriesInDBState(dbmsg *messages.DBStateMsg) {
 	height := dbmsg.DirectoryBlock.GetDatabaseHeight()
 	if s.EntryDBHeightComplete > height {
 		return
@@ -532,7 +532,7 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 		ix := int(dbheight) - s.DBStatesReceivedBase
 		if ix < 0 {
 			// If we are missing entries at this DBState, we can apply the entries only
-			executeEntriesInDBState(s, dbstatemsg)
+			s.ExecuteEntriesInDBState(dbstatemsg)
 			return
 		}
 		for len(s.DBStatesReceived) <= ix {
@@ -569,7 +569,7 @@ func (s *State) FollowerExecuteDBState(msg interfaces.IMsg) {
 		dbstatemsg.EBlocks,
 		dbstatemsg.Entries)
 	if dbstate == nil {
-		executeEntriesInDBState(s, dbstatemsg)
+		s.ExecuteEntriesInDBState(dbstatemsg)
 		s.AddStatus(fmt.Sprintf("FollowerExecuteDBState(): dbstate fail at ht %d", dbheight))
 		cntFail()
 		return
