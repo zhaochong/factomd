@@ -132,7 +132,9 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 
 					// This message is less than our first pass, but higher than the second
 					if dbMsg.DirectoryBlock.GetDatabaseHeight() < s.GetHighestSavedBlk() {
-						s.ExecuteEntriesInDBState(dbMsg)
+						if dbMsg.Validate(s) >= 0 {
+							s.ExecuteEntriesInDBState(dbMsg)
+						}
 					} else {
 						// This pushes the message onward
 						inQueue <- dbMsg
