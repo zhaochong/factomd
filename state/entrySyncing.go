@@ -274,6 +274,7 @@ func (s *State) GoSyncEntries() {
 		}
 		lastfirstmissing = firstMissing
 		if firstMissing < 0 {
+			s.EntryDBHeightComplete = s.GetHighestSavedBlk()
 			time.Sleep(60 * time.Second)
 		}
 
