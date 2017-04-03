@@ -34,6 +34,7 @@ func (s *State) fetchByTorrent(height uint32) {
 // This go routine checks every so often to see if we have any missing entries or entry blocks.  It then requests
 // them if it finds entries in the missing lists.
 func (s *State) MakeMissingEntryRequests() {
+	return
 	missing := 0
 	found := 0
 

@@ -145,7 +145,9 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 					// did not request it, they get tossed. This ensures no entries that are
 					// not valid make it into the DB
 					for _, e := range dbMsg.Entries {
-						s.WriteEntry <- e
+						if len(s.WriteEntry) < cap(s.WriteEntry)-1 {
+							s.WriteEntry <- e
+						}
 					}
 				}
 			}
