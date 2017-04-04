@@ -160,7 +160,9 @@ func (m *DBStateMsg) Validate(state interfaces.IState) int {
 		return -1
 	}
 
-	diff := int(dbheight) - (int(state.GetHighestSavedBlk())) // Difference from the working height (completed+1)
+	//diff := int(dbheight) - (int(state.GetHighestSavedBlk())) // Difference from the working height (completed+1)
+	// Difference of completed blocks, rather than just highest DBlock (might be missing entries)
+	diff := int(dbheight) - (int(state.GetEntryDBHeightComplete()))
 
 	// Look at saved heights if not too far from what we have saved.
 	if diff < -1 {

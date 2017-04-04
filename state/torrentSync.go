@@ -33,7 +33,7 @@ func (s *State) StartTorrentSyncing() error {
 		}
 
 		// Range of heights to request
-		lower := dblock.GetDatabaseHeight()
+		lower := s.EntryDBHeightComplete //dblock.GetDatabaseHeight()
 		upper := s.GetHighestKnownBlock()
 
 		// If the network is at block 0, we aren't on the network
@@ -43,8 +43,9 @@ func (s *State) StartTorrentSyncing() error {
 		}
 
 		// Synced up, sleep for awhile
-		if lower == upper {
+		if lower == upper || upper-250 < lower {
 			rightDuration = time.Duration(20 * time.Second)
+			continue
 		}
 
 		// Prometheus
@@ -62,6 +63,9 @@ func (s *State) StartTorrentSyncing() error {
 		// The torrent plugin handles dealing with lots of heights. It has it's own queueing system, so
 		// we can spam and repeat heights
 		for u = lower; u < max; u++ {
+			if upper-250 < max {
+				break // This means we hit the highest torrent height
+			}
 			// Plugin handles repeat requests
 			err := s.DBStateManager.RetrieveDBStateByHeight(u)
 			if err != nil {
@@ -76,9 +80,6 @@ func (s *State) StartTorrentSyncing() error {
 
 		// This tells our plugin to ignore any heights below this for retrieval
 		s.DBStateManager.CompletedHeightTo(s.EntryDBHeightComplete)
-
-		// Request the 2nd pass too, plugin will handle any repeats, and this makes our second pass catch up
-		s.DBStateManager.RetrieveDBStateByHeight(s.EntryDBHeightComplete + 1)
 
 		time.Sleep(rightDuration)
 	}

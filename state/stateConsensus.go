@@ -467,6 +467,7 @@ var avgs [4]float64
 
 func (s *State) ExecuteEntriesInDBState(dbmsg *messages.DBStateMsg) {
 	height := dbmsg.DirectoryBlock.GetDatabaseHeight()
+
 	if s.EntryDBHeightComplete > height {
 		return
 	}
@@ -488,7 +489,6 @@ func (s *State) ExecuteEntriesInDBState(dbmsg *messages.DBStateMsg) {
 	for _, e := range dbmsg.Entries {
 		if exists, _ := s.DB.DoesKeyExist(databaseOverlay.ENTRY, e.GetHash().Bytes()); !exists {
 			s.DB.InsertEntry(e)
-			fmt.Println("Added a missing entry woo!!")
 		}
 	}
 }

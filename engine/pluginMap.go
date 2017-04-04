@@ -130,15 +130,7 @@ func manageDrain(inQueue chan interfaces.IMsg, man interfaces.IManagerController
 						continue
 					}
 
-					// This message is less than our first pass, but higher than the second
-					if dbMsg.DirectoryBlock.GetDatabaseHeight() < s.GetHighestSavedBlk() {
-						if dbMsg.Validate(s) >= 0 {
-							s.ExecuteEntriesInDBState(dbMsg)
-						}
-					} else {
-						// This pushes the message onward
-						inQueue <- dbMsg
-					}
+					inQueue <- dbMsg
 
 					// Put entries into the write entry queue. This queue checks to see
 					// if it is an entry we have requested, if it is, we will add it. If we
