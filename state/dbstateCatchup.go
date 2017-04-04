@@ -60,7 +60,7 @@ func (list *DBStateList) Catchup(justDoIt bool) {
 				if msg != nil {
 					//		list.State.RunLeader = false
 					//		list.State.StartDelay = list.State.GetTimestamp().GetTimeMilli()
-					msg.SendOut(list.State, msg)
+					//msg.SendOut(list.State, msg)
 					list.State.DBStateAskCnt++
 					list.TimeToAsk.SetTimeSeconds(now.GetTimeSeconds() + 6)
 					list.LastBegin = begin
